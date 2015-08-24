@@ -1,0 +1,107 @@
+\documentclass[11pt,a4paper,DIV12,BCOR1.5mm]{scrartcl}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+%\usepackage[ngerman]{babel}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\author{Enzo Scossa-Romano}
+\date{24 Juli 2014}
+\title{Signal Processing}
+
+\begin{document}
+%%%%%%%%%%%%%%%%%%%%%%
+%Titolo%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%
+\maketitle
+\tableofcontents
+%%%%%%%%%%%%%%%%%%%%%
+\section{Acustica: SPL, Schalleistungpegel }
+\subsection{Definitionen aus Kontinuumsmechanik}
+Ein Schallfeld ist vollständig beschrieben durch die Feldgrössen
+\begin{equation}
+	 	p_g(x,t)=p_0+p(x,t)\qquad \text{und}\qquad \vec v(x,t) \qquad x\in  U \subseteq\mathbb{R}^3,\quad t\in  \mathbb{R}\,.
+\end{equation}
+dabei ist die Leistung pro Fläche oder Intensität wie folgt gegeben. 
+\begin{equation}
+\vec I(x,t)=p(x,t)\vec v(x,t)\,.
+\end{equation}
+
+\textbf{Schallgrössen}
+\begin{itemize}
+	\item Der \emph{Schallintensitätspegel} $L(t)$ zu einem Zeitpunkt $t$ in einem gegebenen Punkt( x weggelassen) wird berechnet aus die Intensität $\vec I(x,t)$. Da  die Leistung $\vec{I}$ eine varierende Grösse ist wird besser durch den den Mittelwert dargestellt. Damit ist die Definition des  Schallintensitätspegel mit 
+		\begin{equation}
+			L_I(t)=10\cdot \log_{10}\frac{\overline{I} (t)}{I_0}, \qquad I_0 = 10^{-12}\, W/m^2
+		\end{equation}
+		Der Mittelwert auf einem Zeitintervall $T$ ist  $\overline{I}=\frac{1}{\Delta t}\int_t^{t+T}|\vec{I}(s)| ds =\frac{E}{T}$. $E$ ist die  vom  Schallfeldes geleistet Energie auf $1m^2$ während $T$. \\
+		In Fernfeld sind Schnelle und Druck in Phase es gilt $\vec{v}(x,t) = p(x,t)/Z$   wobei $Z=\rho_0 c \approx 400 Pa\,s/m$ ist Schallkennimpedanz oder Schallwiderstand genannt. Somit ist der die Schallintensität $\vec I(x,t) =\frac{p(x,t)^2}{\rho_0 c}$ und damit lässt sich die Schallintensitätspegel allein aus den Druck bestimmen mit
+		\begin{equation}
+		L_I(t)=10\cdot \log_{10}\frac{p_{rms}^2 (t)}{\rho_0 c \cdot I_0}\,.
+		\end{equation}
+		
+		
+	\item Der \emph{Schalldruckpegel(SPL)} ist definiert mit
+		\begin{equation}
+			L(t)=20\cdot \log_{10}\frac{p_{eff} (t)}{p_0},\qquad p_0 =2 \cdot 10^{-5} Pa
+		\end{equation}
+		beachte dass $\frac{p_0^2}{Z}= I_0$. Damit ist der Zusammenhang mit der Schallintensitätspegel
+		\begin{equation}
+		L(t)= L_I(t)
+		\end{equation}
+		
+
+	\item	Der \emph{Schalleistung} einer Quelle ist definiert  durch die emittierte Leistung $ P(t) $ der Quelle. Diese wird mithilfe einer umhüllende Fläche  $\Omega$ berechnet. Es gilt  $P(t)=\int_\Omega \vec I(x,t)d\vec \sigma$. Aus dieser Leistung lässt sich ein Mittelwert $\overline{P}$ berechnen und damit definiert der Schallleistungspegel  
+	\begin{equation}
+		L_W(t)=10\cdot \log_{10}\frac{\overline{P}(t)}{P_0} \qquad P0 = 10^{-12} W
+	\end{equation}
+	Für rotationssymmetrische Quellen mit Schallintensitätspegel $L_I$ bei $r=1$ ist $\overline{P} = 4\pi I_0 10^{\frac{L_I}{10}}$ und damit $L_W = 10 log_{10} 4\pi\,+ L_I$
+	Beachte dass für kleine Flächen oder Konstante Intesität lässt sich approximieren durch $P(x,t) \approx \vec I(x,t) d\vec \sigma $. Bei einer Messung ist sigma die Fläche des Mikrophon.
+
+	\item 
+	 Der \emph{äquivalenter Dauerschallpegel}$L_{eq,\Delta T}$ ist gegeben durch energetische Integrierung\footnote{ Zeitintervalle $\Delta T$ gross im Vergleich zu RMS integrierung} der Schallintensitätspegel (oder Schalldruckpegel(SPL))
+	\begin{equation}
+		L_{eq,\Delta T}=10\cdot\log_{10}\left(\frac{1}{\Delta T}\int_{\Delta T} 10^{\frac{L(t)}{10}} dt \right)
+	\end{equation}
+	Ähnlich Definiert werden SEL und TEL indem das Faktor $\frac{1}{\delta T}$ modifiziert wird.  
+\end{itemize}
+	
+\newpage
+\subsection{Messungund digitale Auswertung}
+L'SPL si definisce tramite l'intensità media o la pressione RMS  nel modo seguente
+\begin{align}
+L&=
+10\cdot \log_{10}\frac{\overline{I}}{I_0}, \qquad I_0 = 10^{-12} W/m^2\\
+&=20\cdot \log_{10}\frac{p_{eff}}{p_0},\qquad p_0 =2 \cdot 10^{-5} Pa
+\end{align}
+nella seconda riga si é utilizzata la relazione $\vec I(x,t) =\frac{p(x,t)^2}{\rho_0 c}$ e quindi 
+$\overline{I}= \frac{p_{rms}^2}{\rho_0 c}$ dove $Z=\rho_0 c =\frac{p_0^2}{I_0} \approx 400 Pa\,s/m$.\\
+
+Utilizzando le definizione 
+\begin{equation}
+\overline{I} =\frac{1}{\Delta t}\int_t^{t+T}|\vec{I}(s)|ds =\frac{E}{T}
+\end{equation}
+Otteniamo
+\begin{align}
+\overline{I} &=\frac{ (\rho_0 c)^2}{N}|x|^2\\
+&=\frac{ (\rho_0 c)^2}{N}|x|^2\\
+&=\frac{ (\rho_0 c)^2}{N}|x|^2\\
+\end{align}
+oppure con la definizione di $p_eff$
+
+$I_{eff} =\frac{I_0}{p_0^2}p_{eff}^2=\frac{I_0}{p_0^2}c\cdot x_{eff}^2$
+
+si puo pasare a $S_rms$ in ogni istante moltiplicando per la cosatante $A2$
+
+\section{Frequenzanalyse im continuum}
+nimmt man einem kleinem Zeitintervall $\Delta t$ wärend sich der Schall sich wenig werhändert(langzeitveränderung,es gibt immer eine frequenzverhänderung), dann macht man eine fouriertransformierte der frequenz der Druck man kriegt die $p(x,\omega)$ (keine zeitabhängigkehit der frequenz mehr). Dann lässt sich der RMS Druck berechnen mit
+\begin{equation}
+p_{eff}^2=\int p(\omega)^2 d\omega
+\end{equation} 
+und 
+\begin{equation}
+L=10\cdot \log_{10}\frac{\sum_\omega p(\omega)^2}{p_0^2}
+\end{equation}
+Die frequenzabhängigen Pegel sind dann definiert durch $L_{\omega}=10\cdot \log_{10}\frac{ p(\omega)^2}{p_0^2}$ und es gilt $L= 10\cdot\log_{10}\left(\sum_\omega 10^\frac{L_{\omega}}{10}\right)$.
+\end{document}

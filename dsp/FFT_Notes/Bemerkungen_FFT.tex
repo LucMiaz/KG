@@ -1,0 +1,319 @@
+\documentclass[11pt,a4paper,DIV12,BCOR1.5mm]{scrartcl}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+%\usepackage[ngerman]{babel}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\author{Enzo Scossa-Romano}
+\date{24 Juli 2014}
+\title{Signal Processing}
+
+\begin{document}
+%%%%%%%%%%%%%%%%%%%%%%
+%Titolo%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%
+\maketitle
+\tableofcontents
+%%%%%%%%%%%%%%%%%%%%%
+\section{DTFT}
+la discret time fourier trasform é l'equivalente della DFT per sequenze infinite. Solitamente viene definita prima della DFT ed é data da 
+\begin{equation}
+X(\omega) = \sum_{n=-\infty}^{\infty} x(n)\cdot \exp^{-i\,n\,\omega},\qquad \omega \in -\pi,\pi
+\end{equation} 
+Le frequenze sono continue. La relazione tra DFT e DTFT la si può osservare facendo la DTFT di un segnale moltiplicato con una finestra rettangolare. 
+\begin{itemize}
+	\item eigenvectors of linear convolution
+	\item $2\pi$ periodic
+\end{itemize}
+
+\section{DFT/FFT: dalla matematica alla pratica}
+Sequenza di $N$ elementi $x= {x(n)}_{n=0,...,N-1}$. La DFT é:
+\begin{equation}
+	X(k) = \sum_{n=0}^{N-1} x(n)\cdot \exp^{-i\,n\,k \frac{2\pi}{N}},\qquad k = 0..N-1
+\end{equation}
+FFT é il nome dell'algoritmo numerico per calcolare la DFT.\\
+
+\begin{itemize}
+\item 
+	Sequenza $X$ ha nuovamente $N$ Elementi complessi. $X(k) = |X(k)| \cdot \exp{i\phi}$ dove $\phi$ rappresenta la fase. La fase é determinata fino a modulo $2\pi$. 
+\item 
+	Con il prodotto scalare $ <x,y> =  \sum_{n=0}^{N-1} x(n)\cdot y(n)^*$  e la Base ortogonale $y_k(n)= e^{i\,n\,k \frac{2\pi}{N}}$ come un Cambiamento di base.
+\item 
+	per la base $y_k$ vale: $y_k = y_{k+lN}$  e $ y_{N-k} = y_{-k} = y_{k}^* $. Il modulo é $|y_k|=N$.\\
+	Una base equivalente é quindi rappresentata da $\{(y_k, y_{k}^*)\}$ per $ k = 0..(N)/2$  
+\item 
+	$X(k)$ é la proiezione di $x$ su $y_k$.
+\item 
+	se $x \in \mathcal{R}$  Vale $X(k)= X(N-k)^*$ e $X(N-k) = |X(k)|\cdot \exp{i(2\pi-\phi)} $  
+\item 
+	Nella nuova base il prodotto scalare diventa $<X,Y> = \frac{1}{N}\sum_{n=0}^{N-1} Y(k)\cdot Y(k)^*$. Ne segue Parseval.
+\item 
+	Ogni base $y_k$ é caratterizzata dalla Frequenza 
+	\begin{equation}
+	f=|k|/N \in\{0,1/N,2/N,...,(N-1)/N\} 
+	\end{equation}
+	Dalle proprietà sopra elencate si ottengono le seguenti interpretazioni: le frequenze rilevanti sono solamente $N/2$ ($(N-1)/2$ se $N$ dispari) con frequenza massima uguale a $\frac{1}{2}$. Le frequenze $k/N$ e $(k+lN)/N$ sono le stesse. Le basi $y_k$, $y_{N-k}$ o $y_{-k}$ hanno la stessa frequenza.
+\item 
+	La DFT per una sequenza finita ha frequenze discrete e finite. Le frequenze sono determinate dalla discretizazione del tempo (limite superiore) e date dalla lunghezza del segnale(risoluzione).
+	
+\item la DFT di un vettore a N dimensioni può essere calcolata per qualsiasi frequenza $\omega_k$. Questo procedimento corrisponde a 0-padding
+\end{itemize}
+
+\subsection{Relazione tra DTFT e DFT}
+nella DFT $x(n)$ ha un numero di elementi finiti. Per paragonare le due sequenze il segnale deve essere esteso ad un numero infinito di elementi. Questo può essere fatto in due modi:
+\begin{enumerate}
+	\item 0-Padding denominata con $\hat x$
+	\item circular extension. $\tilde x (n) = x( n \, mod_N)$. Il segnale esteso all infinito é rappresebtabile da $\frac{1}{N}\sum_k ^{N-1} X(k) \exp^{i\omega_k\,n}$.
+	Ogni segnale (infinito) periodico (periodo finito di lunghezza N) é rappresentabile in questo modo. 
+\end{enumerate}
+
+The DFT computes the DTFT of a finite segment of an infinite-length signal at a finite number of frequencies; it is thus the operational tool for computing the DTFT, which cannot be computed in full.
+
+\textbf{caso 1, DFT approssima la DTFT di $\tilde{x}$}
+\begin{itemize}
+\item 
+	la DFT equivale alla DTFT dello spezzone zero padded  campionata alle frequenze $\omega_k$
+\item 
+	se nella DFT si utilizza uno 0-padding si aumentala risoluzione della campionatura.
+	Se il segnale infinito é realmente 0 al di furi di $x(n)$ tramite zero padding si aumentano le informazioni ricavate con la DFT.
+\item 
+	Aumentando la lunghezza $T$ del segnale si aumenta la risoluzione della frequenza nella sua DTFT. Analogamente aumentando l'intervallo delle frequenze conosciute si aumenta la risoluzione temporale del segnale. 
+\item 
+	la ricostruzione del segnale con la DFT sarà periodico(se esteso all infinito)
+
+\end{itemize}
+
+\textbf{caso 2: DFT equivalente alla DTFT di $\tilde{x}$}
+\begin{itemize}
+\item 
+	In questo caso la DTFT é una sommatoria di funzioni delta. Al massimo in $N$ punti é diversa da zero. in quei punti diverge.
+\item la relazione tra DFT e DTFT é
+ 	\begin{equation}
+ 	 \tilde X(\omega) = \sum_k^{N-1} \frac{2\pi}{N} X(k) \cdot \delta(\omega -k\cdot \frac{2\pi}{N})
+ 	\end{equation}
+
+\end{itemize}
+
+\textbf{caso3: relazione tra DTFT di $\tilde x $ e $x$ 0-padded}
+
+\begin{align}
+\tilde{X}(\omega) =& \sum_{n=-\infty}^\infty \tilde{x}(n) \exp^{-i\omega n} \\
+=&  \sum_{l=-\infty}^\infty \sum_{n=0}^{N-1} \tilde{x}(lN+n) \exp^{-i\omega (lN+n)} \\
+=&  \sum_{l=-\infty}^\infty \sum_{n=0}^{N-1} x(n) \exp^{-i\omega n} \exp^{-i\omega Nl} \\
+=&  \hat X(\omega) \cdot \sum_{l=-\infty}^\infty    \exp^{-i\omega Nl}
+\end{align}
+
+$ \sum_{l=-\infty}^\infty    \exp^{-i\omega N\, l} $ é uguale a 0 se $\omega N = 2\pi k$ altrimenti a $ $
+
+Spesso il segnale reale $x(n)$ é infinito e non periodico. \textbf{Si é interessati alla DTFT del segnale ma questo non si può calcolare}. Quello che viene fatto é prendere uno spezzone del segnale infinito di lunghezza N $x_N(n)$. Perndere lo spezzone equivale a moltiplicare il segnale con una finestra; il segnale viene trasformato in un segnale infinito $\tilde x_N(n)$ 0-padded. Con la DFT si può ottenere un'approssimazione della DTFT del segnale $\tilde x_N(n)$ in n punti.  Per ricollegarsi alla DTFT del segnale originale é necessario capire la relazione tra le DTFT dei due segnali infiniti $x(n)$ e $\tilde x_N(n)$ .\\
+
+
+
+\subsection{Dalla sequenza matematica al segnale reale}
+
+Fino ad adesso tutte le discussioni su FFT sono matematiche. Per passare ad un segnale fisico bisogna considerare la durata totale $T$ in secondi della sequenza $x$ o in modo equvalente la sampling rate $Fs$ oppure ancora il lasso di tempo $\Delta t$ tra due elementi della sequenza. La relazione tra queste grandezze é:
+\begin{equation}
+	Fs =  \frac{N}{T} = \frac{1}{ \Delta t }\,.
+\end{equation}
+Le considerazioni Matematiche sono come se la durata fosse $T=N$ , $Fs = 1$ e $\Delta t = 1$\\
+La frequenza corrispondente a $k$ si ottiene moltiplicando per $Fs$ 
+\begin{equation}
+	f_k = \frac{|k|\cdot Fs}{N} = \frac{|k|}{N \cdot \Delta t}= \frac{|k|}{ T }
+\end{equation} 
+le frequenze sono spaziate equidistantemente con distanza $\Delta f=\frac{1}{N \Delta t} =\frac{1}{T} $ 
+la frequenza max $f_{k=N/2} = \frac{Fs}{2} $ ha periodo  $\frac{2T}{N}=\frac{2}{Fs} $, la minima con $f_1=\Delta f=\frac{1}{T}$ ha periodo $T$. Da notare che $\Delta f$ dipende solo da $T$.
+
+\section{Convoluzione}
+la convoluzione é un operazione $(C^n\times C^n \mapsto C^n)$ tra due sequenze.
+Differenziamo due tipi di convoluzioni
+\subsection{convoluzione lineare per sequenze infinite}
+definita nel seguente modo
+\begin{equation}
+(h\ast x)(n) = \sum_s h(s)\cdot x(n-s)
+\end{equation}
+la somma é infinita da $-\inf$ fino a $+\infty$.\\
+La convoluzione é bilineare e simmetrica (rappresentabile con un tensore $T\in \varLambda^1_2$.
+\begin{itemize}
+	\item se le sequenze sono finite possono essere 0-padded
+	\item il risultato é sempre definito per sequenze infinite
+	\item se una delle due sequenze é periodica il risultato sarà periodico
+	\item il tensore $T$ nella base $\delta_i$ é rappresentato da $T_{i,j}^n = \delta_{n-(i+j)}$
+	\item  La si può comporre con una inversione del tempo R e un shift di n  elementi $S(n)$.\\
+	Inversione del tempo $y = R x$ con $y(n) = x(-n) = R^n_j x(j) =  \delta ^n_{j+n} x(j)$. segue che R nelle base standard é rappresentato da $\delta ^n_{j+n}$\\
+	shift del tempo $y = S_l x$ con $y(n) = x(n-l) = (S_l)^n_j x(j) =  \delta ^n_{j-(n-l)} x(j)$. Segue che $S_l$ nelle base standard é rappresentato da $\delta^n_{j-(n-l)}$
+	
+	\item nella base $v_\omega (n) = \exp^{-i\omega\cdot n}$ otteniamo
+	\begin{equation}
+	T(v_\omega,v_{\omega'}) = \sum_k \exp^{-i\omega\cdot k} \exp^{-i\omega'\cdot (n-k)} = \sum_k \exp^{-i(\omega-\omega')\cdot k} \exp^{-i\omega'\cdot n} = v_\omega 
+	\end{equation} 
+	se $\omega = \omega'$ altrimenti 0.
+	
+	\item  nella base di furrier DTFT (infinita) questa operazione é diagonalizzata, vale quindi:
+	\begin{equation}
+	DTF[(h\ast x)(n)](k) = H(k) \cdot X(k)
+	\end{equation}
+	Da notare che se si definisce operazionalmente la stessa operazione nella base di fourier si ottiene la stessa proprietà nella base 'euclidea'.
+\end{itemize}
+
+
+\subsection{convoluzione ciclica per sequenze finite e infinite periodiche}
+definita nel seguente modo per sequenze finite di lunghezza N
+\begin{equation}
+(h \circledast_N x)(n) = \sum_{s=0}^{N-1} h(s)\cdot x(n-s)_{mod_N}
+\end{equation}
+La sommatoria in questo caso é finita. Si possono calcolare infiniti elementi $n$, ma in ogni caso il risultato ha periodo N.\\
+
+La domanda fondamentale consiste nel determinare quando le due definizioni sono equivalenti.
+
+\begin{itemize}
+	\item nel caso $x(n)$ sia N-periodico sostituendo la sequenza $h$ (infinita) con $h_N$ (periodica)
+	\begin{equation}
+	h_N(n) = \sum_{s=-\infty}^{\infty} h(n+sN)
+	\end{equation}
+	si ottiene $(h_N \circledast_N x)(n) = (h\ast x)(n) $. Ricordare che il risultato é periodico in entrambi i casi.
+	\item se $h$ é diverso da zero per soli finiti elementi, schegliendo N sufficientemente grande si ottiene $h_N = h$.
+	\item nel caso che $h$ e $x$ siano finiti di lunghezza $M$ e $L$ abbiamo che la convoluzione lineare delle sequenze 0-padded é uguale alla convoluzione ciclica nel caso in cui $N = M+L-1$
+	
+	\item  nella base di furrier DFT/FFT(infinita) questa operazione é diagonalizzata
+
+	\item si sceglie la sequenza più lunga (M). si pone $N=2M$. si 0-pad entrabi le sequenze alla lunghezza $N$. la convoluzione 0 padded é ugusale alla convoluzione lineare(con sequenze 0-padded) per gli indici $n \in 0..N$. lineare é altrimenti 0, la circolare periodica.
+\end{itemize}
+
+
+\section{Windowing}
+ Windowing é un procedimento per ottenere da sequenze infinite generiche sequenze Infinite con solo $N$ elementi dieversi da 0.  La sequenza si può quindi trattare analogamente come sequenza infinita zero padded che a sua volta viene poi trattata con FFT che calcola i valori equivalenti ad una sequenza finita periodicizzata.\\
+ il procedimento  é il seguente:
+ \begin{equation}
+ x_w(n) = w(n)\cdot x(n)
+ \end{equation}
+ 
+ 
+ vale 
+  \begin{equation}
+  X_w (\omega) = (W \ast X) (\omega)
+  \end{equation}
+  
+  \subsection{Energia}
+  
+  
+ 
+ 
+ 
+ 
+\section{Zero padding}
+Zero padding una sequenza significa aggiungere 0 alla fine di questultima. calcolando la DTDT di una sequenza zero padded si ottengono le seguenti proprietà
+
+\begin{itemize}
+\item aggiungere zeri  all'inizio piuttosto che alla fine ha come unico effetto nella DTFT del segnale uno shift nella fase
+\item ...
+\end{itemize}
+
+\section{Energia e Spettri}
+Per gli spettri ci sono molte definizioni e alcune differenze. Bisogna differenziare tra sequenze  discrete finite, discrete infinite, continue finite e continue infinite
+\begin{itemize}
+	\item  nel caso di sequenze discrete infinite (DTFT) e continue (FT) si parla di densità per lo spettro 
+	\item   nel caso di sequenze discrete finite (DFT) e continue  finite/ periodiche(FT) lo spettro é sotto forma di serie
+	\item casi con spettri discreti possono essere trasformati in casi continui con appropriate estensioni.
+	\item  quando si parla di autospectrum si intende la DFT FT o DTFT della correlazione
+	
+	\item  quando si parla di powerspectrum si l'onesided autospectrum
+	
+	\item  quando si parla di (amplitude) spectrum si intende la DFT FT o DTFT della sequenza
+	\item  quando si parla di Energispectrum si intende la DFT FT o DTFT della correlazione
+	
+\end{itemize} 
+\subsection{Energia matematica}
+L'energia di una sequenza lunga $N$ punti o infinita é definita come:
+\begin{equation}
+E_m[x] = \sum_{n=0}^{N-1} x(n)\cdot x(n)^* = |x|^2
+\end{equation}
+Con parseval vale
+\begin{itemize}
+	\item \textit{sequenza infinita; DTFT}
+	\begin{equation}
+	E[x]_m =  <x,x> = <X,X> =   \frac{1}{2\pi} \int_{-\pi}^{\pi} |X(\omega)|^2d\,\omega
+	\end{equation}
+	\item \textit{sequenzafinita;DFT}
+	\begin{equation}
+	E[x]_m =  <x,x> = \frac{1}{N} <X,X> =   \frac{1}{N} \sum_k |X(k)|^2
+	\end{equation}
+\end{itemize}
+
+\subsection{Deterministic correlation and autocorrelation per sequenze infinite}
+la correlazione deterministica tra due sequenze(infinite) é definita come
+\begin{equation}
+ (x\star y)(n)=  \sum_k x(k) y^*(k-n) \qquad \textrm{shift e prodotto scalare}
+\end{equation}
+La autocorrelazione di una sequenza $x$
+\begin{equation}
+a_x(n)=  \sum_k x(k) x^*(k-n) 
+\end{equation}
+che si può scrivere come convoluzione tra $x(n)$ e $x^*(-n)$. da notare che vale $a_x(0) = E[x]_m $. \\
+La DTFT della autocorrelazione é reale e simmetrica (anche per sequenze complesse) e definisce in modo generale il concetto di \textbf{Powerspectrumdensity}(one sided).
+\begin{equation}
+A_x(\omega) = |X(\omega)|^2\ =\frac{1}{2} S(\omega),.
+\end{equation}
+la inversa DTFT per tempo $t=0$  da come risultato, equivalentemente a parseval
+\begin{equation}
+E[x]_m =  \frac{1}{2\pi}\int_0^\pi\,S(\omega)\,d\omega,.
+\end{equation}
+\subsection{Autospectrum per sequenze finite o infinite (con N elementi non-0)}
+Analogamente a quanto fatto per le sequenze infinite , utilizzando le definizioni circolari si  può definire energia \textbf{powerspectrum} per sequenze finite $x(n)$. Denotiamo $\hat{x}$  una qualunque estensione  di $x$ finita (0-padded) di lunghezza $Nz$.\\
+\begin{equation}
+E[\hat{x}]_m = a_{\hat{x}}(0) \qquad \textrm{convoluzione circolare}
+\end{equation}
+e
+\begin{equation}
+\frac{1}{2}S_{\tilde{x}}(\omega_k) = |X(k)|^2 =  A_{\hat{x}}(k)
+\end{equation}
+
+Definiamo $\tilde x(n) $ la sequenza infinita 0-padded  di $x$.  Valgono le seguenti  proprietà:\\
+ 
+L'uguaglianza 
+\begin{equation}
+a_{\tilde{x}}(n) =  a_{\hat{x}}(n) \textrm{lineare, circolare}
+\end{equation}
+ é valida se $Nz>=2N-1$. Per l'elemento $a(n=0)$ l'uguaglianza é sempre valida (vedi anche prodotto scalare)
+\begin{equation}
+E[\tilde{x}]_m = a_{\tilde{x}}(0) =  a_{\hat{x}}(0) = E[\hat{x}]_m 
+\end{equation}
+quindi anche (parseval o inverse DTFT)
+\begin{equation}
+E[\tilde{x}]_m =  \frac{1}{2\pi}\int_0^\pi\,S_{\tilde{x}}(\omega)\,d\omega = E[\hat{x}]_m =  \frac{1}{Nz}\sum_k^{Nz/2}\,S_{\hat{x}}(\omega_k)\,.
+\end{equation}
+
+\begin{equation}
+E[\tilde{x}]_m \overset{f = \frac{n_s \omega}{2\pi}}{=} \frac{1}{n_s}\int_0^\frac{n_s}{2}\,S_{\tilde{x}}(\omega_f)\,df = E[\hat{x}]_m =  \frac{1}{n_s}\sum_k^{Nz/2}\,S_{\hat{x}}(\omega_k)\Delta f\,.
+\end{equation}
+Per lo spettro vale che il caso finito é una campionatura del caso infinito se $Nz>=2N-1$.(da dft e dtft definizione)
+\begin{equation}
+S_{\tilde{x}}(\omega_k) = S_{\hat{x}}(\omega_k) \qquad 
+\end{equation}
+
+
+\subsection{Calcolo di $p_{rms}^2$, power spectral density (PSD), Energy spectral density (ESD) }
+partiamo da un segnale continuo $p(t)$ diverso da 0 per un intervallo finito $T$ (esempio un rumore di n secondi). $p_{rms}^2$ é definito  nel seguente modo:
+\begin{equation}
+	p_{rms}^2 = \frac{1}{T} \int_{-\frac{T}{2}}^{\frac{T}{2}} p^2(t) dt 
+\end{equation}
+l'integrale si può estendere a infinito nel caso di una sequenza infinita. La discretizzazione del segnale porta al segnale finito $p(n)$ (senza windowing). L'integrale lo si può approssimare con 
+\begin{equation}
+p_{rms}^2 \approx \frac{1}{T} \sum_{n}^{Nz} \hat{p}^2(n) \Delta t = \frac{1}{T} E[\hat p]_m \Delta t = \frac{1}{T} a_{\hat{p}}(0) \Delta t = \frac{E[\hat p]_m}{N}= \frac{a_{\hat{p}}(0)}{N} 
+\end{equation}
+per qualsiasi  estensione (finita/infinita) $\hat p(n)$. Attenzione $T$ rimane lo stesso per qualunque estensione $\hat p$. $prms$ é indipendente dallo time scaling (frequenza).
+\begin{equation}
+p_{rms}^2  = \frac{\Delta t^2}{T}\int_0^\frac{n_s}{2}\,S_{\tilde{x}}(\omega_f)\,df = \frac{\Delta t^2}{T}\sum_k^{Nz/2}\,S_{\hat{x}}(\omega_k)\Delta f\,.
+\end{equation}
+con $\frac{\Delta t^2}{T} = \frac{\Delta t}{N}$.
+relazione tra prms e autocorrelation / energia
+autocorrelation
+autopowerspectrum
+
+caso segnale con finiti elementi diversi da 0 tramite windowing($p_{rms}^2(t)$)
+
+
+
+\end{document}

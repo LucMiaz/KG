@@ -1,0 +1,48 @@
+#Beschreibung der messung;;;;
+#;;;;
+#
+#
+LOCATION;;;;
+Zug;;;;
+MEASUREMENT;;;;
+Vormessung;;;;
+#MES_DATE;;;;
+#Apr 15;;;;
+MIC;;;;
+[1,2,4,5,6,7];;;;
+#Excel tables;;;;
+TABLES;fileName;description;skip;
+Achszeiten;Achszeiten.xls;;1;
+Pegelzeitverlauf;Pegelzeitverlauf.xls;;2;
+Terzspektren;Terzspektren.xls;;1;
+Wetterstation;Wetterstation.xls;;0;
+#;;;;
+#variables ID informations;;;;
+#ID info;;;;
+IDINFO;table;sheet;colName;description
+Gleis;Achszeiten;Achszeiten;Gleis;Gleis
+direction;Achszeiten;Achszeiten;Fahrtrichtung;Fahrrichtung, 1 süd,0 nord
+v2;Achszeiten;Achszeiten;v2 [km/h];v letzes drehgestell
+v1;Achszeiten;Achszeiten;v1 [km/h];v erstes drehgestell
+trainType;Achszeiten;Achszeiten;Zugart;
+trainLenght;Achszeiten;Achszeiten;Länge [m];zugslÃ¤nghe
+axleProLenght;Achszeiten;Achszeiten;Achsen pro Länge;
+#wetterstation;;;;
+mDate;Wetterstation;Infos;Datum;
+mTime;Wetterstation;Infos;Uhrzeit;
+Temp;Wetterstation;Infos;Temperatur [K];
+humidity;Wetterstation;Infos;rel. Feuchte [%];
+wind;Wetterstation;Infos;Windgeschw. [m/s];
+rain;Wetterstation;Infos;Regen [V];
+#;;;;
+#for thenext variables you have to replace i with the mic channel number;;;;
+MICVALUES;table;sheet;colName;description
+t1b_mic_i;Pegelzeitverlauf;TEL;t1b_mic_i;Vorbeifahrtbeginn
+t1e_mic_i;Pegelzeitverlauf;TEL;t1e_mic_i;Vorbeifahrtende
+tb_mic_i;Pegelzeitverlauf;TEL;tb_mic_i;Auswertezeit beginn
+te_mic_i;Pegelzeitverlauf;TEL;te_mic_i;Auswertezeitende
+TEL_mic_i;Pegelzeitverlauf;TEL;TEL_mic_i;TEL
+LAEQ_mic_i;Pegelzeitverlauf;LAEQ;LAEQ_mic_i;LAEQ
+LAmax_mic_i;Pegelzeitverlauf;LAmax;LAmax_mic_i;max o
+LPAeqTP_mic_i;Terzspektren;LPAeqTP_mic_i;[50, 63, 80,100, 125, 160, 200, 250, 315, 400, 500, 630, 800, 1000, 1250, 1600, 2000, 2500, 3150, 4000, 5000, 6300, 8000,10000];spectrum
+#;;;;

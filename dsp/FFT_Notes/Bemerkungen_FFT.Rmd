@@ -1,0 +1,159 @@
+---
+title: Notes on FFT
+output:
+  html_document:
+    toc: yes
+---
+
+
+#DFT/FFT: dalla matematica alla pratica
+
+Sequenza di $N$ elementi $x= {x(n)}_{n=0,...,N-1}$. La DFT é:
+$$
+	X(k) = \sum_{n=0}^{N-1} x(n)\cdot \exp^{-i\,n\,k \frac{2\pi}{N}},\qquad k = 0..N-1
+$$
+
+- Sequenza $X$ ha nuovamente $N$ Elementi complessi. 
+
+- Con il prodotto scalare $ <x,y> =  \sum_{n=0}^{N-1} x(n)\cdot y(n)^*$  e la Base ortogonale $y_k(n)= e^{i\,n\,k \frac{2\pi}{N}}$ come un Cambiamento di base.
+
+- per la base $y_k$ vale: $y_k = y_{k+lN}$  e $y_k = y_{N-k}^* = y_{-k}^*$. Il modulo é $|y_k|=N$.
+
+- $X(k)$ é la proiezione di $x$ su $y_k$.
+
+- se $x \in \mathcal{R}$  Vale $X(k)= X(N-k)^*$ 
+
+- Nella nuova base il prodotto scalare diventa $<X,Y> =  \frac{1}{N}\sum_{n=0}^{N-1} Y(k)\cdot Y(k)^*$. Ne segue Parseval.
+
+- Ogni base $y_k$ é caratterizzata dalla Frequenza 
+	$$
+	f=|k|/N \in\{0,1/N,2/N,...,(N-1)/N\} 
+	$$
+	Dalle proprietà sopra elencate si ottengono le seguenti interpretazioni: le frequenze rilevanti sono solamente $N/2$ ($(N-1)/2$ se $N$ dispari) con frequenza massima uguale a $\frac{1}{2}$. Le frequenze $k/N$ e $(k+lN)/N$ sono le stesse. Le basi $y_k$, $y_{N-k}$ o $y_{-k}$ hanno la stessa frequenza.
+	
+- La spettro $S(k/N)$ per una frequenza $k/N$ si può definire nel seguente modo per $k$ diverso da 0 e da $N/2$:
+	$$
+	S(k/N)= A |X(k)y_k + X(-k)y_{-k}| = A \sqrt{|X(k)|^2 + |X(-k)|^2}=  A\sqrt{2} |X(k)|
+	$$
+	fino ad una costante $A$ che definiremo in seguito secondo la necessità.
+	
+
+##Energia matematica
+
+L'energia di una sequenza lunga $N$ punti é definita come:
+$$
+	E_m[x] = \sum_{n=0}^{N-1} x(n)\cdot x(n)^* = |x|^2
+$$
+quindi vale con parseval
+$$
+	E[x]_m =  <x,x> = \frac{1}{N} <X,X> = \frac{1}{N\,A^2 } \sum_f S(f)^2
+$$
+
+### Dalla sequenza matematica al segnale reale
+
+Fino ad adesso tutte le discussioni su FFT sono matematiche. Per passare ad un segnale fisicobisogna considerare la durata totale $T$ in secondi della sequenza $x$ o in modo equvalente la sampling rate $Fs$ oppure ancora il lasso di tempo $\Delta t$ tra due elementi della sequenza. La relazione tra queste grandezze é:
+$$
+	Fs =  \frac{N}{T} = \frac{1}{ \Delta t }\,.
+$$
+Le considerazioni Matematiche sono come se la durata fosse $T=N$ , $Fs = 1$ e $\Delta t = 1$
+
+La frequenza corrispondente a $k$ si ottiene moltiplicando per $Fs$ 
+$$
+	f_k = \frac{|k|\cdot Fs}{N} = \frac{|k|}{N \cdot \Delta t}= \frac{|k|}{ T }
+$$ 
+le frequenze sono spaziate equidistantemente con distanza $\Delta f=\frac{1}{N \Delta t} =\frac{1}{T} $ 
+la frequenza max $f_{k=N/2} = \frac{Fs}{2} $ ha periodo  $\frac{2T}{N}=\frac{2}{Fs} $, la minima con $f_1=\Delta f=\frac{1}{T}$ ha periodo $T$. Da notare che $\Delta f$ dipende solo da $T$.
+
+## Energia fisica 
+
+Nel caso in cui per sequenza $x \in \mathcal{R}$  vale $x^2 \propto  \mathbf{Potenza}$ (costante di proporzionalità $A$) la definizione di energia matematica é interpretabile come energia fisica fino a delle costanti:
+$$
+	E[x] = \sum_{n=0}^{N-1} (A\cdot x(n))^2 \Delta t= \frac{T \cdot A^2}{N}|x|^2
+$$
+Nel caso di un segnale audio $x$ può essere il voltaggio $v$ o la pressione $p$. In entrambi i casi sono proporzionali tra di loro e vale  $p= \frac{v}{\Delta v}$. $\Delta v$ é una caratteristica dello strumento di misura.
+
+- $x = p$; la potenza (per $m^2$)  é $\overline{I} = \frac{p^2}{\rho_0 \,c}$. Segue $ A = \frac{1}{\rho_0 \,c} $.
+	L'energia
+-  $x = v$; la potenza(su $m^2$)$\overline{I} = \frac{v^2}{\Delta v^2\rho_0 \,c}$. Quindi $ A = \frac{1}{\Delta v^2 \,\rho_0 \,c} $
+
+## Energia e SPL
+L'SPL si definisce tramite l'intensità media o la pressione RMS  nel modo seguente
+\[
+\begin{aligned}
+	L&=
+	10\cdot \log_{10}\frac{\overline{I}}{I_0}, \qquad I_0 = 10^{-12} W/m^2\\
+	 &=20\cdot \log_{10}\frac{p_{eff}}{p_0},\qquad p_0 =2 \cdot 10^{-5} Pa
+\end{aligned} 
+\]
+
+nella seconda riga si é utilizzata la relazione $\vec I(x,t) =\frac{p(x,t)^2}{\rho_0 c}$ e quindi 
+$\overline{I}= \frac{p_{rms}^2}{\rho_0 c}$ dove $Z=\rho_0 c =\frac{p_0^2}{I_0} \approx 400 Pa\,s/m$.\\
+
+Utilizzando le definizione 
+\[
+\overline{I} =\frac{1}{\Delta t}\int_t^{t+T}|\vec{I}(s)|ds =\frac{E}{T}
+\]
+Otteniamo
+\[
+\begin{aligned}
+\overline{I} &=\frac{ (\rho_0 c)^2}{N}|x|^2\\
+			 &=\frac{ (\rho_0 c)^2}{N}|x|^2\\
+			 &=\frac{ (\rho_0 c)^2}{N}|x|^2\\
+\end{aligned}
+\]
+
+oppure con la definizione di $p_eff$
+
+$I_{eff} =\frac{I_0}{p_0^2}p_{eff}^2=\frac{I_0}{p_0^2}c\cdot x_{eff}^2$
+
+si puo pasare a $S_rms$ in ogni istante moltiplicando per la cosatante $A2$
+
+
+# Acustica: SPL, Schalleistungpegel e Frequenzanalyse 
+
+- Das gemessene `Schallintensitätspegel` $L(t)$ zu einem Zeitpunkt $t$ in einem gegebenen Punkt( x weggelassen) wird berechnet aus die Intensität $\vec I(x,t)=p(x,t)\vec v(x,t)$ (Leistung pro Fläche ist) der Schallfeldes.
+Ein Schallfeld ist vollständig beschrieben durch
+\[
+p_g(x,t)=p_0+p(x,t)\qquad \text{und}\qquad \vec v(x,t)
+\].
+Da  die energie von $\vec{I}$ besser durch den den Mittelwert dargestellt wird ist die definition des  Schallintensitätspegel mit 
+\[
+	L_I(t)=10\cdot \log_{10}\frac{I (t)}{I_0}, \qquad I_0 = 10^{-12} W/m^2
+\]
+Der Mittelwert auf einem Zeitintervall $T$ ist  $I =\frac{1}{\Delta t}\int_t^{t+T}|\vec{I}(s)|ds =\frac{E}{T}$. $E$ ist die  vom  Schallfeldes geleistet Energie auf $1m^2$ während $T$. 
+In Fernfeld es gilt $\vec I(x,t) =\frac{p(x,t)^2}{\rho_0 c}$ (Schnelle und Druck sind in phase), wobei $Z=\frac{p_0^2}{I_0}\rho_0 c \approx 400 Pa\,s/m$ auch Schallkennimpedanz oder Schallwiderstand genannt wird. Somit ist der Schallintensitätspegel
+\[
+	L(t)=20\cdot \log_{10}\frac{p_{eff} (t)}{p_0},\qquad p_0 =2 \cdot 10^{-5} Pa
+\]
+was der `Schalldruckpegel` (SPL) entspricht.
+
+
+-	Der `Schalleistungpegel` einer Quelle ist definiert  durch die emittierte Leistung $ P(t) $ welche mithilfe einer umhüllende Fläche $\Omega$  mit  $P(t)=\int_\Omega \vec I(x,t)d\vec \sigma$ berechnet werden kann. Aus dieser Leistung lässt sich ein Effektivwert berechnen und  ist der schallleistungpegel  
+	\[
+		L_W(t)=10\cdot \log_{10}\frac{P_{eff}(t)}{P_0}
+	\]
+  
+	 \footnote{Beachte dass für kleine Flächen oder Konstante Intesität lässt sich approximieren durch $P(x,t) \approx \vec I(x,t) d\vec \sigma $. Bei einer Messung ist sigma die Fläche des Mikrophon.}
+
+- `Frequenzanalyse`
+nimmt man einem kleinem Zeitintervall $\Delta t$ wärend sich der Schall sich wenig werhändert(langzeitveränderung,es gibt immer eine frequenzverhänderung), dann macht man eine fouriertransformierte der frequenz der Druck man kriegt die $p(x,\omega)$ (keine zeitabhängigkehit der frequenz mehr). Dann lässt sich der RMS Druck berechnen mit
+	\[
+		p_{eff}^2=\int p(\omega)^2 d\omega
+	\] 
+	und 
+	\[
+		L=10\cdot \log_{10}\frac{\sum_\omega p(\omega)^2}{p_0^2}
+	\]
+	Die frequenzabhängigen Pegel sind dann definiert durch $L_{\omega}=10\cdot \log_{10}\frac{ p(\omega)^2}{p_0^2}$ und es gilt $L= 10\cdot\log_{10}\left(\sum_\omega 10^\frac{L_{\omega}}{10}\right)$.
+
+- $L_{eq,\Delta T}$ \emph{äquivalenter Dauerschallpegel} ist gegeben durch Integrierung der Intensität
+\[
+	\begin{aligned}
+		L_{eq,\Delta T}&=10\cdot\log_{10}\left(\frac{1}{\Delta T}\int_{\Delta T} \frac{p_{eff}(t)^2}{p_0^2} dt \right)\\
+		&=10\cdot\log_{10}\left(\frac{1}{\Delta T}\int_{\Delta T} I_0\cdot 10^{\frac{L(t)}{10}} dt \right)
+	\end{aligned}.
+\]
+
+
+
+

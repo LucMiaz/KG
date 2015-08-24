@@ -1,0 +1,34 @@
+Zuordnung der Matlab-Messdaten, Vormessungen SSA Zug
+exemplarisch ist nur Messung m_0100 beigelegt, die Bezeichnungen gelten selbstverständlich für alle Messungen.
+
+m_0100_1.mat: A-bewerteter Schalldruckverlauf (RMS) in Pa am Mikrofonquerschnitt 1, Gleis 1, zusätzlich Vektor mit Zeitachse Schalldruckverläufe
+m_0100_2.mat: A-bewerteter Schalldruckverlauf (RMS) in Pa am Mikrofonquerschnitt 1, Gleis 4
+m_0100_4.mat: A-bewerteter Schalldruckverlauf (RMS) in Pa am Mikrofonquerschnitt 2, Gleis 1
+m_0100_5.mat: A-bewerteter Schalldruckverlauf (RMS) in Pa am Mikrofonquerschnitt 2, Gleis 4
+m_0100_6.mat: A-bewerteter Schalldruckverlauf (RMS) in Pa am Mikrofonquerschnitt 3, Gleis 1
+m_0100_7.mat: A-bewerteter Schalldruckverlauf (RMS) in Pa am Mikrofonquerschnitt 3, Gleis 4
+
+m_0100_9.mat: Zeitrohdaten (el.Spannung) des Schienentriggers Querschnitt 1, Gleis 1, zusätzlich Vektor mit Zeitachse für Triggersignale
+m_0100_10.mat: Zeitrohdaten (el.Spannung) des Schienentriggers Querschnitt 1, Gleis 2
+m_0100_11.mat: Zeitrohdaten (el.Spannung) des Schienentriggers Querschnitt 1, Gleis 3
+m_0100_12.mat: Zeitrohdaten (el.Spannung) des Schienentriggers Querschnitt 1, Gleis 4
+m_0100_13.mat: Zeitrohdaten (el.Spannung) des Schienentriggers Querschnitt 2, Gleis 1
+m_0100_14.mat: Zeitrohdaten (el.Spannung) des Schienentriggers Querschnitt 2, Gleis 2
+m_0100_15.mat: Zeitrohdaten (el.Spannung) des Schienentriggers Querschnitt 2, Gleis 3
+m_0100_16.mat: Zeitrohdaten (el.Spannung) des Schienentriggers Querschnitt 2, Gleis 4
+
+m_0100_17_{Messdatum}_{Messzeit}.mat: Unbenutzter Kanal für Übergabe des Messzeitpunkts
+
+m_0100_18.mat: Lufttemperatur in K, zusätzlich Vektor mit Zeitachse für Wetterkanäle
+m_0100_19.mat: rel. Luftfeuchte in %
+m_0100_20.mat: Windgeschwindigkeit in m/s
+m_0100_21.mat: Windrichtung in °
+m_0100_22.mat: Regensensor in V (ca. 0 bei kein Regen)
+m_0100_23.mat: Luftdruck in Pa
+
+zrd_m_0100_1.mat: Zeitrohdaten der Mikrofonsignale in Pa am Mikrofonquerschnitt 1, Gleis 1, zusätzlich Vektor mit Zeitachse Schalldruckrohdaten
+zrd_m_0100_2.mat: Zeitrohdaten der Mikrofonsignale in Pa am Mikrofonquerschnitt 1, Gleis 4
+zrd_m_0100_4.mat: Zeitrohdaten der Mikrofonsignale in Pa am Mikrofonquerschnitt 2, Gleis 1
+zrd_m_0100_5.mat: Zeitrohdaten der Mikrofonsignale in Pa am Mikrofonquerschnitt 2, Gleis 4
+zrd_m_0100_6.mat: Zeitrohdaten der Mikrofonsignale in Pa am Mikrofonquerschnitt 3, Gleis 1
+zrd_m_0100_7.mat: Zeitrohdaten der Mikrofonsignale in Pa am Mikrofonquerschnitt 3, Gleis 4
