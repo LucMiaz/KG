@@ -42,7 +42,7 @@ def STFT(sn, M, N = None, ola = 2, R = None, window = 'hann',  sR=1, inverse = F
         raise(ValueError('R should be between 1 and M')) 
     #set center frame of STFT
     # fenster centered at time mR
-    frame_i = np.arange(0 , len(sn) + shift) , R , dtype=int)
+    frame_i = np.arange(0 , len(sn) + shift , R , dtype=int)
     # Hann  window, such thath COLA
     #h
     window =  scipy.signal.get_window(window, M)
@@ -512,20 +512,22 @@ class stftWidget(QMainWindow):
 if __name__ == "__main__":
     
     import sys
-    sys.path.append('D:\GitHub\KG')
-    sys.path.append('D:\GitHub\python-acoustics')
+    sys.path.append('D:\GitHub\myKG\kg')
+    sys.path.append('D:\GitHub\myAcoustics')
     import acoustics
+    from time_signal import timeSignal
 
     sR = 1024
     NF = sR*20
     t = np.arange(0,NF)/sR
     f = 200/20
     omega = 2*np.pi*f
-    noise = acoustics.generator.white(NF)
+    #noise = acoustics.generator.white(NF)
     A = np.sqrt(2)*(2e-5)* 10 **(5/20)
-    y =(np.cos(omega*t**2) + 10 **(-30/20)*noise)
+    y =np.cos(omega*t**2) #+ 10 **(-30/20)*noise)
     sn = {'y':y,'t':t,'sR':sR}
     ##
+    timeSignal._setup('D:\GitHub\myKG\Measurements_example\MBBMZugExample\Messdaten_Matlab')
     signal = timeSignal('m_0100')
     mic=1
     signal.read_signal(mic)
