@@ -10,7 +10,7 @@ from kg.grafics import BarCanvas
 from kg.audio_visual_app import PlaybackWindow
 from PySide import QtGui,QtCore
 from pandas.sandbox.qtpandas import DataFrameModel, DataFrameWidget
-
+# todo: analyze non zug signalss
 
 def process_ID( ID, mvalues, method='method2', Mic = None, plot = True):
     """
