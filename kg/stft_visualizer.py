@@ -13,56 +13,74 @@ import numpy as np
 import scipy 
 from scipy.fftpack import fft,fftfreq, ifft
 from scipy.signal import hamming, hanning, hann,lfilter, filtfilt, decimate
+import seaborn as sns
 
-def STFT(sn, M, N = None, ola = 2, R = None, window = 'hann',  sR=1, inverse = False):
-    """
+def STFT(sn, M, N = None , R = None, overlap = 2, sR=1, window = 'hann', inverse = False):
+    """Calculate short time fourier transform
     https://ccrma.stanford.edu/~jos/sasp/Mathematical_Definition_STFT.html
-    parameter:
-    - N FFT length
-    - M fenster lengt M<=N, odd!!
-    - R fenster shift
-    - ola overlapping
+    param:
+    - M: window length
+    - N: FFT length
+    - R:  hopsize
+    - sR: sampling Rate
+    - ola: overlapping
+    - window: window type
+    - inverse: True if window normalized such that stft is invertible
     """
-    if M%2 == 0:
-        shift = M//2
-    else:
-        shift = (M+1)//2
-        raise(ValueError('M should be odd'))
-    if N == None:
-        # N next power of 2 bigger than M
-        N = int(2**np.ceil(np.log2(M)))
-    if N < M:
-        raise(ValueError('N should be > M and even'))
     #hoop 
     if R == None:
-        R = (M-1)//ola
+        R = M//ola
     else:
-        ola =(M-1)/R
+       ola = np.floor(M/R)
+       
     if R <= 0 or R > M:
         raise(ValueError('R should be between 1 and M')) 
-    #set center frame of STFT
-    # fenster centered at time mR
-    frame_i = np.arange(0 , len(sn) + shift , R , dtype=int)
-    # Hann  window, such thath COLA
-    #h
-    window =  scipy.signal.get_window(window, M)
-    normCOLA = ola / 2 #for hann window s in range(0,R)])
-    norm_prms = np.sqrt((window*window).mean())
+        
+    #FFT length
+    if N == None:
+        N=M
+    if N < M:
+        raise(ValueError('N should be >= M '))
+        
+    #window    
+    window =  scipy.signal.get_window(window, M,fftbins = True)
+    # the window has to be symmetric(% M) around the center frame
+    # for a symmetric odd length (M) window centering is obvious
+    # for a length (M) window we set fftbins = True
     
+    # 0-pad signalsuch that len(sn) is multiple of R
+    padN = np.ceil(len(sn)/R)*R-len(sn)
+    sn = np.pad(sn, (0,padN), 'constant', constant_values = 0)
+    
+    # f_i frame vector, window centered at time m*R
+    frame_i = np.arange(0 , len(sn) + 1 , R , dtype=int)
+    
+    #normalizations
+    normCOLA = ola / 2 #for hann window s in range(0,R)])
+    norm_prms = np.sqrt((window**2).mean())
+    
+    #freqency vector
     freq = fftfreq(N, 1/sR)
+    
     #prepare STFT array
     X = np.zeros(N*len(frame_i), dtype=np.complex128).reshape(len(frame_i),N)
-    #0-pad begin/end of signal such thath window at f_i=0 exist
-    sn = np.pad(sn, (int((M-1)/2),M), 'constant', constant_values = 0)
+    
+    #0-pad begin/end of signal such thath window at f_i[0] = 0 and f_i.max exist
+    sn = np.pad(sn, (R,M), 'constant', constant_values = 0)
+    
+    #calculate FFT of shifted windows
     for i , frame in enumerate(frame_i):
         X[i,:] = fft( sn[frame: frame+M] * window, n = N )*\
          np.exp(- 1j * freq *frame)
-    #normalization such that invertible or such thath prm  is calculable
+         
+    #normalization
     if inverse:
+        #such that invertible
         X /= normCOLA
     else:
+        #that prms  is calculable
         X /= norm_prms
-    return(X, freq, frame_i, {'M':M, 'N':N, 'ola':np.round(ola,2), 'R':R, 'window':window })
+    return(X, freq, frame_i, {'M':M, 'N':N, 'overlap':np.round(overlap,2), 'R':R, 'window':window })
     
 #def ISTFT(self, STFT):
 #         """
@@ -130,7 +148,7 @@ import brewer2mpl
 from matplotlib.gridspec import GridSpec
 
 
-def plot_spectrogram(X, freqency, f_i, sR, param, ax, colorbar = True, title = 'Spectrogram', dB= True, freqscale = 'log', vMax = None):
+def plot_spectrogram(X, freqency, f_i, sR, param, ax, colorbar = True, title = 'Spectrogram', dB= True, freqscale = 'log', dBMax = None):
     """
     plot the spectrogram of a STFT
     """
@@ -151,10 +169,10 @@ def plot_spectrogram(X, freqency, f_i, sR, param, ax, colorbar = True, title = '
     # plotting
     ax.set_title(title, fontsize = 10)
     cmap = brewer2mpl.get_map('RdPu', 'Sequential', 9).mpl_colormap
-    if vMax==None:
+    if dBMax==None:
         norm = matplotlib.colors.Normalize(vmin = 0)
     else:
-        norm = matplotlib.colors.Normalize(vmin = 0, vmax=vMax)
+        norm = matplotlib.colors.Normalize(vmin = 0, vmax=dBMax)
     # np.round(np.max(ZdB)-60 ,-1), vmax = np.round(np.max(ZdB)+5,-1), clip = False)
     spect = ax.pcolormesh(X, Y, np.transpose(Z), norm=norm, cmap = cmap)
     #legenda
@@ -232,7 +250,7 @@ def plot_PDD_k(X, freqency, f_i, k , sR, param, ax, dB= True):
 
     ax.plot(t_i,Y)
     ax.grid(True)
-    
+
 
 from PySide import QtGui, QtCore
 from PySide.QtGui import (QApplication, QMainWindow, QAction, QStyle,
@@ -248,14 +266,14 @@ class stftWidget(QMainWindow):
         self.signal = signal
         self.lenSn = len(signal['y'])
         # parameter STFT
-        self.M = self.signal['sR'] - int(not signal['sR']%2)
-        self.N = self.M+1
-        self.ola = 1
-        self.R = self.M
+        self.M = 2048
+        self.N = self.M
+        self.overlap = 2
+        self.R = self.M/self.overlap
         self.window = 'hann'
         self.inverse = False
-        self.df = self.N/self.signal['sR']
-        self.dt = self.M/self.signal['sR']
+        self.df = self.signal['sR']/self.N
+        self.dt = self.R/self.signal['sR']
         # parmeter plot
         self.i = 0 #parameter X[i,:]
         self.k = 0 #parameter X[:,k]
@@ -273,7 +291,7 @@ class stftWidget(QMainWindow):
         self.canvas.setParent(self.main_frame)
         
         gs1 = GridSpec(4, 6)
-        gs1.update( top = 0.95,bottom = 0.12, wspace=0.05,hspace=0.05)
+        gs1.update( top = 0.95,bottom = 0.12, wspace=0.1,hspace=0.1)
         
         #spectrum
         self.ax1 = self.fig.add_subplot(gs1[:-1, 0])
@@ -309,17 +327,17 @@ class stftWidget(QMainWindow):
         labelR = QtGui.QLabel('R:')
         self.tboxR = QtGui.QLineEdit()
         self.tboxR.setMinimumWidth(10)
-        self.tboxR.editingFinished.connect(self.set_ola)
+        self.tboxR.editingFinished.connect(self.set_overlap)
         # N
         labelN = QtGui.QLabel('N:')
         self.tboxN = QtGui.QLineEdit()
         self.tboxN.setMinimumWidth(10)
         #self.tboxN.editingFinished.connect(self.calcSTFT)
-        # ola
-        labelola = QtGui.QLabel('ola:')
-        self.tboxola = QtGui.QLineEdit()
-        self.tboxola.setMinimumWidth(5)
-        self.tboxola.editingFinished.connect(self.set_R)
+        # overlap
+        labeloverlap = QtGui.QLabel('overlap:')
+        self.tboxoverlap = QtGui.QLineEdit()
+        self.tboxoverlap.setMinimumWidth(5)
+        self.tboxoverlap.editingFinished.connect(self.set_R)
         # COLA normalization checkbox
         self.inverse_cb = QtGui.QCheckBox("COLA normalization")
         self.inverse_cb.setChecked(False)
@@ -327,7 +345,7 @@ class stftWidget(QMainWindow):
         #select window combobox
         labelCombo = QtGui.QLabel('''Select window:''')
         self.combo = QtGui.QComboBox(self)
-        for window  in ['hann', 'flattop', 'hamming']:
+        for window  in ['hann','triang', 'flattop', 'hamming']:
             self.combo.addItem(window)
         #self.combo.currentIndexChanged.connect(self.calcSTFT)
         #calculate button
@@ -339,18 +357,18 @@ class stftWidget(QMainWindow):
         # dB Checkbox 
         self.dB_cb = QtGui.QCheckBox("dB")
         self.dB_cb.setChecked(True)
-        #self.dB_cb.stateChanged.connect(self._plot)
+        self.dB_cb.stateChanged.connect(self.set_dB)
         # yScales Checkbox 
         self.freqscales_cb = QtGui.QCheckBox("freqency scale linear")
         self.freqscales_cb.setChecked(False)
-        #self.freqscales_cb.stateChanged.connect(self._plot)
+        self.freqscales_cb.stateChanged.connect(self.set_freqscale)
         # i
-        labeli = QtGui.QLabel(' frame i:')
+        labeli = QtGui.QLabel('time:')
         self.tboxi = QtGui.QLineEdit()
         self.tboxi.setMinimumWidth(5)
         #self.tboxi.editingFinished.connect(self._plot)
         # k
-        labelk = QtGui.QLabel('frequency k:')
+        labelk = QtGui.QLabel('frequency:')
         self.tboxk = QtGui.QLineEdit()
         self.tboxk.setMinimumWidth(5)
         #self.tboxk.editingFinished.connect(self._plot)
@@ -372,7 +390,7 @@ class stftWidget(QMainWindow):
         
         hbox2 = QtGui.QHBoxLayout()
         for w in [ labelM, self.tboxM,labelN, self.tboxN,labelR, self.tboxR,\
-                   labelola, self.tboxola,labelCombo, self.combo, self.inverse_cb,calcB]:
+                   labeloverlap, self.tboxoverlap,labelCombo, self.combo, self.inverse_cb,calcB]:
              hbox2.addWidget(w)
         hbox2.addStretch(1)
         groupBoxSTFT.setLayout(hbox2)
@@ -393,27 +411,34 @@ class stftWidget(QMainWindow):
 
     def set_R(self):
         try:
-            self.ola = float(self.tboxola.text())
-            self.R = int((self.M-1)//self.ola)
+            self.overlap = float(self.tboxoverlap.text())
+            self.R = int(self.M/self.overlap)
         except ValueError:
-            print('ola shoud be number')
+            print('overlap shoud be number')
         self.tboxR.setText(str(self.R))
     
-    def set_ola(self):
+    def set_overlap(self):
         try:
             self.R = int(self.tboxR.text())
         except ValueError:
-            print('ola should be integer ')
-        self.ola = np.round(self.M / self.R,1)
-        self.tboxola.setText(str(self.ola))
+            print('R should be integer ')
+        self.overlap = np.round(self.M / self.R,1)
+        self.tboxoverlap.setText(str(self.overlap))
             
     def set_M(self):
         try:
             self.M = int(self.tboxM.text())
-            if self.M%2 ==0:
-                raise(ValueError()) 
         except ValueError:
             print('M should be integer and odd ')
+    
+    def set_freqscale(self):
+        # set plot param
+        self.freqscale = 'linear'  if self.freqscales_cb.isChecked() else 'log'
+        self.replot = True
+        
+    def set_dB(self):
+        self.replot = True
+        
         
     def calcSTFT(self):
         #read parameters
@@ -428,20 +453,19 @@ class stftWidget(QMainWindow):
         self.X, self.freq, self.f_i, self.param = STFT( sn = self.signal['y'], M = self.M, N = self.N,\
                                     R = self.R, window = self.window,\
                                     sR = self.signal['sR'], inverse = self.inverse)
-        self.df = self.R / self.signal['sR']
-        self.dt = self.signal['sR']/self.N
+        self.dt = self.R / self.signal['sR']
+        self.df =  self.signal['sR']/self.N
         #calc spectrum 
-        self.spectrum, _ = stft_spectrum(self.X,self.freq,self.f_i,sn['sR'])
-        self.prms, self.t_i = stft_prms(self.X,self.freq,self.f_i,sn['sR'])
+        self.spectrum, _ = stft_spectrum(self.X,self.freq, self.f_i,sn['sR'])
+        self.prms, self.t_i = stft_prms(self.X,self.freq, self.f_i,sn['sR'])
         # set output
-        for lineE, par in zip([self.tboxM,self.tboxN,self.tboxR,self.tboxola], ['M','N','R','ola']):
+        for lineE, par in zip([self.tboxM,self.tboxN,self.tboxR,self.tboxoverlap], ['M','N','R','overlap']):
             lineE.setText(str(self.param[par]))
 
         self.tboxOutput.setText('dt (M): ' + str(self.dt) +'\n df: ' + str(self.df))
+        self.replot = True
         
     def _plot(self):
-        # set plot param
-        self.freqscale = 'linear'  if self.freqscales_cb.isChecked() else 'log'
         self.dB = self.dB_cb.isChecked()
         if self.dB:
             spectrum = 10*np.log10(self.spectrum) - 20*np.log10(2e-5)
@@ -458,7 +482,7 @@ class stftWidget(QMainWindow):
             k=1
         self.i = i if i in range(0,len(self.f_i)) else 0 
         self.k = k if k in range(1,int(self.N/2)) else 1
-        print(self.freq[self.k])
+        
         #ax1 plot spectrum
         self.ax1.cla()
         plot_PDD_i(self.X, self.freq, self.f_i, self.i, self.signal['sR'], self.param,\
@@ -472,10 +496,14 @@ class stftWidget(QMainWindow):
                     self.ax3, dB = self.dB)
         self.ax3.plot(self.t_i, prms, label='prms', color = 'red')
         #ax2: plot spectrogram
-        spect = plot_spectrogram(self.X, self.freq, self.f_i, self.signal['sR'],\
-                                    self.param, self.ax2, colorbar = False, \
-                                    dB = self.dB,title='', freqscale = self.freqscale )
-        self.ax2.figure.colorbar(spect, cax = self.axcolorbar)
+        if self.replot:
+            spect = plot_spectrogram(self.X, self.freq, self.f_i,
+                                    self.signal['sR'], self.param, self.ax2,\
+                                    colorbar = False, \
+                                    dB = self.dB,title='', 
+                                    freqscale = self.freqscale )
+            self.ax2.figure.colorbar(spect, cax = self.axcolorbar)
+            self.replot = False
                     
         #plot i,k lines
         self.vline.set_xdata(self.i*self.dt)
@@ -513,10 +541,10 @@ if __name__ == "__main__":
     
     import sys
     sys.path.append('D:\GitHub\myKG\kg')
-    sys.path.append('D:\GitHub\myAcoustics')
+    sys.path.append('D:\GitHub\myKG\Measurements_example\various_passby')
     import acoustics
     from time_signal import timeSignal
-
+## crete signal
     sR = 1024
     NF = sR*20
     t = np.arange(0,NF)/sR
@@ -526,14 +554,20 @@ if __name__ == "__main__":
     A = np.sqrt(2)*(2e-5)* 10 **(5/20)
     y =np.cos(omega*t**2) #+ 10 **(-30/20)*noise)
     sn = {'y':y,'t':t,'sR':sR}
-    ##
+    ## Read signal from zug
     timeSignal._setup('D:\GitHub\myKG\Measurements_example\MBBMZugExample\Messdaten_Matlab')
     signal = timeSignal('m_0100')
     mic=1
     signal.read_signal(mic)
     sn = signal.get_signal(mic)
     
-    #STFT( sn=sn['y'], M = sR-1, N = sR, R=(sR-1),sR = sR)
+    ##Read signal from wav
+    
+    s = acoustics.Signal.from_wav('kreischen.wav')
+    sn = {'y':s.pick(),'t':s.times(),'sR':s.fs}
+    ##Run App
+    
+    STFT( sn=sn['y'], M = sR-1, N = sR, R=(sR-1),sR = sR)
     app = QApplication(sys.argv)
     form = stftWidget(sn)
     form.show()#showFullScreen() 
