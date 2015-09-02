@@ -5,6 +5,6 @@ STFT
 The stft module.
 
 """
-import myStft.stft
-from stft.stftWidget import Visualizer
+import mySTFT.stft
+from mySTFT.stftWidget import Visualizer
 

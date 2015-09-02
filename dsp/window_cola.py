@@ -1,4 +1,4 @@
-# Squared signals 
+# Test a nd plot Overlap Add of windows
 #
 #
 import scipy.signal
@@ -6,32 +6,43 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.fftpack import fft, fftshift, fftfreq
 
+OLA_WINDOWS = ['hann', 'hamming', 'triang']
+
+def calc_ola(window, M, R):
+    window = scipy.signal.get_window(window, M, fftbins = True)
+    
+    f1, ax = plt.subplots(1)
+    R0 = M - M%R
+    #ax.axvline(R0,linewidth=3.0,color='black')
+    plt.axvspan(R0, R0+M-1, facecolor='grey', alpha=0.5)
+    #ax.axvline(R0+M-1,linewidth=3.0,color='black')
+    
+    ola = np.zeros(3*M)
+    w_i = []
+    for shift in np.arange(0,2*M,R):
+        win = np.zeros(3*M)
+        win[shift:shift+M] += window
+        w_i.append(win)
+        if shift == R0:
+            ax.plot(win, '-o', linewidth=2.5)
+        else:
+            ax.plot(win)
+        ola += win
+    ax.plot(ola, '-or')    
+    ola = ola[R0:R0+M]
+    normCola = np.unique(np.round(ola,10))
+    print(normCola)
+    if len(normCola)==1:
+        return(True, normCola)
+    else:
+        return(False, ola)
+
 ##COLA
-M = 7
-ola = 1
-R = (M-1)//ola
-w = scipy.signal.get_window('hann',M)
-ww = scipy.signal.hann(M,sym = True)
-norm = [np.sum([ w[i] for i in range(s,M,R)]) for s in range(0,R)]
+M = 23
+ola = 3.2
+R = 1
+win='hann'
 
-l = 10
-f_i= np.arange((M-1)/2,l*M-(M-1)/2,R)
+print(calc_ola('hann',M,R))
 
-w_i =[]
-for nl,nu in zip(f_i-(M-1)/2, -f_i-(M-1)/2+l*M-1):
-    window = np.lib.pad(w, (int(nl),int(nu)), 'constant', constant_values=0)
-    w_i.append(window)
-
-f1, ax = plt.subplots(2)
-ax[0].plot(ww,color = 'red')
-ax[0].plot(w)
-
-sum = np.zeros(l*M)
-for win in w_i:
-    ax[1].plot(win)
-    sum+=win
-ax[1].plot(sum)
-ax[0].grid()
-print(norm)
-print(np.sum(w))
 
