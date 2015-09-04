@@ -1,29 +1,28 @@
-## info
+
 '''
 short Time Fourier Transform tools
 plots:
 - plot PSD
 - stft Widget
 '''
-
-import myStft.stft
+import sys
 import matplotlib
-from matplotlib.figure import Figure
-matplotlib.use('Qt4Agg')
-matplotlib.rcParams['backend.qt4']='PySide'
-from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
 from mpl_toolkits.axes_grid.inset_locator import inset_axes
 import brewer2mpl
-from matplotlib.gridspec import GridSpec
 import seaborn as sns
+sys.path.append('D:\GitHub\myKG')
+import mySTFT
+from mySTFT.stft import *
 
-def plot_spectrogram(X, freqency, f_i, sR, param, ax, colorbar = True, title = 'Spectrogram', dB= True, freqscale = 'log', dBMax = None):
+
+def plot_spectrogram(X, param, ax, colorbar = True, title = 'Spectrogram', dB= True, freqscale = 'log', dBMax = None):
+    #todo: correct t axis scala
     """
     plot the spectrogram of a STFT
     """
+    sR = param['sR']
     # PSD
-    PSD, freq, t_i =  stft_PSD(X, freqency,f_i, sR)
+    PSD, freq, t_i =  stft_PSD(X,param)
 
     if dB:
         Z = 10*np.log10(PSD) - 20*np.log10(2e-5)
@@ -76,7 +75,7 @@ def plot_PDD_i(X, freqency, f_i, i , sR, param, ax, orientation = 'horizontal', 
     plot the spectrogram of a STFT
     """
     # PSD
-    PSD, freq, t_i =  stft_PSD(X, freqency,f_i, sR)
+    PSD, freq, t_i =  stft_PSD(X, param)
     PSD_i = PSD[i,:]
 
     if dB:
@@ -108,7 +107,7 @@ def plot_PDD_k(X, freqency, f_i, k , sR, param, ax, dB= True):
     plot the spectrogram of a STFT
     """
     # PSD
-    PSD, freq, t_i =  stft_PSD(X, freqency, f_i, sR)
+    PSD, freq, t_i =  stft_PSD(X, param)
     PSD_k = PSD[:,k]
 
     if dB:
@@ -121,14 +120,17 @@ def plot_PDD_k(X, freqency, f_i, k , sR, param, ax, dB= True):
     ax.grid(True)
 
 
+from matplotlib.figure import Figure
+matplotlib.use('Qt4Agg')
+matplotlib.rcParams['backend.qt4']='PySide'
+from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
 from PySide import QtGui, QtCore
-from PySide.QtGui import (QApplication, QMainWindow, QAction, QStyle,
-                          QFileDialog)
                                        
-class Visualizer(QMainWindow):
+class Visualizer(QtGui.QMainWindow):
 
     def __init__(self, signal, parent=None):
-        QMainWindow.__init__(self, parent)
+        QtGui.QMainWindow.__init__(self, parent)
         self.setWindowTitle('STFT visualizer')
         # STFT 
         # signal
@@ -159,7 +161,7 @@ class Visualizer(QMainWindow):
         self.canvas = FigureCanvas(self.fig)
         self.canvas.setParent(self.main_frame)
         
-        gs1 = GridSpec(4, 6)
+        gs1 = matplotlib.gridspec.GridSpec(4, 6)
         gs1.update( top = 0.95,bottom = 0.12, wspace=0.1,hspace=0.1)
         
         #spectrum
@@ -325,8 +327,8 @@ class Visualizer(QMainWindow):
         self.dt = self.R / self.signal['sR']
         self.df =  self.signal['sR']/self.N
         #calc spectrum 
-        self.spectrum, _ = stft_spectrum(self.X,self.freq, self.f_i,sn['sR'])
-        self.prms, self.t_i = stft_prms(self.X,self.freq, self.f_i,sn['sR'])
+        self.spectrum, _ = stft_spectrum(self.X,self.freq, self.f_i,self.signal['sR'])
+        self.prms, self.t_i = stft_prms(self.X,self.freq, self.f_i,self.signal['sR'])
         # set output
         for lineE, par in zip([self.tboxM,self.tboxN,self.tboxR,self.tboxoverlap], ['M','N','R','overlap']):
             lineE.setText(str(self.param[par]))

@@ -7,24 +7,6 @@ from numpy.testing import assert_almost_equal, assert_array_almost_equal, assert
 
 import pytest
 
-
-# @pytest.mark.parametrize(
-#     "u,h", [
-#     ( np.array([1,2,3,4,3,2,1], dtype='float'), np.array([1,2,3,4], dtype='float') ),
-#     ( np.array([1,2,3,4,3,2,1,1], dtype='float'), np.array([1,2,3,4,5], dtype='float') ),
-#     ])
-# def test_convolve_lti(u, h):
-#     """Test whether :func:`acoustics.signal.convolve` behaves properly when 
-#     performing a convolution with a time-invariant system.
-#     """
-#     H = np.tile(h, (len(u), 1)).T
-# 
-#     np.testing.assert_array_almost_equal(convolveLTV(u,H), convolveLTI(u,h))
-#     np.testing.assert_array_almost_equal(convolveLTV(u,H,mode='full'), convolveLTI(u,h,mode='full'))
-#     np.testing.assert_array_almost_equal(convolveLTV(u,H,mode='valid'), convolveLTI(u,h,mode='valid'))
-#     np.testing.assert_array_almost_equal(convolveLTV(u,H,mode='same'), convolveLTI(u,h,mode='same'))
-#     
-
 @pytest.fixture(params = OLA_WINDOWS)
 def window(request):
     return request.param
@@ -35,18 +17,21 @@ def test_window_0(window):
     M = np.random.randint(1,1024)
     w = scipy.signal.get_window(window, M,fftbins = True)
     assert_array_equal(w.max(),1.0 )
+    
+#todo  : test for window COLA
       
 @pytest.mark.parametrize(
-    "x,R,xnew,padN", [
+    "x,R,xPadded,padN", [
     ( np.array([0,1,2,3,4,5,6]), 7, np.array([0,1,2,3,4,5,6,0]), 1 ),
     ( np.array([0,1,2,3,4,5,6,7]), 7, np.array([0,1,2,3,4,5,6,7]), 0 ),
     ( np.array([0,1,2,3,4,5,6,7,8]), 7, np.array([0,1,2,3,4,5,6,7,8,0,0,0,0,0,0]), 6 ),
     ( np.array([0,1,2,3,4,5,6,7,8,9,10,11,12]), 4, np.array([0,1,2,3,4,5,6,7,8,9,10,11,12]), 0 ),
     ( np.array([0,1,2,3,4,5,6,7,8,9,10,11]), 4, np.array([0,1,2,3,4,5,6,7,8,9,10,11,0]), 1 )
     ])
-def test_pad_for_given_hoop(x,R,xnew,padN):
-    xnew1, padN1 = pad_for_given_hoop(x,R)
-    np.testing.assert_array_equal(xnew1,xnew)
+def test_pad_to_multiple_of_hoop(x,R,xPadded,padN):
+    y, padN1 = pad_to_multiple_of_hoop(x,R)
+    np.testing.assert_array_equal(y,xPadded)
+    np.testing.assert_array_equal(pad_to_multiple_of_hoop(y,R)[0],xPadded)
     assert(padN==padN1)
     
 @pytest.mark.parametrize(
@@ -66,4 +51,30 @@ def test_pad_for_invertible(x,M,R,before , after):
     assert(before == before1)
     assert(after == after1)
 
-#todo ISTFT test
+#pytest.mark.xfail(("6*9", 42))
+
+#todo  : PARAMETRIZE test
+
+def test_stft_istft():
+M = 111
+R = M//2
+window = 'hann'
+N = 1024
+sR = 1
+#prepare signal
+x = np.sin(np.arange(0,2*np.pi,0.01)*3)
+xPadded , padN = pad_for_given_hoop(x,R)
+w =  scipy.signal.get_window(window, M, fftbins = True)
+assert(len(xPadded) % R == 1)
+invertible, normCola, before, after = cola_test_window(w,R)
+
+if invertible:
+    #calc STFT
+    X, freq, f_i, param = stft(x, M=M, R=R, N=N, sR=sR, window = window )
+    padN, before , after = param['0-pad']
+    xPadded2 = np.pad(xPadded,(before,after), 'constant', constant_values = 0)
+    y = istft(X,param)
+    assert(len(y) == len(xPadded2))
+    np.testing.assert_array_almost_equal(xPadded2,y)
+
+#todo: test spectrum fft <-> stft

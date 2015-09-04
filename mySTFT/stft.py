@@ -10,13 +10,14 @@ plots:
 
 import numpy as np
 import scipy 
-from scipy.fftpack import fft,fftfreq, ifft
+from scipy.fftpack import fft,fftfreq, ifft, fftshift
 from scipy.signal import  hann,lfilter, filtfilt, decimate
 
-OLA_WINDOWS = ['hann', 'hamming', 'triang']
+OLA_WINDOWS = ['hann', 'hamming', 'triang','blackman']
 
 
 def cola_test_window(window, R):
+    #todo: control test
     ''' COLA for given hop and its normalization factor
     param:
     - window 
@@ -40,21 +41,21 @@ def cola_test_window(window, R):
     ola = ola[R0:R0+M]
     normCola = np.unique(np.round(ola,10))
     #calculate 0-padding before and after such that ola dont0affect
-    before = int(np.arange(0,(M+1)//2,R).max())
-    after = int(np.arange(0,M//2+1,R).max())
+    before = int(np.arange(0,(M-1)//2+1, R).max())
+    after = int(np.arange(0, M//2+1 , R).max())
     if len(normCola)==1:
         return(True, normCola, before, after)
     else:
         return(False, ola, None, None)
 
-def pad_for_given_hoop(x,R):
+def pad_to_multiple_of_hoop(x,R):
     ''' 0-pad signal such that len(xnew)-1 is multiple of R (hoop)
         with this padding in STFT first element and last element have a centered 
         windows on it
     '''
     lenxnew = np.ceil((len(x)-1)/R)*R + 1
-    padN = lenxnew - len(x)
-    return( np.pad(x, (0,padN), 'constant', constant_values = 0), padN)
+    padN = int(lenxnew - len(x))
+    return(np.pad(x, (0,padN), 'constant', constant_values = 0), padN)
     
 def pad_for_invertible(x,M,R):
     ''' 0-pad signal such that xnew has inverse stft when computed with COLA window
@@ -62,14 +63,13 @@ def pad_for_invertible(x,M,R):
         remarks:
         - len(x)-1 has to be multiple of R
     '''
-    before = int(np.arange(0,(M+1)//2,R).max())
-    after = int(np.arange(0,M//2+1,R).max())
+    before = int(np.arange(0,(M-1)//2+1, R).max())
+    after = int(np.arange(0, M//2+1 , R).max())
     x = np.pad(x, (before,after), 'constant', constant_values = 0)
     return(x, before, after)
     
-def STFT(x, M, N = None , R = None, overlap = 2, sR=1, window = 'hann', invertible = True):
+def stft(x, M, N = None , R = None, overlap = 2, sR=1, window = 'hann', invertible = True):
     """Calculate short time fourier transform of x
- 
     param:
     - M: window length
     - N: FFT length
@@ -100,15 +100,9 @@ def STFT(x, M, N = None , R = None, overlap = 2, sR=1, window = 'hann', invertib
     if R <= 0 or R > M:
         raise(ValueError('R should be between 1 and M')) 
         
-    #FFT length
-    if N == None:
-        N=M
-    if N < M:
-        raise(ValueError('N should be >= M '))
-        
     # 0-pad signal such that len(xnew)-1 is multiple of R
     # first element and last element have a centered windows on it
-    x, padN = pad_n(x,R)
+    x, padN = pad_to_multiple_of_hoop(x,R)
         
     #window    
     w =  scipy.signal.get_window(window, M, fftbins = True)
@@ -125,32 +119,39 @@ def STFT(x, M, N = None , R = None, overlap = 2, sR=1, window = 'hann', invertib
         x = np.pad(x, (before,after), 'constant', constant_values = 0)
         w /= normCOLA
         padN = (padN,before,after)
-    else:
-        # normalize window 
-        w /= np.sqrt((w**2).mean())
-    
+        frames_added=(before/R, after/R)
+
     # f_i frame vector, window centered at time m*R
     frame_i = np.arange(0 , len(x) , R , dtype=int)
     
+    #0-pad begin/end of signal such thath window at f_i[0] = 0 and f_i.max exist
+    x = np.pad(x, (M//2,(M-1)//2), 'constant', constant_values = 0)
+    
+    #FFT length
+    if N == None:
+        N=M
+    if N < M:
+        raise(ValueError('N should be >= M '))
+        
     #freqency vector
     freq = fftfreq(N, 1/sR)
     
     #prepare STFT array
     X = np.zeros(N*len(frame_i), dtype=np.complex128).reshape(len(frame_i),N)
     
-    #0-pad begin/end of signal such thath window at f_i[0] = 0 and f_i.max exist
-    x = np.pad(x, (M//2,(M-1)//2), 'constant', constant_values = 0)
-    
     #calculate FFT of shifted windows
     for i , frame in enumerate(frame_i):
-        X[i,:] = fft(x[frame: frame+M] * w, n = N)* np.exp(-1j * freq * frame)
- 
+        X[i,:] = fft(x[frame:frame+M] * w,n = N)
+    #correct phase of stft
+    shift =  np.exp(-1j*2*np.pi/sR*np.outer(frame_i - M//2  ,freq))
+    X = X * shift
     return(X, freq, frame_i, \
-            {'M':M, 'N':N, 'overlap':np.round(overlap,2), \
-             'R':R, 'window':window, '0-pad': padN, 'inverible': invertible }
+            {'M':M, 'N':N, 'overlap':np.round(overlap,2),'sR':sR, \
+             'R':R, 'window':window, '0-pad': padN, 'invertible': invertible,\
+             'normCOLA':normCOLA,'frames_added':frames_added }
             )
     
-def ISTFT(X, param):
+def istft(X, param):
         """
         parameter: 
         - X: STFT np.array
@@ -161,45 +162,67 @@ def ISTFT(X, param):
         Remarks:
         - if window,R COLA and x is 0-padded (x->x') then ISTFT(STFT(x')) = x'
         """
-        M = param['M']# Window length
+        M = param['M']
         R = param['R']
-        fi = STFT['f_i'] # fenster centered at time mR.
-        n,lenf_i= X.shape
-        if not n == param['N']:
-            raise(ValueError())
-
+        N = param['N']
+        sR = param['sR']
+        #calculate ferquency vetor
+        freq = fftfreq(N, 1/sR)
+        #test if param and X are compatible in dimension
+        lenf_i, n = X.shape
         # np.array with center frame of stft
-        f_i = np.arange(0,lenf_i*R + 1, R)
+        f_i = np.arange(0,lenf_i*R , R)
         # time vector padded front and back
-        x = np.zeros(lenf_i*R + 1 + (M - 1))
-        back = (M-1) // 2 + 1 
-        
-        for i, frame in enumerate( f_i - M//2):
+        x = np.zeros(f_i.max() + 1 + 2*(M//2))
+        shift =  np.exp(1j*2*np.pi/sR*np.outer(f_i- M//2 ,freq))
+        X = X * shift
+        for i, frame in enumerate(f_i):
             x[frame : frame + M] += np.real(ifft(X[i,:]))[0:M]
-            
         return(x[M//2:-(M-1)//2 ])
 
-def stft_PSD(X, freq, f_i, sR):
+def stft_spectrum(X, param):
+    '''return spectrum N points,
+       if N > len x sameresult
+    '''
+    freq = fftfreq(param['N'],1/param['sR'])
+    return(X.sum(axis=0), freq)
+    
+def adjust_PSD_time_freq(PS_i, freq, t_i, t0, tmax, tmin, fmax, fmin):
+    #todo: implement
+    '''
+    return a 
+    '''
+    return(X, freq, t)
+    
+def stft_PSD(X, param):
     #Magnitude singlesided
-    N = len(freq)
-    if not N%2 == 0:
-        raise(ValueError('N should be even'))
+    R = param['R']
+    N = param['N']
+    sR = param['sR']
+    lenf_i,n= X.shape
+    #calculate frquency vetor
+    freq = fftfreq(N, 1/param['sR'])
+    f_i = np.arange(0,lenf_i*R , R)
     df = sR / N
-    PS_i = abs(X)**2
+    w =  scipy.signal.get_window(param['window'], param['M'], fftbins = True)
+    # TODO: CONTROL NORMALIZATION
+    norm = np.sqrt((w**2).mean())
+    if  param['invertible']:
+        X *= (param['normCOLA']/norm)
+    else:
+        X /= norm
+    #onesided
+    PS_i = (2*abs(X)**2)[:,1:(N+1)//2]/df
     # normalizzazione x spettro vale prms^2= sum PS
     #A =  1 / (np.sum(window)**2) * (2/3)  
     #print((np.sum(window)**2)/(np.sum(window**2))
-    # escludere le frequenze fk con k =0, k=N/2+1 
-    return(2*PS_i[:,1:N/2]/df, freq[1:N/2], f_i/sR)
-
-def stft_spectrum(X, freq, f_i, sR):
-    #todo: 
-    PSD, freq, t_i = stft_PSD(X,freq,f_i,sR)
-    return(PSD.mean(0),freq )
+    return(PS_i, freq[1:(N+1)//2], f_i/sR)
     
-def stft_prms(X, freq, f_i, sR):
-    #todo:
-    PSD, freq, t_i = stft_PSD(X,freq,f_i,sR)
+def stft_prms(X, param):
+    '''prms value from stft
+    '''
+    #todo: compare with MBBM fast(MAGNITUDE)
+    PSD, freq, t_i = stft_PSD(X,param)
     return(PSD.mean(1), t_i )
     
 def frequency_resolution(N,sR):
@@ -213,4 +236,7 @@ def time_resolution(df,sR):
     return N dt
     '''
     return(sR /(df),1/(df))
+    
+
+    
     
