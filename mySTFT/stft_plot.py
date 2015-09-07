@@ -1,4 +1,3 @@
-
 '''
 short Time Fourier Transform tools
 plots:

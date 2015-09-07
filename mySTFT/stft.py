@@ -187,15 +187,15 @@ def _adjust_time(X, t_i, t0 = 0, tmin= None, tmax = None):
     '''
     return a 
     '''
-    t = t_i - t0
+    t = t_i + t0
     t_mask = np.all([(t >= tmin), (t <= tmax)], axis=0)
     return(X[:,t_mask], t[t_mask])
     
-def _adjust_PSD_time_freq(PS_i, freq, t_i, t0 = 0, tmax = None, tmin= None, fmax = None, fmin = None):
+def _adjust_PSD_time_freq(PS_i, freq, t_i, t0 = 0, tmin= None,tmax = None, fmax = None, fmin = None):
     '''
     return a 
     '''
-    t = t_i - t0
+    t = t_i + t0
     f_mask = np.all([(freq >= fmin), (freq <= fmax)], axis=0)
     t_mask = np.all([(t >= tmin), (t <= tmax)], axis=0)
     return(PS_i[t_mask,:][:,f_mask], freq[f_mask], t[t_mask])
@@ -239,9 +239,6 @@ def stft_PSD(X, param, **kwargs):
     PS_i = (2*abs(Xnorm)**2)[:,1:(N+1)//2]/df
     freq = freq[1:(N+1)//2]
     t_i = f_i / sR
-    # normalizzazione x spettro vale prms^2= sum PS
-    #A =  1 / (np.sum(window)**2) * (2/3)  
-    #print((np.sum(window)**2)/(np.sum(window**2))
     if kwargs:
         t_i = (f_i - param['hoop_added'][0]*R)/sR
         return(_adjust_PSD_time_freq(PS_i, freq, t_i, **kwargs))
@@ -266,7 +263,3 @@ def time_resolution(df,sR):
     return N dt
     '''
     return(sR /(df),1/(df))
-    
-
-    
-    
