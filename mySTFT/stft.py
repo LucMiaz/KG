@@ -119,7 +119,7 @@ def stft(x, M, N = None , R = None, overlap = 2, sR=1, window = 'hann', invertib
         x = np.pad(x, (before,after), 'constant', constant_values = 0)
         w /= normCOLA
         padN = (padN,before,after)
-        frames_added=(before/R, after/R)
+        hoop_added = (before/R, after/R)
 
     # f_i frame vector, window centered at time m*R
     frame_i = np.arange(0 , len(x) , R , dtype=int)
@@ -148,7 +148,7 @@ def stft(x, M, N = None , R = None, overlap = 2, sR=1, window = 'hann', invertib
     return(X, freq, frame_i, \
             {'M':M, 'N':N, 'overlap':np.round(overlap,2),'sR':sR, \
              'R':R, 'window':window, '0-pad': padN, 'invertible': invertible,\
-             'normCOLA':normCOLA,'frames_added':frames_added }
+             'normCOLA':normCOLA,'hoop_added':hoop_added }
             )
     
 def istft(X, param):
@@ -179,22 +179,43 @@ def istft(X, param):
         for i, frame in enumerate(f_i):
             x[frame : frame + M] += np.real(ifft(X[i,:]))[0:M]
         return(x[M//2:-(M-1)//2 ])
-
-def stft_spectrum(X, param):
-    '''return spectrum N points,
-       if N > len x sameresult
-    '''
-    freq = fftfreq(param['N'],1/param['sR'])
-    return(X.sum(axis=0), freq)
-    
-def adjust_PSD_time_freq(PS_i, freq, t_i, t0, tmax, tmin, fmax, fmin):
-    #todo: implement
+        
+def _adjust_time(X, t_i, t0 = 0, tmin= None, tmax = None):
     '''
     return a 
     '''
-    return(X, freq, t)
+    t = t_i - t0
+    t_mask = np.all([(t >= tmin), (t <= tmax)], axis=0)
+    return(X[:,t_mask], t[t_mask])
     
-def stft_PSD(X, param):
+def _adjust_PSD_time_freq(PS_i, freq, t_i, t0 = 0, tmax = None, tmin= None, fmax = None, fmin = None):
+    '''
+    return a 
+    '''
+    t = t_i - t0
+    f_mask = np.all([(freq >= fmin), (freq <= fmax)], axis=0)
+    t_mask = np.all([(t >= tmin), (t <= tmax)], axis=0)
+    return(PS_i[t_mask,:][:,f_mask], freq[f_mask], t[t_mask])
+
+def stft_spectrum(X, param, **kwargs):
+    '''return spectrum N points,
+       if N > len x sameresult
+    '''
+    #todo normalization
+    R = param['R']
+    N = param['N']
+    sR = param['sR']
+    lenf_i,n = X.shape
+    f_i = np.arange(0, lenf_i*R , R)
+    
+    if kwargs:
+        t_i = (f_i - param['hoop_added'][0]*R)/sR
+        X, _ = _adjust_time(X, t_i, **kwargs)
+    
+    freq = fftfreq(N, 1/sR)
+    return(X.sum(axis=0), freq)
+    
+def stft_PSD(X, param, **kwargs):
     #Magnitude singlesided
     R = param['R']
     N = param['N']
@@ -208,21 +229,27 @@ def stft_PSD(X, param):
     # TODO: CONTROL NORMALIZATION
     norm = np.sqrt((w**2).mean())
     if  param['invertible']:
-        X *= (param['normCOLA']/norm)
+        Xnorm = X * (param['normCOLA']/norm)
     else:
-        X /= norm
+        Xnorm = X * norm
     #onesided
-    PS_i = (2*abs(X)**2)[:,1:(N+1)//2]/df
+    PS_i = (2*abs(Xnorm)**2)[:,1:(N+1)//2]/df
+    freq = freq[1:(N+1)//2]
+    t_i = f_i / sR
     # normalizzazione x spettro vale prms^2= sum PS
     #A =  1 / (np.sum(window)**2) * (2/3)  
     #print((np.sum(window)**2)/(np.sum(window**2))
-    return(PS_i, freq[1:(N+1)//2], f_i/sR)
+    if kwargs:
+        t_i = (f_i - param['hoop_added'][0]*R)/sR
+        return(_adjust_PSD_time_freq(PS_i, freq, t_i, **kwargs))
+    else:
+        return(PS_i, freq, t_i)
     
-def stft_prms(X, param):
+def stft_prms(X, param, **kwargs):
     '''prms value from stft
     '''
     #todo: compare with MBBM fast(MAGNITUDE)
-    PSD, freq, t_i = stft_PSD(X,param)
+    PSD, freq, t_i = stft_PSD(X,param, **kwargs)
     return(PSD.mean(1), t_i )
     
 def frequency_resolution(N,sR):
