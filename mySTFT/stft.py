@@ -120,7 +120,10 @@ def stft(x, M, N = None , R = None, overlap = 2, sR=1, window = 'hann', invertib
         w /= normCOLA
         padN = (padN,before,after)
         hoop_added = (before/R, after/R)
-
+    else:
+        normCOLA = None
+        hoop_added = None
+        
     # f_i frame vector, window centered at time m*R
     frame_i = np.arange(0 , len(x) , R , dtype=int)
     
@@ -249,8 +252,8 @@ def stft_prms(X, param, **kwargs):
     '''prms value from stft
     '''
     #todo: compare with MBBM fast(MAGNITUDE)
-    PSD, freq, t_i = stft_PSD(X,param, **kwargs)
-    return(PSD.mean(1), t_i )
+    PSD, freq, t_i = stft_PSD(X, param, **kwargs)
+    return( PSD.mean(1), t_i )
     
 def frequency_resolution(N,sR):
     '''

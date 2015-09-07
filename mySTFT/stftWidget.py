@@ -65,11 +65,12 @@ def plot_spectrogram(X, param, ax, colorbar = True, title = 'Spectrogram', dB= T
     ax.grid(which= 'both' ,ls="-", linewidth=0.4, color=cmap(0), alpha=0.8)
     ax.set_xlim(t.min(),t.max())
     ax.set_ylim(freq.min(),freq.max())
+    
     if not colorbar:
         return(spect)
 
 
-def plot_PDD_i(X, param, i , ax, orientation = 'horizontal', dB = True, freqscale = 'log', **kwargs):
+def plot_PDD_i(X, param, i, ax, orientation = 'horizontal', dB = True, freqscale = 'log',**kwargs):
     """
     plot the spectrogram of a STFT
     """
@@ -101,12 +102,12 @@ def plot_PDD_i(X, param, i , ax, orientation = 'horizontal', dB = True, freqscal
             tl.set_fontsize(8)
     ax.grid(True)
     
-def plot_PDD_k(X, param, k, ax, dB = True, **kwargs):
+def plot_PDD_k(X, param, k, ax, dB= True,**kwargs):
     """
     plot the spectrogram of a STFT
     """
     # PSD
-    PSD, freq, t_i =  stft_PSD(X, param, **kwargs )
+    PSD, freq, t_i =  stft_PSD(X, param, **kwargs)
     PSD_k = PSD[:,k]
 
     if dB:
@@ -114,6 +115,7 @@ def plot_PDD_k(X, param, k, ax, dB = True, **kwargs):
     else:
         Y = PSD_k
     ax.xaxis.set_minor_locator(matplotlib.ticker.AutoMinorLocator())
+
     ax.plot(t_i,Y)
     ax.grid(True)
 
@@ -125,22 +127,22 @@ from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
 from PySide import QtGui, QtCore
                                        
-class stftWidget(QtGui.QMainWindow):
+class Visualizer(QtGui.QMainWindow):
 
-    def __init__(self, signal, M, parent = None):
+    def __init__(self, signal, parent=None,**kwargs):
         QtGui.QMainWindow.__init__(self, parent)
         self.setWindowTitle('STFT visualizer')
         # STFT 
-        # signal        
+        # signal
         self.signal = signal
         self.lenSn = len(signal['y'])
         # parameter STFT
-        self.M = M
+        self.M = 2048
         self.N = self.M
         self.overlap = 2
-        self.R = self.M/ self.overlap
+        self.R = self.M/self.overlap
         self.window = 'hann'
-        self.invertible = True
+        self.inverse = False
         self.df = self.signal['sR']/self.N
         self.dt = self.R/self.signal['sR']
         # parmeter plot
@@ -201,7 +203,7 @@ class stftWidget(QtGui.QMainWindow):
         labelN = QtGui.QLabel('N:')
         self.tboxN = QtGui.QLineEdit()
         self.tboxN.setMinimumWidth(10)
-        self.tboxN.editingFinished.connect(self.set_N)
+        #self.tboxN.editingFinished.connect(self.calcSTFT)
         # overlap
         labeloverlap = QtGui.QLabel('overlap:')
         self.tboxoverlap = QtGui.QLineEdit()
@@ -209,7 +211,7 @@ class stftWidget(QtGui.QMainWindow):
         self.tboxoverlap.editingFinished.connect(self.set_R)
         # COLA normalization checkbox
         self.inverse_cb = QtGui.QCheckBox("COLA normalization")
-        self.inverse_cb.setChecked(self.invertible)
+        self.inverse_cb.setChecked(False)
         #self.inverse_cb.stateChanged.connect(self.calcSTFT)
         #select window combobox
         labelCombo = QtGui.QLabel('''Select window:''')
@@ -252,16 +254,14 @@ class stftWidget(QtGui.QMainWindow):
         
         # Layout with box sizers
         hbox1 = QtGui.QHBoxLayout()
-        for w in [self.dB_cb, self.freqscales_cb, labelk, self.tboxk, labeli,\
-                  self.tboxi, plotB]:
+        for w in [ self.dB_cb,self.freqscales_cb,labelk,self.tboxk,labeli,self.tboxi,plotB ]:
              hbox1.addWidget(w)
         hbox1.addStretch(1)
         groupBoxPlot.setLayout(hbox1)
         
         hbox2 = QtGui.QHBoxLayout()
-        for w in [labelM, self.tboxM,labelN, self.tboxN,labelR, self.tboxR,\
-                   labeloverlap, self.tboxoverlap,labelCombo, self.combo, 
-                   self.inverse_cb,calcB]:
+        for w in [ labelM, self.tboxM,labelN, self.tboxN,labelR, self.tboxR,\
+                   labeloverlap, self.tboxoverlap,labelCombo, self.combo, self.inverse_cb,calcB]:
              hbox2.addWidget(w)
         hbox2.addStretch(1)
         groupBoxSTFT.setLayout(hbox2)
@@ -276,13 +276,14 @@ class stftWidget(QtGui.QMainWindow):
         #set main frame 
         self.main_frame.setLayout(vbox)
         self.setCentralWidget(self.main_frame)
+        #
         self.calcSTFT()
         self._plot()
 
     def set_R(self):
         try:
             self.overlap = float(self.tboxoverlap.text())
-            self.R = int(self.M / self.overlap)
+            self.R = int(self.M/self.overlap)
         except ValueError:
             print('overlap shoud be number')
         self.tboxR.setText(str(self.R))
@@ -299,13 +300,7 @@ class stftWidget(QtGui.QMainWindow):
         try:
             self.M = int(self.tboxM.text())
         except ValueError:
-            print('M should be integer  ')
-            
-    def set_N(self):
-        try:
-            self.N = int(self.tboxN.text())
-        except ValueError:
-            print('N int ')
+            print('M should be integer and odd ')
     
     def set_freqscale(self):
         # set plot param
@@ -314,16 +309,41 @@ class stftWidget(QtGui.QMainWindow):
         
     def set_dB(self):
         self.replot = True
-    
-    def set_stft_param(self):
+        
+    def calcSTFT(self):
+        #read parameters
+        try:
+            self.N = int(self.tboxN.text())
+        except ValueError:
+            pass
+
+        self.inverse = self.inverse_cb.isChecked()
+        self.window = self.combo.currentText()
+        # calc STFT
+        self.X, self.freq, self.f_i, self.param = STFT( sn = self.signal['y'], M = self.M, N = self.N,\
+                                    R = self.R, window = self.window,\
+                                    sR = self.signal['sR'], inverse = self.inverse)
+        self.dt = self.R / self.signal['sR']
+        self.df =  self.signal['sR']/self.N
+        #calc spectrum 
+        self.spectrum, _ = stft_spectrum(self.X,self.freq, self.f_i,self.signal['sR'])
+        self.prms, self.t_i = stft_prms(self.X,self.freq, self.f_i,self.signal['sR'])
         # set output
-        iter = zip([self.tboxM, self.tboxN, self.tboxR, self.tboxoverlap],\
-                   ['M','N','R','overlap'])
-        for lineE, par in iter:
+        for lineE, par in zip([self.tboxM,self.tboxN,self.tboxR,self.tboxoverlap], ['M','N','R','overlap']):
             lineE.setText(str(self.param[par]))
+
         self.tboxOutput.setText('dt (M): ' + str(self.dt) +'\n df: ' + str(self.df))
-    
-    def set_ik(self):
+        self.replot = True
+        
+    def _plot(self):
+        self.dB = self.dB_cb.isChecked()
+        if self.dB:
+            spectrum = 10*np.log10(self.spectrum) - 20*np.log10(2e-5)
+            prms = 10*np.log10(self.prms) - 20*np.log10(2e-5)
+        else:
+            spectrum = self.spectrum
+            prms = self.prms
+        #i,k
         try:
             i = np.round(int(self.tboxi.text())/self.dt)
             k = np.round(int(self.tboxk.text())/self.df)
@@ -333,27 +353,36 @@ class stftWidget(QtGui.QMainWindow):
         self.i = i if i in range(0,len(self.f_i)) else 0 
         self.k = k if k in range(1,int(self.N/2)) else 1
         
+        #ax1 plot spectrum
+        self.ax1.cla()
+        self.ax1.plot(spectrum,self.freq[1:self.N/2], label='total',color = 'r')
+        plot_PDD_i(self.X, self.freq, self.f_i, self.i, self.signal['sR'], self.param,\
+                    self.ax1, orientation='vert', dB = self.dB, freqscale = self.freqscale )
+                    
         
-    def calcSTFT(self):
-        #read parameters
-        self.invertible = self.inverse_cb.isChecked()
-        self.window = self.combo.currentText()
-        # calc STFT
-        self.X, self.freq, self.f_i, self.param = stft( x = self.signal['y'], M = self.M, N = self.N,\
-                                    R = self.R, window = self.window,\
-                                    sR = self.signal['sR'], invertible = self.invertible)
-        self.dt = self.R / self.signal['sR']
-        self.df = self.signal['sR']/self.N
-        #calc spectrum 
-        self.spectrum, _ = stft_spectrum(self.X, self.param)
-        self.spectrum = (abs(self.spectrum)**2)[1:self.N//2]
-        self.prms, self.t_i = stft_prms(self.X, self.param)
-        #set param
-        self.set_stft_param()
-        #replot needed
-        self.replot = True
         
-    def _set_limits_tick_labels(self):
+        #ax3 plot time
+        self.ax3.cla()
+        self.ax3.plot(self.t_i, prms, label='prms', color = 'red')
+        plot_PDD_k(self.X, self.freq, self.f_i, self.k, self.signal['sR'], self.param,\
+                    self.ax3, dB = self.dB)
+        
+        #ax2: plot spectrogram
+        if True:#self.replot:
+            spect = plot_spectrogram(self.X, self.freq, self.f_i,
+                                    self.signal['sR'], self.param, self.ax2,\
+                                    colorbar = False, \
+                                    dB = self.dB,title='', 
+                                    freqscale = self.freqscale )
+            self.ax2.figure.colorbar(spect, cax = self.axcolorbar)
+            self.replot = False
+                    
+        #plot i,k lines
+        self.vline.set_xdata(self.i*self.dt)
+        self.hline.set_ydata(self.k*self.df)
+        self.tboxi.setText(str(int(self.i*self.dt)))
+        self.tboxk.setText(str(int(self.k*self.df)))
+        
         # share axis limits
         self.ax1.set_ybound(self.ax2.get_ybound())
         self.ax3.set_xbound(self.ax2.get_xbound())
@@ -374,51 +403,6 @@ class stftWidget(QtGui.QMainWindow):
         #labels
         self.ax1.set_ylabel('frequency Hz')
         self.ax3.set_xlabel('time s')
-        
-    def _plot(self):
-        self.dB = self.dB_cb.isChecked()
-        self.set_ik()
-        
-        #ax1 plot spectrum
-        self.ax1.cla()
-        if self.dB:
-            spectrum = 10*np.log10(self.spectrum) - 20*np.log10(2e-5)
-            self.ax1.plot(spectrum, self.freq[1:self.N//2], label='total', color = 'r')        
-        else:
-            self.ax1.plot(self.spectrum, self.freq[1:self.N//2], label='total', color = 'r')
-        #frame i
-        plot_PDD_i(self.X, self.param, self.i, self.ax1, orientation='vert', \
-        dB = self.dB, freqscale = self.freqscale )
-                    
-        #ax3 plot time
-        self.ax3.cla()
-        if self.dB:
-            prms = 10*np.log10(self.prms) - 20*np.log10(2e-5)
-            self.ax3.plot(self.t_i, prms, label='prms', color = 'red')
-        else:
-            self.ax3.plot(self.prms, prms, label='prms', color = 'red')
-        #frame k    
-        self.ax3.plot(self.t_i, prms, label='prms', color = 'red')
-        plot_PDD_k(self.X, self.param, self.k,\
-                    self.ax3, dB = self.dB)
-        
-        #ax2: plot spectrogram
-        if True:#self.replot:
-            spect = plot_spectrogram(self.X,self.param, self.ax2,\
-                                    colorbar = False, \
-                                    dB = self.dB,title='', 
-                                    freqscale = self.freqscale )
-            self.ax2.figure.colorbar(spect, cax = self.axcolorbar)
-            self.replot = False
-                    
-        #plot i,k lines
-        self.vline.set_xdata(self.i*self.dt)
-        self.hline.set_ydata(self.k*self.df)
-        self.tboxi.setText(str(int(self.i*self.dt)))
-        self.tboxk.setText(str(int(self.k*self.df)))
-        
-        #limits 
-        self._set_limits_tick_labels()
         
         #draw canvas
         self.canvas.draw()
