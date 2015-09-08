@@ -31,7 +31,7 @@ if __name__ == "__main__":
     path = 'D:\GitHub\myKG\Measurements_example\\various_passby'
     s = acoustics.Signal.from_wav(path+'/kreischen.wav')
     sn = {'y':s.pick(),'t':s.times(),'sR':s.fs}
-    sn['y'] = sn['y'][7*s.fs:9*s.fs]
+    sn['y'] = sn['y'][5*s.fs:8*s.fs]
 
     M = 1024
     app = QtGui.QApplication(sys.argv)

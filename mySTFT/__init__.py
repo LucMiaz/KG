@@ -6,5 +6,5 @@ The stft module.
 
 """
 import mySTFT.stft
-from mySTFT.stftWidget import Visualizer
+import mySTFT.stft_plot
 

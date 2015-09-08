@@ -39,7 +39,7 @@ def cola_test_window(window, R):
         win[shift:shift+M] += window
         ola += win
     ola = ola[R0:R0+M]
-    normCola = np.unique(np.round(ola,10))
+    normCola = np.unique(np.round(ola,10))**(-1)
     #calculate 0-padding before and after such that ola dont0affect
     before = int(np.arange(0,(M-1)//2+1, R).max())
     after = int(np.arange(0, M//2+1 , R).max())
@@ -117,7 +117,7 @@ def stft(x, M, N = None , R = None, overlap = 2, sR=1, window = 'hann', invertib
     #if test passed x padding and window normalization    
     if invertible:
         x = np.pad(x, (before,after), 'constant', constant_values = 0)
-        w /= normCOLA
+        w *= normCOLA
         padN = (padN,before,after)
         hoop_added = (before/R, after/R)
     else:
@@ -183,7 +183,7 @@ def istft(X, param):
             x[frame : frame + M] += np.real(ifft(X[i,:]))[0:M]
         return(x[M//2:-(M-1)//2 ])
         
-def _adjust_time(X, t_i, t0 = 0, tmin= None, tmax = None):
+def _adjust_time(X, t_i, t0 = 0, tmin= None, tmax=None ):
     '''
     return a 
     '''
@@ -218,32 +218,57 @@ def stft_spectrum(X, param, **kwargs):
     freq = fftfreq(N, 1/sR)
     return(X.sum(axis=0), freq)
     
-def stft_PSD(X, param, **kwargs):
+def stft_PSD(X, param, scaling = 'density', **kwargs):
     #Magnitude singlesided
     R = param['R']
     N = param['N']
     sR = param['sR']
-    lenf_i,n= X.shape
+    lenf_i, _ = X.shape
     #calculate frquency vetor
-    freq = fftfreq(N, 1/param['sR'])
+    freq = fftfreq(N, 1/sR)
     f_i = np.arange(0,lenf_i*R , R)
-    df = sR / N
-    w =  scipy.signal.get_window(param['window'], param['M'], fftbins = True)
+    #normalization
+
     # TODO: CONTROL NORMALIZATION
-    norm = np.sqrt((w**2).mean())
-    if  param['invertible']:
-        Xnorm = X * (param['normCOLA']/norm)
+    win =  scipy.signal.get_window(param['window'], param['M'], fftbins = True)
+    if scaling == 'density':
+        scale = 1.0 / (sR * (win*win).sum())
+    elif scaling == 'spectrum':
+        scale = 1.0 / win.sum()**2
     else:
-        Xnorm = X * norm
+        raise ValueError('Unknown scaling: %r' % scaling)
+    if  param['invertible']:
+        scale = scale / (param['normCOLA']**2)
+
+    # calculate PSD    
+    PS_i = np.real(np.conjugate(X)*X)*scale
+    
     #onesided
-    PS_i = (2*abs(Xnorm)**2)[:,1:(N+1)//2]/df
-    freq = freq[1:(N+1)//2]
+    if N % 2:
+        freq = freq[:(N+1)//2]
+        PS_i = PS_i[:,:(N+1)//2]
+        PS_i[:,1:] *= 2
+    else:
+        freq = freq[:N//2+1]
+        freq[-1] *= -1
+        PS_i = PS_i[:,:N//2+1]
+        # Last point is unpaired Nyquist freq point, don't double
+        PS_i[:,1:-1] *= 2
+
     t_i = f_i / sR
+    
     if kwargs:
         t_i = (f_i - param['hoop_added'][0]*R)/sR
         return(_adjust_PSD_time_freq(PS_i, freq, t_i, **kwargs))
     else:
         return(PS_i, freq, t_i)
+
+def stft_welch(X, param, scaling = 'density',  **kwargs):
+    '''return spectrum N points,
+       if N > len x sameresult
+    '''
+    PS_i, freq, t_i = stft_PSD(X, param, scaling, **kwargs)
+    return(PS_i.mean(axis=0), freq)
     
 def stft_prms(X, param, **kwargs):
     '''prms value from stft

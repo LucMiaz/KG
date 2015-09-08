@@ -14,14 +14,14 @@ import mySTFT
 from mySTFT.stft import *
 
 
-def plot_spectrogram(X, param, ax, colorbar = True, title = 'Spectrogram', dB= True, freqscale = 'log', dBMax = None, **kwargs):
+def plot_spectrogram(X, param, ax, colorbar = True, title = 'Spectrogram', dB= True, freqscale = 'log', dBMax = None, scaling = 'density', **kwargs):
     #todo: correct t axis scala
     """
     plot the spectrogram of a STFT
     """
     sR = param['sR']
     # PSD
-    PSD, freq, t_i =  stft_PSD(X, param, **kwargs)
+    PSD, freq, t_i =  stft_PSD(X, param,scaling = scaling, **kwargs)
     
     if dB:
         Z = 10*np.log10(PSD) - 20*np.log10(2e-5)
@@ -68,12 +68,13 @@ def plot_spectrogram(X, param, ax, colorbar = True, title = 'Spectrogram', dB= T
         return(spect)
 
 
-def plot_PDD_i(X, param, i , ax, orientation = 'horizontal', dB = True, freqscale = 'log', **kwargs):
+def plot_PDD_i(X, param, i , ax, orientation = 'horizontal', dB = True, \
+                freqscale = 'log', scaling = 'density',**kwargs):
     """
     plot the spectrogram of a STFT
     """
     # PSD
-    PSD, freq, t_i =  stft_PSD(X, param,**kwargs)
+    PSD, freq, t_i =  stft_PSD(X, param, scaling = scaling,**kwargs)
     PSD_i = PSD[i,:]
 
     if dB:
@@ -100,12 +101,12 @@ def plot_PDD_i(X, param, i , ax, orientation = 'horizontal', dB = True, freqscal
             tl.set_fontsize(8)
     ax.grid(True)
     
-def plot_PDD_k(X, param, k, ax, dB = True, **kwargs):
+def plot_PDD_k(X, param, k, ax, dB = True, scaling = 'density', **kwargs):
     """
     plot the spectrogram of a STFT
     """
     # PSD
-    PSD, freq, t_i =  stft_PSD(X, param, **kwargs )
+    PSD, freq, t_i =  stft_PSD(X, param, scaling = scaling, **kwargs )
     PSD_k = PSD[:,k]
 
     if dB:
