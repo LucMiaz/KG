@@ -1,7 +1,7 @@
 #Beschreibung der messung;;;;
 #;;;;
-#
-#
+#;;;;
+#;;;;
 LOCATION;;;;
 Zug;;;;
 MEASUREMENT;;;;
@@ -35,7 +35,7 @@ humidity;Wetterstation;Infos;rel. Feuchte [%];
 wind;Wetterstation;Infos;Windgeschw. [m/s];
 rain;Wetterstation;Infos;Regen [V];
 #;;;;
-#for thenext variables you have to replace i with the mic channel number;;;;
+#for the next variables you have to replace i with the mic channel number;;;;
 MICVALUES;table;sheet;colName;description
 t1b_mic_i;Pegelzeitverlauf;TEL;t1b_mic_i;Vorbeifahrtbeginn
 t1e_mic_i;Pegelzeitverlauf;TEL;t1e_mic_i;Vorbeifahrtende
