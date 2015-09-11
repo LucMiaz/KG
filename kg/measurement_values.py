@@ -4,13 +4,19 @@ import numpy as np
 import pandas as pd
 import copy
 import xlrd
-
 import csv
 import datetime
+import pathlib
 
 class measuredValues():
     def __init__(self,path):
-        self.path = path
+        '''
+        parameters
+        ----------
+        path: main path of measurement
+        
+        '''
+        self.path = pathlib.Path(path)
         #initiate attributes from Readme.csv
         self.location = None
         self.measurement = None
@@ -21,13 +27,13 @@ class measuredValues():
         #
         vars = ['LOCATION','MEASUREMENT','MIC']
         dicts = ['TABLES','MICVALUES','IDINFO']
-        with open(self.path + '\\' + 'Readme.csv', 'r+') as readme:
-            reader = csv.reader(readme,delimiter=';')
-            dict ={}#{k : None for k in var+dicts}
+        with self.path.joinpath('measurement_info.csv').open('r+') as info:
+            reader = csv.reader(info,delimiter=';')
+            dict ={}
             var = None
             header = None
             for row in reader:
-                if row[0][0]=='#':
+                if row[0][0][0]=='#':
                     pass
                 elif row[0] in dicts:
                     var = row[0]
@@ -48,11 +54,11 @@ class measuredValues():
                             row[i] = None    
                     dict[var][row[0]] = { h:v for h,v in zip(header,row[1:])}
             #set var and dicts
-            self.location, self.measurement,self.mic = (dict[k] for k in vars) 
+            self.location, self.measurement, self.mic = (dict[k] for k in vars) 
             self.tables, self.micValues, self.idInfo = (dict[k] for k in dicts)
         #correct mic 
         self.mic = eval(self.mic)
-        self.micValues['LPAeqTP_mic_i']['colName'] = eval(self.micValues['LPAeqTP_mic_i']['colName'] )
+        self.micValues['LAf']['colName'] = eval(self.micValues['LAf']['colName'] )
         #
         self.kgValues ={}
                 
@@ -72,15 +78,18 @@ class measuredValues():
         load values of selected variables and mic
         '''
         #if load mic values for interested mic
+        tablesPath = self.path.joinpath('measurement_values')
+        print('MIC VALUES \n-----------')
         for k,v in self.micValues.items():
             #
+            print(k,', ', end='')
             table = self.tables[v['table']]
-            wb = xlrd.open_workbook(self.path +'\\'+ table['fileName'])
+            wb = xlrd.open_workbook(str(tablesPath.joinpath(table['fileName'])))
             #if Spectrum
-            if k == 'LPAeqTP_mic_i':
+            if k == 'LAf':
                 S_mic = []
                 for mic in self.mic:
-                    sN = k.replace('_i','_'+ str(mic))
+                    sN = v['sheet'].replace('_Miki','_Mik'+ str(mic))
                     ws = wb.sheet_by_name(sN)
                     index = []
                     data  = []
@@ -88,7 +97,8 @@ class measuredValues():
                         index.append(ws.cell_value(row,0))
                         #terzband spektrum hat 24 werte
                         data.append([ws.cell_value(row,i) for i in range(1,25)])
-                    S_mic.append(pd.DataFrame({sN:data}, index = index))
+                    cN = 'mic_'+str(mic)
+                    S_mic.append(pd.DataFrame({cN:data}, index = index))
                 v['values'] = pd.concat(S_mic, axis=1)
             #if mic single valued value
             else:
@@ -108,12 +118,13 @@ class measuredValues():
                     data.append([ws.cell_value(row,i) for i in selectCol])
                 #
                 v['values'] = pd.DataFrame(data, index = index, 
-                columns = [k.replace('_i','_'+ str(mic)) for mic in self.mic])
-                
-        #if IDINFO value        
+                columns = ['mic_' + str(mic) for mic in self.mic])
+        #if IDINFO value
+        print('\n\nIDINFO \n-----------')        
         for k,v in self.idInfo.items():
+            print(k,', ', end='')
             table = self.tables[v['table']]
-            wb = xlrd.open_workbook(self.path +'\\'+ table['fileName'])
+            wb = xlrd.open_workbook(str(tablesPath.joinpath(table['fileName'])))
             ws = wb.sheet_by_name(v['sheet'])
             # col names Table
             colNames = ws.row_values(table['skip'])
@@ -124,13 +135,22 @@ class measuredValues():
                 index.append(ws.cell_value(row,0))
                 data.append(ws.cell_value(row,selectCol))
             v['values'] = pd.DataFrame({k:data}, index = index )
-
+        print('\n\nFinish read values')
+    
+    def get_IDs(self, evaluated = False):
+        if not evaluated:
+            Index = self.idInfo['mTime']['values'].index.tolist()
+        else:
+            Index = self.micValues['LAEQ']['values'].index.tolist()
+        return(Index)
+        
     def get_variables_values(self,ID, mic, variables):
         """
         parameter:
-        ID list of ID
-        mic list of mic
-        Variables list of variables
+        ----------
+        ID: list of ID
+        mic: mic list or int
+        Variables: list of variables
         return:
         dict of df of the variables
         """
@@ -138,13 +158,12 @@ class measuredValues():
         for var in variables:
             if var in list(self.idInfo.keys()):
                 dict[var] =self.idInfo[var]['values'].ix[ID,var]
-            else:
+            elif var in list(self.micValues.keys()):
                 values = self.micValues[var]['values']
                 if isinstance(mic, list):
-                    vars = [var.replace('_i','_'+ str(i)) for i in mic]
-                    dict[var] = [values.ix[ID,i] for i in vars] 
+                    dict[var] = [values.ix[ID,'mic_'+str(i)] for i in mic] 
                 else:
-                    dict[var] = values.ix[ID,var.replace('_i','_'+ str(mic))]
+                    dict[var] = values.ix[ID,'mic_'+ str(mic)]
         return(dict)
     
     def set_kg_values(self, calc_id, ID, dspValues ):
@@ -165,16 +184,17 @@ class measuredValues():
     def set_kg_alg_description(self,calc_id, algorithmDescription,variableInfo):
         if not calc_id in self.kgValues.keys():
             self.kgValues[calc_id] = {}
-        self.kgValues[calc_id]['description']=algorithmDescription
+        self.kgValues[calc_id]['description'] = algorithmDescription
         self.kgValues[calc_id]['varInfo'] = variableInfo
         
     def export_kg_results(self, calc_id, variables = []):
         '''
         '''
+        resultsPath = self.path.joinpath('results')
         KG = self.kgValues[calc_id]
         dateTime =  datetime.datetime.now()
         fileName = 'results_'+ calc_id +'_'+ dateTime.strftime( "%d-%m-%Y_%H-%M-%S")
-        filePath = self.path + '\\results\\' + fileName + '.csv'
+        resultsPath = resultsPath.joinpath( fileName + '.csv').as_posix()
         #header
         header =   [['# Description' ],
                     ['# This file contains the Results of KG processing'],
@@ -195,7 +215,7 @@ class measuredValues():
         varInfo = self.list_variables()
         colNames += [[var, varInfo.ix[varInfo.variable =='v1','description']] for var in variables]
         #write to csv
-        with open(filePath, 'w+', newline='') as file:
+        with open(resultsPath, 'w+', newline='') as file:
             csv_writer = csv.writer(file, delimiter=';')
             for row in header + colNames:
                 csv_writer.writerow(row)
@@ -221,11 +241,10 @@ class measuredValues():
         
     def plot_spectrum(self, ID, mic, ax, label=None):
         ax.set_title('Spectrum', fontsize=12)
-        freq = np.array(self.micValues['LPAeqTP_mic_i']['colName'])
-        #mask = np.all([(freq <= fmax), (freq >= fmin)], axis=0)
-        PS_i = np.array(self.get_variables_values(ID,[mic],['LPAeqTP_mic_i'])['LPAeqTP_mic_i'])
+        freq = np.array(self.micValues['LAf']['colName'])
+        PS_i = np.array(self.get_variables_values(ID,mic,['LAf'])['LAf'])
         if label == None:
-            label = 'Spectrum _ch_' + str(mic)
+            label = 'Spectrum_ch_' + str(mic)
         ax.plot(freq, PS_i, label = label)
         ax.set_xscale('log')
         ax.grid(True)
@@ -243,10 +262,10 @@ class measuredValues():
         
         """
         if type == 'eval':
-            variables = ['tb_mic_i', 'te_mic_i']
+            variables = ['Tb', 'Te']
             col= 'R'
         elif type == 'passby':
-            variables = ['t1b_mic_i', 't1e_mic_i']
+            variables = ['Tp_b', 'Tp_e']
             col= 'B'
         t = self.get_variables_values(ID, mic, variables)
         [ax.axvline(x, color= col, lw = lw) for x in t.values()]
@@ -257,19 +276,28 @@ class measuredValues():
 
 if __name__ == "__main__":
     
-    AA = measuredValues('D:\KurvenK\Messung Zug\data_bsp')
+    AA = measuredValues('D:\GitHub\myKG\Measurements_example\MBBMZugExample')
     AA.list_variables()
     AA.read_variables_values()
-    ##
-    s=AA.get_variables_values(ID='m_0100',mic= [1,2], variables=['v2','direction','tb_mic_i', 'te_mic_i', 't1b_mic_i', 't1e_mic_i'])
+    ##getexample
+    s=AA.get_variables_values(ID='m_0100',mic= [1,2], variables=['v2','v1','direction','Ta', 'Te', 'Tp_a', 'Tp_e'])
     print(s)
     
-    s=AA.get_variables_values(ID='m_0100',mic= 1, variables=['te_mic_i','v2','v1'])
+    s=AA.get_variables_values(ID='m_0101',mic= 1, variables=['v2','v1'])
     print(s)
+    ## get evaluated signals
+    allID = AA.get_IDs(evaluated = False)
+    print( 'Total N. of IDs:' , len(allID))
+    evalID = AA.get_IDs(evaluated = True)
+    print( 'evaluated IDs:' , len(evalID))
+    nonEvalID = list(set(allID)-set(evalID))
+    print(nonEvalID)
+    print('m_0120'in allID)
 
+    ##expot example
     AA.set_kg_alg_description( 'alg1','kkkkkkk',[['var1','aaa'],['var2','bbb'],['mic','micro']])
-    AA.set_kg_values('alg1','m_0100',{'mic':[1,2,7],'var1':[22,33,44],'var2':[9,9,9]})
-    AA.export_kg_results('alg1',variables= ['t1e_mic_i','v2','mTime'])
+    AA.set_kg_values('alg1','m_0101',{'mic':[1,2,7],'var1':[22,33,44],'var2':[9,9,9]})
+    AA.export_kg_results('alg1',variables= ['Te','v2','mTime'])
     AA.export_kg_results('alg1')
 
         
