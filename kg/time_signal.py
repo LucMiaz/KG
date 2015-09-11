@@ -1,6 +1,8 @@
 import os
-import libpath
+import pathlib
 import scipy as sp
+from scipy.io import loadmat, wavfile
+import wave
 import numpy as np
 import pandas as pd
 import copy
@@ -43,17 +45,18 @@ class timeSignal():
         parameter:Measurement ID (string), channel. If channel is none then input is asked.
         return: dict with time array value array and sampling rate
         """
-        #falls channel nicht angegeben auswahl aus liste
-        if channel in self.signals.keys():
-            print( 'channel ' + str(channel) + 'is already loaded.')
-        else:
+        dataPath = self.path.joinpath('raw_signals')
+        if not channel in self.signals.keys():
             signal = timeSignal.SIGNALS[channel]
             time = timeSignal.SIGNALS[signal['time']]
-            paths = [self.path.joinpath(name).as_posix().replace('ID',self.ID)\
-            for names in [signal['fileName'],time['fileName']]]
-            #signal values
-            for a, path , name in zip([y,t],paths,[self.ID, self.ID + '_X']):
-                a = np.ravel(scipy.io.loadmat(path,variable_names = name)[name])
+            #load y vector
+            path = str(dataPath.joinpath(signal['fileName'])).replace('ID',self.ID)
+            arrN = self.ID 
+            y = np.ravel(loadmat(path, variable_names = arrN)[arrN])
+            #load t vector
+            path = str(dataPath.joinpath(time['fileName'])).replace('ID',self.ID)
+            arrN = self.ID + '_X'
+            t = np.ravel(loadmat(path, variable_names = arrN)[arrN])
             #calculate the framerate of the signal
             sR =np.round(len(t)/(t[-1] - t[0]))
             self.signals[channel] = {'t': t, 'y':y, 'sR': int(sR) }
@@ -92,22 +95,21 @@ class timeSignal():
         - don' save if already saved ok
         - return path ok
         """
+        wavPath = self.path.joinpath('wav')
+        os.makedirs(wavPath.as_posix(), exist_ok = True)
         try:
             s = self.signals[channel]
         except KeyError:
             print('Channel '+ str(channel) + ' is not loaded.')
         else: 
-            if timeSignal.SIGNALS[channel]['type'] =='mic':
-                filepath = os.path.dirname(timeSignal.PATH) + '\\audio'
-                filename = self.ID+ '_'+str(channel)+'.wav'
-                os.makedirs(filepath, exist_ok=True)
-                if not filename in os.listdir(filepath):
-                sR = signal['sR']
-                data = signal['y']
-                scaled = np.int16(data/np.max(np.abs(data)) * 32767)
-                sp.io.wavfile.write(filepath, sR, scaled)
-                    print('salvato: ' + str(channel))
-                return(filepath +'\\' + filename)
+            if timeSignal.SIGNALS[channel]['type'] == 'mic':
+                filename = self.ID + '_' + str(channel)+'.wav'
+                filePath = wavPath.joinpath(filename)
+                if not filename in [p.name for p in wavPath.glob('*.wav')]:
+                    sR = s['sR']
+                    scaled = np.int16(s['y']/ np.abs(s['y']).max() * 32767)
+                    wavfile.write(filePath.as_posix(), sR , scaled)
+                return(wavPath.joinpath(filename))
             else:
                 print('Channel'+ str(channel) +'is not a microphone')
         
@@ -119,26 +121,25 @@ class timeSignal():
             s = self.signals[channel]
         except KeyError:
             print('Channel '+ str(channel) + ' is not loaded.')
-            return
-            
-        sn = self.signals[channel]
-        snInfo = timeSignal.SIGNALS[channel]
-        if label == None:
-            if snInfo['type'] == 'p_rms':
-                label = str(channel)
-            else:
-                label = snInfo['type'] + '_ch_' + str(channel)
-                
-        if snInfo['type'] == 'p_rms':
-            ax.plot(sn['t'], np.abs(20*np.log10(sn['y']/(2e-5))), label= label)
         else:
-            ax.plot(sn['t'], sn['y'], label = label)
+            sn = self.signals[channel]
+            snInfo = timeSignal.SIGNALS[channel]
+            if label == None:
+                if snInfo['type'] == 'p_rms':
+                    label = str(channel)
+                else:
+                    label = snInfo['type'] + '_ch_' + str(channel)
+                    
+            if snInfo['type'] == 'p_rms':
+                ax.plot(sn['t'], np.abs(20*np.log10(sn['y']/(2e-5))), label= label)
+            else:
+                ax.plot(sn['t'], sn['y'], label = label)
             
     def setup( path):
         #set path
-        timeSignal.PATH = libpath.Path(path)
-        with open(timeSignal.PATH+ '\\' + 'Readme.csv', 'r+') as readme:
-            reader = csv.reader(readme,delimiter=';')
+        timeSignal.PATH = pathlib.Path(path)
+        with timeSignal.PATH.joinpath('raw_signals_info.csv').open('r+') as info:
+            reader = csv.reader(info,delimiter=';')
             header = None
             dict ={}
             for row in reader:
@@ -157,13 +158,16 @@ class timeSignal():
             timeSignal.SIGNALS = dict
     
 ##tests 
-import pathlib
-import matplotlib.pyplot as plt
 if __name__ == "__main__":
-    path = pathlib.Path('D:\GitHub\myKG\Measurements_example\MBBMZugExample')
-    timeSignal.setup(path.joinpath('Messdaten_Matlab').as_posix())
-    ts = timeSignal('m_0119')
-    ts.read_signal(1)
-    ts.export_to_Wav(1)
-    f,ax = plt.subplots(1)
-    ts.plot_channel(1,ax)
+    #perche 'm1020'noné compreso (tilo), 'm_0119' chefrastuono
+    import pathlib
+    import matplotlib.pyplot as plt
+    timeSignal.setup('D:\GitHub\myKG\Measurements_example\MBBMZugExample')
+    #
+    ts = timeSignal('m_0101')
+    mic=[1,2,4,5,6,7]
+    f,ax = plt.subplots(len(mic),sharex=True,sharey=True)
+    for i,m in enumerate(mic):
+        ts.read_signal(m)
+        ts.export_to_Wav(m)
+        ts.plot_channel(m,ax[i])
