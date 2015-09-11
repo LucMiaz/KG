@@ -264,7 +264,7 @@ if __name__ == "__main__":
     s=AA.get_variables_values(ID='m_0100',mic= [1,2], variables=['v2','direction','tb_mic_i', 'te_mic_i', 't1b_mic_i', 't1e_mic_i'])
     print(s)
     
-    s=AA.get_variables_values(ID='m_0100',mic= [11], variables=['v2','v1'])
+    s=AA.get_variables_values(ID='m_0100',mic= 1, variables=['te_mic_i','v2','v1'])
     print(s)
 
     AA.set_kg_alg_description( 'alg1','kkkkkkk',[['var1','aaa'],['var2','bbb'],['mic','micro']])

@@ -21,7 +21,7 @@ def plot_spectrogram(X, param, ax, colorbar = True, title = 'Spectrogram', dB= T
     """
     sR = param['sR']
     # PSD
-    PSD, freq, t_i =  stft_PSD(X, param,scaling = scaling, **kwargs)
+    PSD, freq, t_i =  stft_PSD(X, param, scaling = scaling, **kwargs)
     
     if dB:
         Z = 10*np.log10(PSD) - 20*np.log10(2e-5)

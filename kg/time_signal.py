@@ -1,44 +1,14 @@
 import os
+import libpath
 import scipy as sp
-import scipy.io
 import numpy as np
 import pandas as pd
 import copy
 
 import csv
 import struct
-import xlrd
-import wave
 import itertools
-#visualization panda
-from pandas.sandbox.qtpandas import DataFrameModel, DataFrameWidget
-from PySide import QtGui, QtCore
 
-
-
-def __create_wav__( signal, filepath, resolution = 16):
-    """
-        create an audio Wav file from signal dict. up to 110dB dynamics
-        parameter:
-        - signal
-        - fileName
-        - path
-        - resolution in bit 
-        TODO:
-        - fix resolution
-    """
-    sR = signal['sR']
-    nframes = len(signal['t'])
-    sampwidth = int(resolution/8)
-    scaling = 2**(resolution-1)/6.32
-    # 10^(110/20)*2*10^(-5) = 6.32 Pa is sound Pressure at 110dB 
-    wavFile = wave.open(filepath, 'w')
-    wavFile.setparams((1, sampwidth, sR, nframes, 'NONE', 'not compressed'))
-    #http://zacharydenton.com/generate-audio-with-python/
-    DataToSave = np.round(signal['y']*scaling).astype(np.int32)
-    wavFile.writeframes(b''.join([struct.pack('h',x) for x in DataToSave ]))
-    wavFile.close()
- 
 
 class timeSignal():
     """
@@ -52,6 +22,7 @@ class timeSignal():
 
     def __init__(self, ID):
         self.ID = ID
+        self.path = timeSignal.PATH
         self.signals = {}
         
     def list_signals(self):
@@ -78,12 +49,11 @@ class timeSignal():
         else:
             signal = timeSignal.SIGNALS[channel]
             time = timeSignal.SIGNALS[signal['time']]
+            paths = [self.path.joinpath(name).as_posix().replace('ID',self.ID)\
+            for names in [signal['fileName'],time['fileName']]]
             #signal values
-            path = timeSignal.PATH +'\\' + signal['fileName'].replace('ID',self.ID)
-            y =  np.ravel(scipy.io.loadmat(path, variable_names = self.ID)[self.ID])
-            #time vector for signal
-            path = timeSignal.PATH +'\\'+ time['fileName'].replace('ID',self.ID)
-            t =  np.ravel(scipy.io.loadmat(path, variable_names = self.ID + '_X')[self.ID + '_X'])
+            for a, path , name in zip([y,t],paths,[self.ID, self.ID + '_X']):
+                a = np.ravel(scipy.io.loadmat(path,variable_names = name)[name])
             #calculate the framerate of the signal
             sR =np.round(len(t)/(t[-1] - t[0]))
             self.signals[channel] = {'t': t, 'y':y, 'sR': int(sR) }
@@ -132,7 +102,10 @@ class timeSignal():
                 filename = self.ID+ '_'+str(channel)+'.wav'
                 os.makedirs(filepath, exist_ok=True)
                 if not filename in os.listdir(filepath):
-                    __create_wav__(self.signals[channel], filepath +'\\' + filename)
+                sR = signal['sR']
+                data = signal['y']
+                scaled = np.int16(data/np.max(np.abs(data)) * 32767)
+                sp.io.wavfile.write(filepath, sR, scaled)
                     print('salvato: ' + str(channel))
                 return(filepath +'\\' + filename)
             else:
@@ -161,9 +134,9 @@ class timeSignal():
         else:
             ax.plot(sn['t'], sn['y'], label = label)
             
-    def _setup( path):
+    def setup( path):
         #set path
-        timeSignal.PATH = path
+        timeSignal.PATH = libpath.Path(path)
         with open(timeSignal.PATH+ '\\' + 'Readme.csv', 'r+') as readme:
             reader = csv.reader(readme,delimiter=';')
             header = None
@@ -184,6 +157,13 @@ class timeSignal():
             timeSignal.SIGNALS = dict
     
 ##tests 
-
+import pathlib
+import matplotlib.pyplot as plt
 if __name__ == "__main__":
-    pass
+    path = pathlib.Path('D:\GitHub\myKG\Measurements_example\MBBMZugExample')
+    timeSignal.setup(path.joinpath('Messdaten_Matlab').as_posix())
+    ts = timeSignal('m_0119')
+    ts.read_signal(1)
+    ts.export_to_Wav(1)
+    f,ax = plt.subplots(1)
+    ts.plot_channel(1,ax)
