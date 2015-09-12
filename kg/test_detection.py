@@ -18,8 +18,6 @@ from pandas.sandbox.qtpandas import DataFrameModel, DataFrameWidget
 # output: sensitivity(TPR), specificity(TNR), TP, TN, FP, FN 
 # visual output
 
-
-
 import datetime
 import pickle
 import glob
@@ -31,7 +29,6 @@ class createCases():
         self.cases = cases
         self.mesValues = measuredValues(measurement)
         self.mesValues.read_variables_values()
-    
     
     def save_case(self,mID):
         dateTime =  datetime.datetime.now()
@@ -117,7 +114,7 @@ class testDetection():
         
     def plot_results(self):
         pass
-
+        
 if __name__ == "__main__":
     path = ''
     measurement = '' 

@@ -63,8 +63,9 @@ class BarCanvas(FigureCanvas):
         self.draw()
         self.set_background()
         
-        
     def resizeEvent(self, e):
         self.rm_bar()
         FigureCanvas.resizeEvent(self,e)
         self.set_background()
+##
+
