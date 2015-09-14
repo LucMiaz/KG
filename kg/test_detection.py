@@ -2,92 +2,127 @@ import sys
 import os
 import pandas as pd
 import numpy as np
-sys.path.append('D:\GitHub\KG')
+sys.path.append('D:\GitHub\myKG')
 from kg.measurement_values import measuredValues
-from kg.time_signal import timeSignal, __create_wav__
-from kg.dsp import DSP
+from kg.time_signal import timeSignal
+from kg.detect import Detect
 from kg.grafics import BarCanvas
 from kg.audio_visual_app import PlaybackWindow
-from PySide import QtGui,QtCore
-from pandas.sandbox.qtpandas import DataFrameModel, DataFrameWidget
-# todo: function class to create test cases, 
-# input: list signals
-# output: file with case results
-# todo: test class algorithm on cases
-# input: test cases (folder/s)
-# output: sensitivity(TPR), specificity(TNR), TP, TN, FP, FN 
-# visual output
 
 import datetime
 import pickle
-import glob
+import pathlib
 import os
 
-class createCases():
-    def __init__(self, measurement, cases= [(None,None)], author= None ):
-        self.author = author 
-        self.cases = cases
-        self.mesValues = measuredValues(measurement)
-        self.mesValues.read_variables_values()
-    
-    def save_case(self,mID):
-        dateTime =  datetime.datetime.now()
-        case = {'caseID':'wavName','measurement', 'mID','mic',\
-                'author':'name',
-                'date': dateTime.strftime( "%d-%m-%Y_%H-%M-%S"),\
+#todo, create
+class Case(object):
+    def __init__(measurement, cID, mID, mic, tb, te, author, date = None, \
+                    Z = [], K = []):
+        self.case = {'caseID': cID,
+                'measurement':measurement, 
+                'mID': mID,
+                'mic': mic,
+                'author':author,
+                'date':date ,
                 #results
-                'dt': int,
-                'tbe':(int,int),
-                'Z':np.array([]),
-                'K':np.array([])
+                'tb':tb,
+                'te':te,
+                'Z':Z,
+                'K':K
                 }
-        try:
-            pickle.dump( caseOutput, open( ID + ".p", "wb" ) )
-        assert Error:
-            pass
+            
+    def compare(self, detect , test = 'Z' , sum = True):
+        '''
+        return
+        ------
+        dict
+        '''
+        Z = detect['test']
+        t = detect['t']
+        cZ = np.zeros(len(t))
+        #crete array fronm case results
+        for t0,t1 in self.results[test]:
+            i0,i1 = np.searchsorted(t,(t0,t1))
+            cZ[i0:i1] = 1
+        out = {}
+        #evaluated interval
+        tb = np.max(detect['tb'], self.case['tb'])
+        te = np.min(detect['te'], self.case['te'])
+        mask = np.logical_and(t > tb ,t < te)
+        #calculate TP, TN, FP, FN
+        Z = np.array([1,1,0,0]).astype('bool')
+        cZ = np.array([1,0,1,0]).astype('bool')
+        out['TP'] = np.logical_and(Z,cZ)
+        out['TN'] = np.logical_and(np.logical_not(Z), np.logical_not(cZ))
+        out['FP'] = np.logical_and( Z, np.logical_not(cZ))
+        out['FN'] = np.logical_and( np.logical_not(Z),  cZ)
+        # sum 
+        if sum:
+            for k,v in out.iteritem():
+                out[k] = v[mask].sum()
+        else:
+            out['mask'] = mask
+        return(out)
+    
+    def test(self, algorithm, mesVar, signal = None, sum = True):
+        mID = self.case['mID']
+        mic = self.case['mic']
+        if(signal is None):
+            ts = timeSignal(mID)
+            ts.read_signal(mic)
+            signal = ts.get_signal(mic)
+            
+        Det = Detect(signal, mID, mic, **mesVar)
+        Det.calc(**algorithm['param'])
+        return(self.compare(algorithm['test'],Det.get_results(), sum = sum))
         
-class testDetection():
-    def __init__(self, path, measurement, author, algorithm, cases = None ):
-        self.path = pathlib.Path(path)
-        self.cases = [x for x in self.path.iterdir() if x.match('case_**.p')]
+    def add_kg_event(self, t0, t1, test = 'Z'):
+        self.case[test].append((to,t1))
+        
+    def save(self, mesPath):
+        '''
+        param
+        -----
+        measurement path
+        '''
+        mesPath = pathlib.Path(mesPath)
+        casePath = mesPath.joinpath('test_cases').joinpath(author)
+        os.makedirs(casePath.as_posix(), exist_ok = True)
+        name = self.case['caseID'] + '.p'
+        casePath = casePath.joinpath(name)
+        #add date
+        dateTime =  datetime.datetime.now()
+        self.case['date'] = dateTime.strftime( "%d-%m-%Y_%H-%M-%S")
+        pickle.dump( self.case, open(casePath.as_posix(), "wb" ))
+    
+    @classmethod
+    def fromfile(cls, casePath):
+        return(cls(**pickle.load( open( casePath, "rb" ))))
+        
+        
+class DetectionTester(object):
+    def __init__(self, mesPath, author, algorithm, cases = None ):
+        self.mesPath = pathlib.Path(mesPath)
+        casePath = self.mesPath.joinpath('test_cases').joinpath(author)
+        casePaths = [cp for cp in casePath.iterdir() if cp.match('case_**.p')]
         if cases is not None:
-            self.cases = [x for x in self.cases if x.name in cases ]
-        self.author = author
+            casePaths = [cp for cp in casePaths if cp.name in cases ]
+        self.cases = [Case.open(cp.as_posix()) for cp in casePaths]
+        
         self.algorithm = algorithm
-        self.mesValues = measuredValues(measurement)
+        self.mesValues = measuredValues(self.mesPath)
         self.mesValues.read_variables_values()
         #
         self.caseResults = pd.DataFrame(columns = ['TP','TN','FP','FN'])
         self.TPR = None
         self.TNR = None
         
-    def _compare_X(self, CX, dtC, DX, dtD ):
-        
-        return(TP, TN, FP, FN)
-    
-    def _test_case(self,caseResults):
-        X = self.algorithm
-        mID = caseResults['mID']
-        mic = caseResults['mic']
-        #todo
-        mesVar = self.mesValues.get_variables_values(mID, mic,\
-                                                     self.algorithm['mesVar'])
-        param = self.algorithm['param']
-        signal = timeSignal(mID)  
-        Det = Detect(mID, mic, **mesVar, **param)
-        # 
-        CX = caseResults[X]
-        dtC = caseResults['dt']
-        DX = Det.KG
-        dtD = Det.dtD
-        return(_compare_X( CX, dtC, DX, dtD ))    
-            
     def test_Detection(self):
-        for case in: self.cases
-            print(pp.name())
-            caseResults = pickle.load( open( case.as_posix(), "rb" ))
-            TP, TN, FP, FN = self._test_case(caseResults)
-            self.caseResults.loc[caseID] = [TP, TN, FP, FN]
+        for case in self.cases:
+            mesVar = self.mesValues.get_variables_values(mID, mic,\
+                                                        self.algorithm['mesVar'])
+            
+            self.caseResults.loc[case.case['caseID']] = case.test(self.algorithm, mesVar)
         #calc Rates
         Results = self.caseResults.sum(axis = 1)
         # sensitivity
@@ -97,7 +132,7 @@ class testDetection():
     
     def save_test_results(self, path = None):
         dateTime =  datetime.datetime.now()
-        TestName = 'test_results_' + self.algorithm['name']'_'+ \
+        TestName = 'test_results_' + self.algorithm['name']+'_'+ \
                     dateTime.strftime( "%d-%m-%Y_%H-%M-%S")
         if path == None:
             path = self.path.parent.joinpath(TestName + ".p")
@@ -112,14 +147,11 @@ class testDetection():
                         }
         pickle.dump( testResults, open( path.as_posix(), "wb" ) )
         
-    def plot_results(self):
-        pass
         
 if __name__ == "__main__":
-    path = ''
-    measurement = '' 
+    mesPath = 'D:\GitHub\myKG\Measurements_example\MBBMZugExample' 
     author = 'esr'
     algorithm =  {'name':'Zischen1', 'mesVar':[], 'param': {}}    
-    test = testDetection(path, measurement, author, algorithm)
+    test = DetectionTester(mesPath, author, algorithm)
     test.test_detection()
     test.save_test_results()

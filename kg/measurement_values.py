@@ -9,14 +9,15 @@ import datetime
 import pathlib
 
 class measuredValues():
-    def __init__(self,path):
+    def __init__(self, mesPath):
         '''
+        handle  the measurement database
         parameters
         ----------
         path: main path of measurement
         
         '''
-        self.path = pathlib.Path(path)
+        self.path = pathlib.Path(mesPath)
         #initiate attributes from Readme.csv
         self.location = None
         self.measurement = None
@@ -239,36 +240,23 @@ class measuredValues():
             #finish
         print('Values writed to file') 
         
-    def plot_spectrum(self, ID, mic, ax, label=None):
-        ax.set_title('Spectrum', fontsize=12)
-        freq = np.array(self.micValues['LAf']['colName'])
-        PS_i = np.array(self.get_variables_values(ID,mic,['LAf'])['LAf'])
-        if label == None:
-            label = 'Spectrum_ch_' + str(mic)
-        ax.plot(freq, PS_i, label = label)
-        ax.set_xscale('log')
-        ax.grid(True)
-        ax.minorticks_off()
-        ax.set_xticks(freq)
-        ax.set_xticklabels([ f if  i%3 == 0  else '' for i,f in enumerate(freq) ])
-        ax.set_xlim([freq.min(),freq.max()])
-        ax.set_xlabel('f (Hz)', fontsize=10)
-        ax.set_ylabel(' (dBA)', fontsize=10)
+    # def plot_spectrum(self, ID, mic, ax, label=None):
+    #     ax.set_title('Spectrum', fontsize=12)
+    #     freq = np.array(self.micValues['LAf']['colName'])
+    #     PS_i = np.array(self.get_variables_values(ID,mic,['LAf'])['LAf'])
+    #     if label == None:
+    #         label = 'Spectrum_ch_' + str(mic)
+    #     ax.plot(freq, PS_i, label = label)
+    #     ax.set_xscale('log')
+    #     ax.grid(True)
+    #     ax.minorticks_off()
+    #     ax.set_xticks(freq)
+    #     ax.set_xticklabels([ f if  i%3 == 0  else '' for i,f in enumerate(freq) ])
+    #     ax.set_xlim([freq.min(),freq.max()])
+    #     ax.set_xlabel('f (Hz)', fontsize=10)
+    #     ax.set_ylabel(' (dBA)', fontsize=10)
         
-    def plot_times(self, ID, mic, ax, type ='passby', label=None, lw=1.5 ):
-        """
-        type eval for t
-        type passby for t
-        
-        """
-        if type == 'eval':
-            variables = ['Tb', 'Te']
-            col= 'R'
-        elif type == 'passby':
-            variables = ['Tp_b', 'Tp_e']
-            col= 'B'
-        t = self.get_variables_values(ID, mic, variables)
-        [ax.axvline(x, color= col, lw = lw) for x in t.values()]
+
 
 
 
