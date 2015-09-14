@@ -16,7 +16,7 @@ def test_window_0(window):
     """
     M = np.random.randint(1,1024)
     w = scipy.signal.get_window(window, M,fftbins = True)
-    assert_array_equal(w.max(),1.0 )
+    assert_array_almost_equal(w.max(),1.0 )
     
 #todo  : test for window COLA
       
@@ -55,26 +55,26 @@ def test_pad_for_invertible(x,M,R,before , after):
 
 #todo  : PARAMETRIZE test
 
-def test_stft_istft():
-M = 111
-R = M//2
-window = 'hann'
-N = 1024
-sR = 1
-#prepare signal
-x = np.sin(np.arange(0,2*np.pi,0.01)*3)
-xPadded , padN = pad_for_given_hoop(x,R)
-w =  scipy.signal.get_window(window, M, fftbins = True)
-assert(len(xPadded) % R == 1)
-invertible, normCola, before, after = cola_test_window(w,R)
-
-if invertible:
-    #calc STFT
-    X, freq, f_i, param = stft(x, M=M, R=R, N=N, sR=sR, window = window )
-    padN, before , after = param['0-pad']
-    xPadded2 = np.pad(xPadded,(before,after), 'constant', constant_values = 0)
-    y = istft(X,param)
-    assert(len(y) == len(xPadded2))
-    np.testing.assert_array_almost_equal(xPadded2,y)
+# def test_stft_istft():
+#     M = 111
+#     R = M//2
+#     window = 'hann'
+#     N = 1024
+#     sR = 1
+#     #prepare signal
+#     x = np.sin(np.arange(0,2*np.pi,0.01)*3)
+#     xPadded , padN = pad_for_given_hoop(x,R)
+#     w =  scipy.signal.get_window(window, M, fftbins = True)
+#     assert(len(xPadded) % R == 1)
+#     invertible, normCola, before, after = cola_test_window(w,R)
+#     
+#     if invertible:
+#     #calc STFT
+#     X, freq, f_i, param = stft(x, M=M, R=R, N=N, sR=sR, window = window )
+#     padN, before , after = param['0-pad']
+#     xPadded2 = np.pad(xPadded,(before,after), 'constant', constant_values = 0)
+#     y = istft(X,param)
+#     assert(len(y) == len(xPadded2))
+#     np.testing.assert_array_almost_equal(xPadded2,y)
 
 #todo: test spectrum fft <-> stft
