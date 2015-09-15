@@ -80,68 +80,6 @@ class DetectControlWidget(QMainWindow):
         #Bar
         bar1= Bar(ax[0])
         return(cls(wavPath.as_posix(), {1:ca} , micSn.tmin, [bar1]))
-        
-##
-class CaseCreatorWidget(DetectControlWidget):
-    
-    def __init__(self, micSn):
-        measurement = ''
-        #initiate new Case
-        #todo
-        self.case = Case()
-
-        #span selector
-        self.span = SpanSelector(axSpan, self._onselect, 'horizontal',\
-        span_stays=True, useblit = True,
-                            rectprops=dict(alpha=0.5, facecolor='red'))
-                            
-        self.kg_events = []
-        #initiate superclass
-        super(DetectControlWidget, self).__init__(wavPath, canvas ,t0 = 0,\
-        bar = [], parent = None)
-        self.setWindowTitle('Create Case')
-        hBox = QtGui.QHBoxLayout()
-        label = QtGui.QLabel('''Select channel to play, first widget''')
-        self.buttonRm = QtGui.QPushButton("delete last event",self)
-        self.buttonSave = QtGui.QPushButton("Save Case",self)
-        hBox.addWidget(self.buttonLim)
-        hBox.addWidget(self.buttonR)
-        hBox.addStretch(1)
-        self.vBox.addLayout(hBox)
-        
-        # centralwidget
-        centralWidget = QtGui.QWidget()
-        centralWidget.setLayout(self.vBox)
-        self.setCentralWidget(centralWidget)
-        
-        # connections
-        self.buttonRm.clicked.connect()
-        self.buttonSave.clicked.connect(self.save_case)
-        
-    def _initgraphics(self, micSn):
-        #create Graphics
-        plt.ioff()
-        stftName = micSn.calc_stft(M=1024*4)
-        self.canvas = FigureCanvas(plt.subplots(2,sharex=True)[0])
-        ax0, axSpan = ca.figure.get_axes()
-        micSn.plot_spectrogram(stftName,ax0)
-        micSn.plot_spectrogram(stftName,axSpan)    
-        #Bar
-        self.bar = Bar(ax0)
-        
-    def _onselect(self, xmin, xmax):
-        self.case.add_kg_event()
-        self.kg_events.append(axSpan.axvspan(xmin, xmax, facecolor='g', alpha=0.5))
-        
-    def remove_last_event(self)
-        #todo
-        pass
-        
-    def save_case(self):
-        #todo
-        pass
-
-##
 
 if __name__ == "__main__":
     import pathlib
