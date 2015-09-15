@@ -191,13 +191,14 @@ def _adjust_time(X, t_i, t0 = 0, tmin= None, tmax=None ):
     t_mask = np.all([(t >= tmin), (t <= tmax)], axis=0)
     return(X[:,t_mask], t[t_mask])
     
-def _adjust_PSD_time_freq(PS_i, freq, t_i, t0 = 0, tmin= None,tmax = None, fmax = None, fmin = None):
+def _adjust_PSD_time_freq(PS_i, freq, t_i, t0 = 0, tmin = None, tmax = None, fmax = None, fmin = None):
     '''
     return a 
     '''
+    # todo inglobe NONE
     t = t_i + t0
-    f_mask = np.all([(freq >= fmin), (freq <= fmax)], axis=0)
-    t_mask = np.all([(t >= tmin), (t <= tmax)], axis=0)
+    f_mask = np.logical_and( freq >= fmin, freq <= fmax )
+    t_mask = np.logical_and(t >= tmin, t <= tmax )
     return(PS_i[t_mask,:][:,f_mask], freq[f_mask], t[t_mask])
 
 def stft_spectrum(X, param, **kwargs):

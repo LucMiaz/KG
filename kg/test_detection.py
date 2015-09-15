@@ -31,6 +31,29 @@ class Case(object):
                 'K':K
                 }
             
+    def add_kg_event(self, t0, t1, test = 'Z'):
+        self.case[test].append((to,t1))
+        
+    def remove_last_event(self):
+        # todo
+        pass
+        
+    def save(self, mesPath):
+        '''
+        param
+        -----
+        measurement path
+        '''
+        mesPath = pathlib.Path(mesPath)
+        casePath = mesPath.joinpath('test_cases').joinpath(author)
+        os.makedirs(casePath.as_posix(), exist_ok = True)
+        name = self.case['caseID'] + '.p'
+        casePath = casePath.joinpath(name)
+        #add date
+        dateTime =  datetime.datetime.now()
+        self.case['date'] = dateTime.strftime( "%d-%m-%Y_%H-%M-%S")
+        pickle.dump( self.case, open(casePath.as_posix(), "wb" ))
+        
     def compare(self, detect , test = 'Z' , sum = True):
         '''
         return
@@ -76,29 +99,10 @@ class Case(object):
         Det.calc(**algorithm['param'])
         return(self.compare(algorithm['test'],Det.get_results(), sum = sum))
         
-    def add_kg_event(self, t0, t1, test = 'Z'):
-        self.case[test].append((to,t1))
-        
-    def save(self, mesPath):
-        '''
-        param
-        -----
-        measurement path
-        '''
-        mesPath = pathlib.Path(mesPath)
-        casePath = mesPath.joinpath('test_cases').joinpath(author)
-        os.makedirs(casePath.as_posix(), exist_ok = True)
-        name = self.case['caseID'] + '.p'
-        casePath = casePath.joinpath(name)
-        #add date
-        dateTime =  datetime.datetime.now()
-        self.case['date'] = dateTime.strftime( "%d-%m-%Y_%H-%M-%S")
-        pickle.dump( self.case, open(casePath.as_posix(), "wb" ))
-    
     @classmethod
     def fromfile(cls, casePath):
         return(cls(**pickle.load( open( casePath, "rb" ))))
-        
+ 
         
 class DetectionTester(object):
     def __init__(self, mesPath, author, algorithm, cases = None ):

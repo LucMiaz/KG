@@ -1,178 +1,166 @@
 import sys
 import os
-import time
 import numpy as np
 from PySide import QtGui, QtCore
-import sys
 from PySide.phonon import Phonon
 from PySide.QtGui import (QApplication, QMainWindow, QAction, QStyle,
                           QFileDialog)
-from pandas.sandbox.qtpandas import DataFrameModel, DataFrameWidget
                           
-class PlaybackWindow(QMainWindow):
+sys.path.append('D:\GitHub\myKG')
+from kg.detect import *
+from kg.mpl_moving_bar import Bar
+from pandas.sandbox.qtpandas import DataFrameModel, DataFrameWidget
+from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.widgets import SpanSelector
+import matplotlib.pyplot as plt
+                          
+class DetectControlWidget(QMainWindow):
 
-    # gui messages for different playback states
-    STATE_MESSAGES = {
-        Phonon.LoadingState: 'Loading {filename}',
-        Phonon.ErrorState: 'Error occured: {error}',
-        Phonon.PausedState: 'Paused {filename}',
-        Phonon.PlayingState: 'Playing {filename}',
-        Phonon.StoppedState: 'Stopped {filename}',
-        Phonon.BufferingState: 'Buffering'}
-
-    ACTIONS = [
-        ('play', 'Play', QStyle.SP_MediaPlay),
-        ('pause', 'Pause', QStyle.SP_MediaPause),
-        ('stop', 'Stop', QStyle.SP_MediaStop)]
-
-    def __init__(self, canvas, signal, dsp , parent=None):
+    def __init__(self,  wavPath, canvas ,t0 = 0, bar = [], parent = None):
         QMainWindow.__init__(self, parent)
-        self.setWindowTitle('V1')
-        #Phonon
+        self.setWindowTitle('listen and detect ;-)')
+        #phonon 
+        self._init_phonon(wavPath)
+        #Attributes
+        self.canvas = canvas
+        self.bar = bar
+        self.tShift = t0
+       
+        #layout
+        self.vBox = QtGui.QVBoxLayout()
+        self.vBox.addWidget(self.seeker)
+        for k, ca in self.canvas.items():
+            self.vBox.addWidget(ca)
+        
+        #centralwidget
+        centralWidget = QtGui.QWidget()
+        centralWidget.setLayout(self.vBox)
+        self.setCentralWidget(centralWidget)
+
+        # connections
+        self.media.tick.connect(self._update)
+    
+    def _init_phonon(self, wavPath):
         # the media object controls the playback
         self.media = Phonon.MediaObject(self)
         self.audio_output = Phonon.AudioOutput(Phonon.MusicCategory, self)
         self.seeker = Phonon.SeekSlider(self)
+        self.seeker.setFixedHeight(20)
         self.seeker.setMediaObject(self.media)
-        self.media.setTickInterval(50)
-        
+        self.media.setTickInterval(20)
+        self.media.setCurrentSource(Phonon.MediaSource(wavPath))
         # audio data from the media object goes to the audio output object
         Phonon.createPath(self.media, self.audio_output)
         # set up actions to control the playback
+        ACTIONS = [
+            ('play', 'Play', QStyle.SP_MediaPlay),
+            ('pause', 'Pause', QStyle.SP_MediaPause),
+            ('stop', 'Stop', QStyle.SP_MediaStop)]
         self.actions = self.addToolBar('Actions')
-        for name, label, icon_name in self.ACTIONS:
+        for name, label, icon_name in ACTIONS:
             icon = self.style().standardIcon(icon_name)
             action = QtGui.QAction(icon, label, self)
             action.setObjectName(name)
             self.actions.addAction(action)
             action.triggered.connect(getattr(self.media, name))
-        #Attributes
-        #Channels
-        self.signal= signal
-        self.canvas = canvas
-        self.channels = list(self.canvas.keys())
-        self.currentCh = None
-        self.tShift = None
-        #combobox
+        
+    def _update(self,t):
+        for bar in self.bar:
+            bar.set_x_position(t/1000 + self.tShift )
+            
+    @classmethod
+    def from_micSignal(cls, micSn):
+        wavPath = micSn.export_to_Wav(mesPath)
+        #Canvas
+        plt.ioff()
+        stftName = micSn.calc_stft(M=1024*4)
+        ca = FigureCanvas(plt.subplots(1,sharex=True)[0])
+        ax = ca.figure.get_axes()
+        micSn.plot_spectrogram(stftName,ax[0])    
+        #Bar
+        bar1= Bar(ax[0])
+        return(cls(wavPath.as_posix(), {1:ca} , micSn.tmin, [bar1]))
+        
+##
+class CaseCreatorWidget(DetectControlWidget):
+    
+    def __init__(self, micSn):
+        measurement = ''
+        #initiate new Case
+        #todo
+        self.case = Case()
+
+        #span selector
+        self.span = SpanSelector(axSpan, self._onselect, 'horizontal',\
+        span_stays=True, useblit = True,
+                            rectprops=dict(alpha=0.5, facecolor='red'))
+                            
+        self.kg_events = []
+        #initiate superclass
+        super(DetectControlWidget, self).__init__(wavPath, canvas ,t0 = 0,\
+        bar = [], parent = None)
+        self.setWindowTitle('Create Case')
         hBox = QtGui.QHBoxLayout()
         label = QtGui.QLabel('''Select channel to play, first widget''')
-        self.buttonLim = QtGui.QPushButton("x limits",self)
-        self.buttonR = QtGui.QPushButton("Results",self)
-        self.combo = QtGui.QComboBox(self)
-        hBox.addWidget(label)
-        hBox.addWidget(self.combo)
+        self.buttonRm = QtGui.QPushButton("delete last event",self)
+        self.buttonSave = QtGui.QPushButton("Save Case",self)
         hBox.addWidget(self.buttonLim)
         hBox.addWidget(self.buttonR)
         hBox.addStretch(1)
-        
-        #stack Widget
-        
-        self.stack = QtGui.QStackedWidget()
-        for k, ca  in self.canvas.items():
-            self.combo.addItem('channel ' + str(k))
-            ca.setParent(self)
-            self.stack.addWidget(ca) 
-        
-        #layout
-        self.vBox = QtGui.QVBoxLayout()
-        self.vBox.addWidget(self.seeker)
         self.vBox.addLayout(hBox)
-        self.vBox.addWidget(self.stack)
-        for k, ca  in self.canvas.items():
-            pass
-            #self.vBox.addWidget(ca)
-        #self.vBox.addSpacing(20)
         
+        # centralwidget
         centralWidget = QtGui.QWidget()
         centralWidget.setLayout(self.vBox)
         self.setCentralWidget(centralWidget)
-        # Info
-        self.InfoWidget = QtGui.QWidget()
-        vBox2 = QtGui.QVBoxLayout()
-        self.df = DataFrameWidget(dsp.SignalInfo)
-        self.label = QtGui.QLabel()
-        self.label.setWindowTitle('Results / Informations')
-        self.label.setScaledContents(1)
-        self.label.setMargin(20)
-        vBox2.addWidget(self.label)
-        vBox2.addWidget(self.df)
-        self.InfoWidget.setLayout(vBox2)
         
-        #Dock
-        #label
-        # self.dock = QtGui.QDockWidget("Results", self)
-        # self.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.dock)
-        # self.dock.setWidget(self.label)
+        # connections
+        self.buttonRm.clicked.connect()
+        self.buttonSave.clicked.connect(self.save_case)
         
-        # whenever the playback state changes, show a message to the user
-        self.media.stateChanged.connect(self._show_state_message)
-        self.combo.currentIndexChanged.connect(self._set_channel)
-        self.buttonLim.clicked.connect(self._sharex_input)
-        self.buttonR.clicked.connect(self._results)
-        self.media.tick.connect(self._update)
+    def _initgraphics(self, micSn):
+        #create Graphics
+        plt.ioff()
+        stftName = micSn.calc_stft(M=1024*4)
+        self.canvas = FigureCanvas(plt.subplots(2,sharex=True)[0])
+        ax0, axSpan = ca.figure.get_axes()
+        micSn.plot_spectrogram(stftName,ax0)
+        micSn.plot_spectrogram(stftName,axSpan)    
+        #Bar
+        self.bar = Bar(ax0)
         
-        #setup
-        self._set_channel(0)
+    def _onselect(self, xmin, xmax):
+        self.case.add_kg_event()
+        self.kg_events.append(axSpan.axvspan(xmin, xmax, facecolor='g', alpha=0.5))
+        
+    def remove_last_event(self)
+        #todo
+        pass
+        
+    def save_case(self):
+        #todo
+        pass
 
-        
-    def _set_channel(self, i):
-        self.stack.setCurrentIndex(i)
-        self.currentCh = self.channels[i]
-        filename = self.signal.export_to_Wav(self.currentCh)
-        self.media.setCurrentSource(Phonon.MediaSource(filename))
-        self.tShift = self.signal.channel_info(self.currentCh)['tmin']
+##
 
+if __name__ == "__main__":
+    import pathlib
+    sys.path.append('D:\GitHub\myKG')
+    from kg.measurement_values import measuredValues
+    from kg.time_signal import timeSignal
+    #setup measurement
+    mesPath = pathlib.Path('D:\GitHub\myKG\Measurements_example\MBBMZugExample')
+    mesVal = measuredValues(mesPath.as_posix())
+    mesVal.read_variables_values()
+    timeSignal.setup(mesPath.as_posix())
     
-    def _sharex(self,xmin=None,xmax=None):
-        for k,ca in self.canvas.items():
-            ca.set_xbounds( xmin , xmax)
-            
-    def _sharex_input(self):
-        x_limits = self.canvas[self.currentCh].x_limits
-        text1 =  ';'.join(map(str, np.round(x_limits,2)))
-        # get values from dialog
-        text, ok = QtGui.QInputDialog.getText(self, 'axes limits',
-            'xmin; xmax',QtGui.QLineEdit.Normal,text1)
-        if ok:
-            if text1 == text:
-                self._sharex()
-            else:
-                try:
-                    xmin,xmax =tuple([float(x) for x in text.split(';')])
-                except ValueError as e:
-                    print('expected xmin and xmax separated by ;')
-                    raise(e)
-                else:
-                    self._sharex(xmin,xmax)
-        
-    def _update(self,t):
-        #t=self.media.currentTime()
-        self.canvas[self.currentCh].update_P(t/1000 + self.tShift )
-    def _results(self):
-        #msgBox = QtGui.QMessageBox()
-        #msgBox.setText("The document has been modified.")
-        #msgBox.exec_()
-        self.label.setText(
-        '''
-        Questo é un text label.         \n
-        Verrano date le informazione sull algoritmo.\n
-        Version 1.1
-        ''')
-        self.InfoWidget.show()
-
-        
-        
-    def _show_state_message(self, new_state):
-        # get the message for the given state and format it
-        message = self.STATE_MESSAGES[new_state].format(
-            filename=self.media.currentSource().fileName(),
-            error=self.media.errorString())
-        self.statusBar().showMessage(message)
-        # set the file path in the window title bar, if the playback source
-        # is a local file
-        source = self.media.currentSource()
-        filepath = 'No File'
-        if source.type() == Phonon.MediaSource.LocalFile:
-            filepath = source.fileName()
-        self.setWindowFilePath(filepath)
-
+    mID = 'm_0100'
+    ts = timeSignal(mID)
+    mic = 1
+    ts.read_signal(mic)
+    sn = ts.get_signal(mic)
+    values = mesVal.get_variables_values(mID, mic, [ 'Tb','Te','Tp_b','Tp_e','LAEQ', 'besch'])
+    micSn = MicSignal(sn,mID,mic,values)
+    ## Run
+    W = DetectControlWidget.from_micSignal(micSn)
+    W.show()

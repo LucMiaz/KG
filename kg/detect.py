@@ -12,6 +12,7 @@ import matplotlib as mpl
 import brewer2mpl
 from mpl_toolkits.axes_grid.inset_locator import inset_axes
 import struct
+import os
 
 sys.path.append('D:\GitHub\myKG')
 import mySTFT
@@ -24,14 +25,15 @@ from pandas.sandbox.qtpandas import DataFrameModel, DataFrameWidget
 # todo: spectrum spectrum plot
 
 class Algorithm(object):
+    #TODO
     pass
     
 class KG(object):
     pass
     
 class Detect():
-
-class Mic(object):
+    pass
+class MicSignal(object):
     
     """
     Audio file and the relation for amplitude pressure DV
@@ -64,12 +66,12 @@ class Mic(object):
         self.mic = mic
         self.signal = signal
         self.tmin = self.signal['t'].min()
-        self.SignalInfo = {'mic', 'tb','te','t1b','t1e','LAEQ', 'besch'}
+        self.SignalInfo = values# {'mic', 'tb','te','t1b','t1e','LAEQ', 'besch'}
         self.STFT = {}
         self.L = {}
         self.KG = {'Z':{},'K':{}}
         
-    def export_to_Wav(self,mesPath):
+    def export_to_Wav(self, mesPath):
         """
         save channel to wav'
         TODO: 
@@ -88,24 +90,18 @@ class Mic(object):
         return(wavPath.joinpath(filename))
     
   
-    def calc_kg(self, stftParam, highcut = 2000, threshold = 5):
+    def calc_kg(self, stftParam, bands = {'b1':(0,2000), 'b2':(2000,15000)}, threshold = 5):
             stftName = self.calc_stft(**stftParam)
-            PS = 
-            # signal filtern 
-            
-            
-            # calculate kg 
-            flanging = self.L[SN]['LF2']['y'] - self.L[newSn]['LF2']['y']
-            # downsampling
-            R = 32 
-            t = self.L[SN]['LF2']['t'][:np.floor(len(flanging)/R)*R].reshape(-1, R).mean(axis=1)
-            flanging = flanging[:np.floor(len(flanging)/R)*R].reshape(-1, R).mean(axis=1)
-            newFr = int(self.L[SN]['LF2']['sR']/R)
-            
-            #smooth kg 
-            av_len = int(DT*newFr)
-            flanging = sp.signal.convolve(flanging, np.ones(av_len)/av_len, 'same')
-            flanging = (flanging.round() >= delta)
+            tmin = 0
+            tmax = 0
+            PB = {}
+            for k,v in bands.iteritem():
+                f0,f1=v
+                #PSD_i = calc_PSD_i(stftName, tmin=, tmax=, fmin = f0, fmax = f1 )
+                
+                PB[k]= PSD_i.sum(axis = 0)
+            #
+            #rapporto
             # calc kenngrössen
             tb = self.SignalInfo.ix[SN]['t1b']
             te = self.SignalInfo.ix[SN]['t1e']
@@ -149,29 +145,28 @@ class Mic(object):
             tsqueal.append(v['tsqueal'])
         return({'mic':mic,'tpassBy':tpassBy,'tsqueal':tsqueal })
         
-    def calc_stft(self, M , N = None, ola = 2, window = 'hann'):
+    def calc_stft(self, M , N = None, overlap = 2, window = 'hann'):
         signal = self.signal
         X, freq, frame_i, param = mySTFT.stft.stft( self.signal['y'], M = M,\
                                                     N = N, \
-                                                    ola = ola,\
+                                                    overlap = overlap,\
                                                     sR = signal['sR'],\
                                                     window = window,\
-                                                    invertible = False)
+                                                    invertible = True)
         
-        name = str(M) +'_'+ str(N) +'_'+ str(ola)
+        name = str(M) +'_'+ str(N) +'_'+ str(overlap)
         self.STFT[name] = { 'name': name ,
                             'frame_i': frame_i,# centre sample i
                             'f': freq,
-                            'X_i': X, # complex FFT
+                            'X': X, # complex FFT
                             'param': param
                             }
         return(name)
     
-    def calcPS_i(self,stftName):
-        stft= self.STFT[stftName]
-         stft_PSD(stft['X'], stft['param'], scaling = 'density',t0,):
-        return()
-        
+    def calc_PSD_i(self, stftName, tmin=0, tmax=0, fmin =0, fmax =0  ):
+        stft = self.STFT[stftName]
+        kwargs = None#{'tmin':,'tmax':,'fmin':,'fmax':}   
+        return(stft_PSD(stft['X'], stft['param'], scaling = 'density', t0 = self.tmin, **kwargs))
 
         
     def calc_spectrum_welch(name, tb=None , te = None):
@@ -214,9 +209,12 @@ class Mic(object):
         kwargs = {
         'fmin': 200,
         'fmax':10000,
-        't0': self.tmin
+        't0': self.tmin,
+        'tmin': self.tmin,
+        'tmax': self.signal['t'].max()
         }
-        plot_spectrogram(stft['X'], stft['param'], ax, dBMax=dBMax, **kwargs )
+        mySTFT.stft_plot.plot_spectrogram(stft['X'], stft['param'], ax,\
+                                            dBMax=dBMax, **kwargs )
 
     def plot_mic(self, ax ,label = None):
         """
@@ -252,33 +250,33 @@ class Mic(object):
         #todo
         pass
         
-    def plot_KG(self, method , ax, test = 'Z', color='red'):
-        """
-        TODO label,colors
-        mic
-        method
-        type in ['squeal', 'flanging']
-        """
-        #todo
-        KG = self.KG[test]
-        except KeyError as e:
-            print('No mic')
-            raise(e)
-        else:
-            try:
-                KG = KG_mic[method]
-            except KeyError as e:
-                print('No method')
-                raise(e)
-            else:
-                try:
-                    KG_sn = KG[types[type]]
-                    t = KG_sn['t']
-                    y = KG_sn['y']
-                except (KeyError, ValueError) as e:
-                    print('no type')
-                    raise(e)
-                else:
-                    ymin, ymax = ax.get_ylim()
-                    ax.fill_between(t, y1 = 130, y2 = 0 , where= y, alpha=0.3, color=color)
-                    ax.set_ybound(ymin, ymax)
+    # def plot_KG(self, method , ax, test = 'Z', color='red'):
+    #     """
+    #     TODO label,colors
+    #     mic
+    #     method
+    #     type in ['squeal', 'flanging']
+    #     """
+    #     #todo
+    #     KG = self.KG[test]
+    #     except KeyError as e:
+    #         print('No mic')
+    #         raise(e)
+    #     else:
+    #         try:
+    #             KG = KG_mic[method]
+    #         except KeyError as e:
+    #             print('No method')
+    #             raise(e)
+    #         else:
+    #             try:
+    #                 KG_sn = KG[types[type]]
+    #                 t = KG_sn['t']
+    #                 y = KG_sn['y']
+    #             except (KeyError, ValueError) as e:
+    #                 print('no type')
+    #                 raise(e)
+    #             else:
+    #                 ymin, ymax = ax.get_ylim()
+    #                 ax.fill_between(t, y1 = 130, y2 = 0 , where= y, alpha=0.3, color=color)
+    #                 ax.set_ybound(ymin, ymax)
