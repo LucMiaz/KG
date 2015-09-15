@@ -83,7 +83,12 @@ class DetectControlWidget(QMainWindow):
         
 ##
 class CaseCreatorWidget(DetectControlWidget):
-    
+    '''
+    this is a subclass of DetectControlWidget
+    this widget should allow to create cases in GUI style
+    kg_ event duration is selected with mouse cursor
+    case is saved using a button
+    '''
     def __init__(self, micSn):
         measurement = ''
         #initiate new Case
