@@ -14,8 +14,7 @@ import itertools
 
 class timeSignal():
     """
-    import time signal and info fro MBBM
-   
+    import time signal and info from MBBM
     """
     PATH = ''
     SIGNALS = {}

@@ -7,6 +7,7 @@ from PySide.QtGui import (QApplication, QMainWindow, QAction, QStyle,
                           QFileDialog)
                           
 sys.path.append('D:\GitHub\myKG')
+sys.path.append('C:\LucMiaz\KG')
 from kg.detect import *
 from kg.mpl_moving_bar import Bar
 from pandas.sandbox.qtpandas import DataFrameModel, DataFrameWidget
@@ -15,14 +16,18 @@ from matplotlib.widgets import SpanSelector
 import matplotlib.pyplot as plt
                           
 class DetectControlWidget(QMainWindow):
-
+    """General window creator. 
+        -Audio file
+        -Canvas
+        -Optional moving bar. 
+        """
     def __init__(self,  wavPath, canvas ,t0 = 0, bar = [], parent = None):
         QMainWindow.__init__(self, parent)
         self.setWindowTitle('listen and detect ;-)')
         #phonon 
-        self._init_phonon(wavPath)
+        self._init_phonon(wavPath)#Path to the audio file
         #Attributes
-        self.canvas = canvas
+        self.canvas = canvas #graphic
         self.bar = bar
         self.tShift = t0
        
@@ -76,10 +81,77 @@ class DetectControlWidget(QMainWindow):
         stftName = micSn.calc_stft(M=1024*4)
         ca = FigureCanvas(plt.subplots(1,sharex=True)[0])
         ax = ca.figure.get_axes()
-        micSn.plot_spectrogram(stftName,ax[0])    
+        micSn.plot_spectrogram(stftName,ax[0])
         #Bar
         bar1= Bar(ax[0])
         return(cls(wavPath.as_posix(), {1:ca} , micSn.tmin, [bar1]))
+        
+##
+class CaseCreatorWidget(DetectControlWidget):
+    '''
+    this is a subclass of DetectControlWidget
+    this widget should allow to create cases in GUI style
+    kg_ event duration is selected with mouse cursor
+    case is saved using a button
+    '''
+    def __init__(self, micSn, wavPath, canvas ,t0 = 0, bar = [], parent = None):
+        measurement = ''
+        #initiate new Case
+        #todo
+        self.case = Case()
+
+        #span selector
+        self.span = SpanSelector(axSpan, self._onselect, 'horizontal',\
+        span_stays=True, useblit = True,
+                            rectprops=dict(alpha=0.5, facecolor='red'))
+                            
+        self.kg_events = []
+        #initiate superclass
+        super(DetectControlWidget, self).__init__(wavPath, canvas ,t0 = 0,\
+        bar = [], parent = None)
+        self.setWindowTitle('Create Case')
+        hBox = QtGui.QHBoxLayout()
+        label = QtGui.QLabel('''Select channel to play, first widget''')
+        self.buttonRm = QtGui.QPushButton("delete last event",self)
+        self.buttonSave = QtGui.QPushButton("Save Case",self)
+        hBox.addWidget(self.buttonLim)
+        hBox.addWidget(self.buttonR)
+        hBox.addStretch(1)
+        self.vBox.addLayout(hBox)
+        
+        # centralwidget
+        centralWidget = QtGui.QWidget()
+        centralWidget.setLayout(self.vBox)
+        self.setCentralWidget(centralWidget)
+        
+        # connections
+        self.buttonRm.clicked.connect(self.remove_last_event)
+        self.buttonSave.clicked.connect(self.save_case)
+        
+    def _initgraphics(self, micSn):
+        #create Graphics
+        plt.ioff()
+        stftName = micSn.calc_stft(M=1024*4)
+        self.canvas = FigureCanvas(plt.subplots(2,sharex=True)[0])
+        ax0, axSpan = ca.figure.get_axes()
+        micSn.plot_spectrogram(stftName,ax0)
+        micSn.plot_spectrogram(stftName,axSpan)    
+        #Bar
+        self.bar = Bar(ax0)
+        
+    def _onselect(self, xmin, xmax):
+        self.case.add_kg_event()
+        self.kg_events.append(axSpan.axvspan(xmin, xmax, facecolor='g', alpha=0.5))
+        
+    def remove_last_event(self):
+        #todo
+        pass
+        
+    def save_case(self):
+        #todo
+        pass
+
+##
 
 if __name__ == "__main__":
     import pathlib
@@ -87,7 +159,8 @@ if __name__ == "__main__":
     from kg.measurement_values import measuredValues
     from kg.time_signal import timeSignal
     #setup measurement
-    mesPath = pathlib.Path('D:\GitHub\myKG\Measurements_example\MBBMZugExample')
+    #mesPath = pathlib.Path('D:\GitHub\myKG\Measurements_example\MBBMZugExample')
+    mesPath = pathlib.Path('C:\LucMiaz\KG\Measurements_example\MBBMZugExample')
     mesVal = measuredValues(mesPath.as_posix())
     mesVal.read_variables_values()
     timeSignal.setup(mesPath.as_posix())
