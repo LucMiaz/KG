@@ -6,19 +6,24 @@ sys.path.append('D:\GitHub\myKG')
 from kg.measurement_values import measuredValues
 from kg.time_signal import timeSignal
 from kg.detect import Detect
-from kg.grafics import BarCanvas
-from kg.audio_visual_app import PlaybackWindow
 
 import datetime
 import pickle
 import pathlib
 import os
 
-#todo, create
 class Case(object):
-    def __init__(measurement, cID, mID, mic, tb, te, author, date = None, \
+    '''
+    A Case object describe the author subjective perception of KG noise
+    for a given Microphone passby records.
+    self.case['Z'] is a list of intervals where 'zischen' is present
+    self.case['K'] is a list of intervals where 'Kreischen' is present
+    
+    The class contains methods to test a detection algorithm on the case
+    '''
+    def __init__(self, measurement, caseID, mID, mic, tb, te, author, date = None, \
                     Z = [], K = []):
-        self.case = {'caseID': cID,
+        self.case = {'caseID': caseID,
                 'measurement':measurement, 
                 'mID': mID,
                 'mic': mic,
@@ -31,8 +36,11 @@ class Case(object):
                 'K':K
                 }
             
-    def add_kg_event(self, t0, t1, test = 'Z'):
-        self.case[test].append((to,t1))
+    def add_kg_event(self, t0, t1, noiseType = 'Z'):
+        '''
+        add intervall where noiseType is present
+        '''
+        self.case[noiseType].append((t0,t1))
         
     def remove_last_event(self):
         # todo
@@ -40,45 +48,44 @@ class Case(object):
         
     def save(self, mesPath):
         '''
-        param
-        -----
-        measurement path
+        save Case to file
         '''
         mesPath = pathlib.Path(mesPath)
-        casePath = mesPath.joinpath('test_cases').joinpath(author)
+        casePath = mesPath.joinpath('test_cases').joinpath(self.case['author'])
         os.makedirs(casePath.as_posix(), exist_ok = True)
         name = self.case['caseID'] + '.p'
         casePath = casePath.joinpath(name)
+        print(casePath)
         #add date
         dateTime =  datetime.datetime.now()
         self.case['date'] = dateTime.strftime( "%d-%m-%Y_%H-%M-%S")
         pickle.dump( self.case, open(casePath.as_posix(), "wb" ))
         
-    def compare(self, detect , test = 'Z' , sum = True):
+    def _compare(self, detect , noiseType = 'Z' , sum = True):
         '''
-        return
+        compare detection algorithm results with Case,
+        return:
         ------
-        dict
+        true positive, true negative, false positive, false negative
         '''
-        Z = detect['test']
-        t = detect['t']
-        cZ = np.zeros(len(t))
-        #crete array fronm case results
-        for t0,t1 in self.results[test]:
+        detResult = detect['noiseType']
+        detTime = detect['t']
+        caseResult = np.zeros(len(detTime)).astype('bool')
+        #crete array from (union)
+        for t0,t1 in self.case[noiseType]:
             i0,i1 = np.searchsorted(t,(t0,t1))
-            cZ[i0:i1] = 1
-        out = {}
+            caseResult[i0:i1] = True
+        
         #evaluated interval
         tb = np.max(detect['tb'], self.case['tb'])
         te = np.min(detect['te'], self.case['te'])
-        mask = np.logical_and(t > tb ,t < te)
+        mask = np.logical_and(detTime > tb , detTime < te)
         #calculate TP, TN, FP, FN
-        Z = np.array([1,1,0,0]).astype('bool')
-        cZ = np.array([1,0,1,0]).astype('bool')
-        out['TP'] = np.logical_and(Z,cZ)
-        out['TN'] = np.logical_and(np.logical_not(Z), np.logical_not(cZ))
-        out['FP'] = np.logical_and( Z, np.logical_not(cZ))
-        out['FN'] = np.logical_and( np.logical_not(Z),  cZ)
+        out = {}
+        out['TP'] = np.logical_and(detResult,caseResult)
+        out['TN'] = np.logical_and(np.logical_not(detResult), np.logical_not(caseResult))
+        out['FP'] = np.logical_and( detResult, np.logical_not(caseResult))
+        out['FN'] = np.logical_and( np.logical_not(detResult),  caseResult)
         # sum 
         if sum:
             for k,v in out.iteritem():
@@ -88,6 +95,9 @@ class Case(object):
         return(out)
     
     def test(self, algorithm, mesVar, signal = None, sum = True):
+        '''
+        test algorithm  on Case
+        '''
         mID = self.case['mID']
         mic = self.case['mic']
         if(signal is None):
@@ -97,7 +107,7 @@ class Case(object):
             
         Det = Detect(signal, mID, mic, **mesVar)
         Det.calc(**algorithm['param'])
-        return(self.compare(algorithm['test'],Det.get_results(), sum = sum))
+        return(self._compare(algorithm['test'],Det.get_results(), sum = sum))
         
     @classmethod
     def fromfile(cls, casePath):
@@ -106,6 +116,9 @@ class Case(object):
         
 class DetectionTester(object):
     def __init__(self, mesPath, author, algorithm, cases = None ):
+        '''
+        initiate an algorithm test on the case defined by an author
+        '''
         self.mesPath = pathlib.Path(mesPath)
         casePath = self.mesPath.joinpath('test_cases').joinpath(author)
         casePaths = [cp for cp in casePath.iterdir() if cp.match('case_**.p')]
@@ -122,6 +135,11 @@ class DetectionTester(object):
         self.TNR = None
         
     def test_Detection(self):
+        '''
+        run the test
+        calculate the True Positive Ratio and the True Negative Ratio for the
+        algorithm
+        '''
         for case in self.cases:
             mesVar = self.mesValues.get_variables_values(mID, mic,\
                                                         self.algorithm['mesVar'])
@@ -150,8 +168,7 @@ class DetectionTester(object):
                         'TNR':self.TNR
                         }
         pickle.dump( testResults, open( path.as_posix(), "wb" ) )
-        
-        
+    ##
 if __name__ == "__main__":
     mesPath = 'D:\GitHub\myKG\Measurements_example\MBBMZugExample' 
     author = 'esr'
