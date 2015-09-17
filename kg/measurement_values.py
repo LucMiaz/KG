@@ -264,29 +264,29 @@ class measuredValues():
 
 if __name__ == "__main__":
     
-    AA = measuredValues('D:\GitHub\myKG\Measurements_example\MBBMZugExample')
-    AA.list_variables()
-    AA.read_variables_values()
+    mesVal = measuredValues('D:\GitHub\myKG\Measurements_example\MBBMZugExample')
+    mesVal.list_variables()
+    mesVal.read_variables_values()
     ##getexample
-    s=AA.get_variables_values(ID='m_0100',mic= [1,2], variables=['v2','v1','direction','Ta', 'Te', 'Tp_a', 'Tp_e'])
+    s=mesVal.get_variables_values(ID='m_0100',mic= [1,2], variables=['v2','v1','direction','Ta', 'Te', 'Tp_a', 'Tp_e'])
     print(s)
     
-    s=AA.get_variables_values(ID='m_0101',mic= 1, variables=['v2','v1'])
+    s=mesVal.get_variables_values(ID='m_0101',mic= 1, variables=['v2','v1'])
     print(s)
     ## get evaluated signals
-    allID = AA.get_IDs(evaluated = False)
+    allID = mesVal.get_IDs(evaluated = False)
     print( 'Total N. of IDs:' , len(allID))
-    evalID = AA.get_IDs(evaluated = True)
+    evalID = mesVal.get_IDs(evaluated = True)
     print( 'evaluated IDs:' , len(evalID))
     nonEvalID = list(set(allID)-set(evalID))
     print(nonEvalID)
     print('m_0120'in allID)
 
     ##expot example
-    AA.set_kg_alg_description( 'alg1','kkkkkkk',[['var1','aaa'],['var2','bbb'],['mic','micro']])
-    AA.set_kg_values('alg1','m_0101',{'mic':[1,2,7],'var1':[22,33,44],'var2':[9,9,9]})
-    AA.export_kg_results('alg1',variables= ['Te','v2','mTime'])
-    AA.export_kg_results('alg1')
+    mesVal.set_kg_alg_description( 'alg1','kkkkkkk',[['var1','aaa'],['var2','bbb'],['mic','micro']])
+    mesVal.set_kg_values('alg1','m_0101',{'mic':[1,2,7],'var1':[22,33,44],'var2':[9,9,9]})
+    mesVal.export_kg_results('alg1',variables= ['Te','v2','mTime'])
+    mesVal.export_kg_results('alg1')
 
         
 

@@ -12,7 +12,7 @@ import struct
 import itertools
 
 
-class timeSignal():
+class measuredSignal():
     """
     import time signal and info fro MBBM
    
@@ -22,13 +22,13 @@ class timeSignal():
 
     def __init__(self, ID):
         self.ID = ID
-        self.path = timeSignal.PATH
+        self.path = measuredSignal.PATH
         self.signals = {}
         
     def list_signals(self):
         data = []
         index = []
-        for k, v in timeSignal.SIGNALS.items(): 
+        for k, v in measuredSignal.SIGNALS.items(): 
             df = pd.DataFrame(v, index= [k])
             if k in list(self.signals.keys()):
                 df['loaded'] = True
@@ -45,8 +45,8 @@ class timeSignal():
         """
         dataPath = self.path.joinpath('raw_signals')
         if not channel in self.signals.keys():
-            signal = timeSignal.SIGNALS[channel]
-            time = timeSignal.SIGNALS[signal['time']]
+            signal = measuredSignal.SIGNALS[channel]
+            time = measuredSignal.SIGNALS[signal['time']]
             #load y vector
             path = str(dataPath.joinpath(signal['fileName'])).replace('ID',self.ID)
             arrN = self.ID 
@@ -65,7 +65,7 @@ class timeSignal():
         '''
         try:
             s = self.signals[channel]
-            info = timeSignal.SIGNALS[channel]
+            info = measuredSignal.SIGNALS[channel]
         except KeyError:
             print('Channel '+ str(channel) + ' is not loaded.')
         else:
@@ -82,7 +82,8 @@ class timeSignal():
         except KeyError:
             print('Channel '+ str(channel) + ' is not loaded.')
         else:
-            return(copy.deepcopy(self.signals[channel]))
+            signal = copy.deepcopy(self.signals[channel])
+        return(signal['y'],signal['t'],signal['sR'],)
     
     @classmethod
     def setup(cls, mesPath):
@@ -113,9 +114,9 @@ if __name__ == "__main__":
     #perche 'm1020'noné compreso (tilo), 'm_0119' chefrastuono
     import pathlib
     import matplotlib.pyplot as plt
-    timeSignal.setup('D:\GitHub\myKG\Measurements_example\MBBMZugExample')
+    measuredSignal.setup('D:\GitHub\myKG\Measurements_example\MBBMZugExample')
     #
-    ts = timeSignal('m_0101')
+    ts = measuredSignal('m_0101')
     mic=[1,2,4,5,6,7]
     for i,m in enumerate(mic):
         ts.read_signal(m)
