@@ -1,38 +1,89 @@
 import sys
 import numpy as np
 import scipy as sp
-from PySide import QtGui, QtCore
 import string
-import pandas as pd
 import wave
-from scipy.io import wavfile
-from scipy.fftpack import fft,fftfreq, ifft
-from scipy.signal import hamming, hanning, hann,lfilter, filtfilt, decimate
 import matplotlib as mpl
-import brewer2mpl
-from mpl_toolkits.axes_grid.inset_locator import inset_axes
 import struct
 import os
 
 sys.path.append('D:\GitHub\myKG')
-import mySTFT
+from mySTFT.stft import *
 
-
-from pandas.sandbox.qtpandas import DataFrameModel, DataFrameWidget
-
-# todo: phase spectrum
-# todo: kg, squeal algorithm
-# todo: spectrum spectrum plot
 
 class Algorithm(object):
-    #TODO
-    pass
+    def __init__(self, name, noiseType, description='', parameter):
+        self.name = name
+        self.desc = description 
+        self.param = parameter
+        self.noiseType = noiseType
     
-class KG(object):
-    pass
+    def get_alg_info(self):
+        return({'name':self.name, noiseType: self.noiseType, \
+        'description':self.description, 'param': self.param})
     
-class Detect():
-    pass
+    def func(self):
+        'function which implement algorithm'
+        pass
+        
+    def __repr__(self):
+        s = '{} :{}\n'.format(self.__class__.__name__, self.name)
+        s += 'description: {}.'.format(self.desc)
+        s += 'parameter: {}\n'.format(self.param)
+        return(s)
+
+class ZischenDetetkt1(Algorithm):
+    '''
+    implement the Algorithm:
+        1: stft -> X(k,i),t_i
+        2: calculate power per bands for every t_i
+        3: build band power ratio (BPR) and compare to threshold for every t_i
+    parameter:
+        stft Parameter
+        cutoff frequency
+        threshold
+    '''
+    def __init__(self, fc, threshold, dt):
+        #
+        fixParam = {'fmin':200,'fmax':12000, 'overlap':2} 
+        #
+        decription = '''implement the Algorithm:
+        1: stft -> X(k,i),t_i
+        2: calculate power per bands for every t_i
+        3: build band power ratio (BPR) and compare to threshold for every t_i'''
+        #
+        name = self.__class__.__name__
+        super(Algorithm, self).__init__(name , description, 'Z', fixParam)
+        for k,v in {'threshold':threshold, 'overlap':overlap, 'fc':fc, 'dt': dt}:
+            self.param[k]=v
+        self.output = {'t':None, 'result':None,'BPR': None, 'dt':None}
+        
+    def func(self, MicSnObj):
+        par = self.param
+        output = copy.deepcopy(self.output)
+        # 1: stft
+        #todo
+        stftParam = {'M' = }
+        output['dt']
+        stftName = MicSnObj.calc_stft(**stftParam)
+        # 2: calculate power per bands
+        bands = {'low':(par['fmin'],par['fc']), 'high':(par['fc'],par['fmax'])}
+        bandPower = {}
+        for k,v in bands.items():
+            #todo
+            PSD_i, output['t'] = MicSnObj.calc_PSD_i(stftName, tmin=, tmax=, fmin = f0, fmax = f1 )
+            bandPower[k]= PSD_i.sum(axis = 0)
+        # 3:build ratio and compare to threshold
+        BPR = bandPower['high']/bandPower['low']
+        output['Results'] = powerRatio > par['threshold']
+        output['BPR'] = BPR
+        return(output)
+        
+    def __str__(self):
+        s = '{}_{}ms'.format( self.name, self.param['dt'])
+        s += '_{}Hz_{}'.format(self.param['fc'],self.param['threshold'])
+        return(s)
+
 class MicSignal(object):
     
     """
@@ -60,23 +111,38 @@ class MicSignal(object):
     - filename, string
     
     """    
-    def __init__(self, signal, ID, mic, values):
-        #dict with all the signals of a given passby to be evaluated
+    def __init__(self, ID, mic, y, t, sR, micValues, wavPath = None):
         self.ID = ID
         self.mic = mic
-        self.signal = signal
-        self.tmin = self.signal['t'].min()
-        self.SignalInfo = values# {'mic', 'tb','te','t1b','t1e','LAEQ', 'besch'}
+        self.y = signal
+        self.t = t
+        self.sR = sR
+        self.micValues = { 'Tb','Te','Tp_b','Tp_e','LAEQ', 'besch'}
+        for k in self.micValues:
+            try:
+                self.micValues[k] = micValues['k']
+            except KeyError:
+                Warning('mic value ' + k + 'is initiate as None')
+                self.micValues[k] = None
+                
+        self.wavPath = wavpath
         self.STFT = {}
-        self.L = {}
         self.KG = {'Z':{},'K':{}}
+        
+    def __str__(self):
+        return(self.ID+'_mic' + '_ch_' + str(mic))
         
     def export_to_Wav(self, mesPath):
         """
-        save channel to wav'
-        TODO: 
-        - don' save if already saved ok
-        - return path ok
+        Export a .wav file of the signal in mesPath\wav
+        
+        param
+        ------
+        mesPath: main measurement path
+        
+        return
+        ------
+        libpath Obj: path of wavfile
         """
         wavPath = mesPath.joinpath('wav')
         os.makedirs(wavPath.as_posix(), exist_ok = True)
@@ -87,67 +153,48 @@ class MicSignal(object):
             sR = s['sR']
             scaled = np.int16(s['y']/ np.abs(s['y']).max() * 32767)
             wavfile.write(filePath.as_posix(), sR , scaled)
-        return(wavPath.joinpath(filename))
-    
-  
-    def calc_kg(self, stftParam, bands = {'b1':(0,2000), 'b2':(2000,15000)}, threshold = 5):
-            stftName = self.calc_stft(**stftParam)
-            tmin = 0
-            tmax = 0
-            PB = {}
-            for k,v in bands.iteritem():
-                f0,f1=v
-                #PSD_i = calc_PSD_i(stftName, tmin=, tmax=, fmin = f0, fmax = f1 )
-                
-                PB[k]= PSD_i.sum(axis = 0)
-            #
-            #rapporto
-            # calc kenngrössen
-            tb = self.SignalInfo.ix[SN]['t1b']
-            te = self.SignalInfo.ix[SN]['t1e']
-            mask = np.all([(t >= tb), (t >= te)], axis=0)
-            tPassby = np.sum(mask)/ newFr
-            tFlanging = np.sum(flanging[mask]) / newFr
-            #Results
-            self.KG[mic][method]={
-            'method':method,
-            'mic': mic,
-            'tPassBy':tPassby,
-            'tSqueal':None,
-            'tFlanging':tFlanging,
-            'tKG':None,
-            #time signal representation of squel/flanging
-            'sSqueal': None,
-            'sFlanging': {'samplingRate': newFr, 
-            't': t,
-            'y':flanging},
-            #additional for this method
-            'sn': SN,
-            'snf': newSn
-            }
-        #
-  
-    def get_KG_algorithm(self):
-        calc_id, algorithmDescription,variableInfo = (1,1,1)
-        return(calc_id, algorithmDescription,variableInfo)
+        self.wavPath = wavPath.joinpath(filename)
+        return(self.wavPath)
         
-    def get_KG_results(self, short = True):
+    def get_mask(self, tlim = None):
+        '''
+        calculate mask for time vector according tlim,
+        default with MBBM evaluation
+        '''
+        if tlim == None:
+            tb = self.micValues['Tb']
+            te = self.micValues['Te']
+        else:
+            tb,te = tlim
+        return(np.logical_and(t >= tb,t >= te)))
+    
+    def calc_kg(self, algorithm):
+        '''
+        run algorithm on MicSignal object
+        parameter
+        ---------
+        algorithm instance
+        '''
+        #run algorithm
+        algInfo = algorithm.get_info()
+        results = algorithm.func(self)
+        # calc kenngrössen
+        mask = self.get_mask()
+        results['tPassby'] = np.sum(mask)/ newFr
+        results['tNoise'] = np.sum(results['results'][mask]) / newFr
+        self.KG[algInfo['noiseType']][str(algorithm)] = results
+        return(results)
+        
+    def get_KG_results(self, algorithm = None, noiseType = None):
         '''
         stored values in self.KG
         are returned
         '''
-        mic = []
-        tpassBy = []
-        tsqueal = []
-        for id,v in self.KG.items():
-            mic.append(self.SignalInfo[id]['mic'])
-            tpassBy.append(v['tpassBy'])
-            tsqueal.append(v['tsqueal'])
+        
         return({'mic':mic,'tpassBy':tpassBy,'tsqueal':tsqueal })
         
     def calc_stft(self, M , N = None, overlap = 2, window = 'hann'):
-        signal = self.signal
-        X, freq, frame_i, param = mySTFT.stft.stft( self.signal['y'], M = M,\
+        X, freq, frame_i, param = mySTFT.stft.stft( self.y, M = M,\
                                                     N = N, \
                                                     overlap = overlap,\
                                                     sR = signal['sR'],\
@@ -163,120 +210,105 @@ class MicSignal(object):
                             }
         return(name)
     
-    def calc_PSD_i(self, stftName, tmin=0, tmax=0, fmin =0, fmax =0  ):
-        stft = self.STFT[stftName]
-        kwargs = None#{'tmin':,'tmax':,'fmin':,'fmax':}   
-        return(stft_PSD(stft['X'], stft['param'], scaling = 'density', t0 = self.tmin, **kwargs))
-
-        
-    def calc_spectrum_welch(name, tb=None , te = None):
-        stft = self.STFT[self.currentSn][name]
-        #set interval to evaluate spectrum
-        if tb==None:
-            tmin,tmax = tb,te
-        else:
-            tmin = self.SignalInfo.ix[self.currentSn]['t1b']
-            tmax = self.SignalInfo.ix[self.currentSn]['t1e']
-        kwargs = {
-        't0' : 0,
-        'tmin': self.SignalInfo.ix[self.currentSn]['t1b'],
-        'tmax': self.SignalInfo.ix[self.currentSn]['t1e']
-        }
-        mask = signal['t']
-        sectrum ,freq = stft_welch(stft['X_i'], stft['param'],'density', **kwargs)
-            
-    def calc_SPL(self):
-       
-        #fill L dict
-        self.L[self.currentSn] = { 
-        'Leq':Leq,
-        'LeqMBBM':snI['LAEQ'],
-        'TEL':TEL,
-        'LF':{'sR':Fr,'t': sn['t'][0] + tF , 'y':LF},
-        'LF2':{'sR':Fr,'t': sn['t'] , 'y':LF2} 
-        }
-        
-    def plot_spectrogram(self, name, ax, freqscale = 'lin', dBMax = 110  ):
-        """
-        
-        """
+    def calc_PSD_i(self, stftName, fmin = 0, fmax = 0tmin = None, tmax = None):
+        '''
+        calculate PSD for all frames f_i
+        '''
         #todo
+        try:
+            stft = self.STFT[stftName]
+        except KeyError:
+            pass
+        else:
+        #set interval to evaluate spectrum
+        kwargs = {'t0' : self.t.min()}
+        if tlim == None:
+            kwargs['tmin'] = self.micValues['Tb']
+            kwargs['tmin']= self.micValues['Te']
+        else:
+            kwargs['tmax'],kwargs['tmin'] = tlim
+          
+        return(stft_PSD(stft['X'], stft['param'], scaling = 'density', **kwargs))
+
+    def calc_spectrum_welch(stftName = None, tint = None):
+        try:
+            stft = self.STFT[stftName]
+        except KeyError:
+            pass
+        else:
+        #set interval to evaluate spectrum
+        kwargs = {'t0' : self.t.min()}
+        if tlim == None:
+            kwargs['tmin'] = self.micValues['Tb']
+            kwargs['tmin']= self.micValues['Te']
+        else:
+            kwargs['tmax'],kwargs['tmin'] = tlim
+        sectrum ,freq = stft_welch(stft['X_i'], stft['param'],'density', **kwargs)
+        
+    def plot_spectrogram(self, name, ax, freqscale = 'lin', dBMax = 110):
+        '''
+        plot spectrogram
+        '''
         # datenvorbereitung
         try:
             stft = self.STFT[name]
         except KeyError:
-            print("STFT list has no element " +str(name))
+            print("STFT dict has no key " + str(name))
         kwargs = {
         'fmin': 200,
         'fmax':10000,
         't0': self.tmin,
-        'tmin': self.tmin,
-        'tmax': self.signal['t'].max()
+        'tmin': self.t.min(),
+        'tmax': self.t.max()
         }
         mySTFT.stft_plot.plot_spectrogram(stft['X'], stft['param'], ax,\
                                             dBMax=dBMax, **kwargs )
-
-    def plot_mic(self, ax ,label = None):
-        """
-        plot signal
-        """
-        label = snInfo['type'] + '_ch_' + str(channel)
-        ax.plot(sn['t'], sn['y'], label = label)
-                
-        # def plot_prms(self, ax ,label = None):
-        # ax.plot(sn['t'], np.abs(20*np.log10(sn['y']/(2e-5))), label= label)
                 
     def plot_triggers(self, ax, type ='passby', label=None, lw=1.5 ):
         """
-        type eval for t
-        type passby for t
-        
+        type: eval for MBBM evaluations bounds
+        type passby passby times
         """
         if type == 'eval':
-            variables = ['Tb', 'Te']
+            bounds = ['Tb', 'Te']
             col= 'R'
         elif type == 'passby':
-            variables = ['Tp_b', 'Tp_e']
+            bounds = ['Tp_b', 'Tp_e']
             col= 'B'
-        t = self.get_variables_values(ID, mic, variables)
-        [ax.axvline(x, color= col, lw = lw) for x in t.values()]
+        [ax.axvline(self.micValues[b], color= col, lw = lw) for b in bounds]
             
         
-    def plot_PS(self, signal, ax):
+    def plot_KG(self, algorithm, ax, color='red'):
+        '''
+        plot detection results for a given algorithm
+        '''
+        KG = self.KG[algorithm.noiseType]
+        try:
+            detection = KG[str(algorothm)]
+        except KeyError as e:
+            print('No calculation for', algorithm)
+            raise(e)
+        else:
+            ymin, ymax = ax.get_ylim()
+            ax.fill_between(detection['t'], where = detection['result'] ,\
+            y1 = ymin, y2 = ymax, alpha = 0.3, color=color)
+            #ax.set_ybound(ymin, ymax)
+            
+    def plot_signal(self, ax , label = None):
         """
+        plot signal
+        """
+        if label == None:
+            label = str(self)
+        ax.plot(self.t, self.y, label = label)
+            
+    def plot_PS(self, ax, label = None):
+        '''
         plot power spectra from FFT
-        TODO
-        """
-        #todo
+        '''
         pass
+                
+    def plot_prms(self, ax ,label = None):
+        pass
+        # ax.plot(sn['t'], np.abs(20*np.log10(sn['y']/(2e-5))), label= label)
         
-    # def plot_KG(self, method , ax, test = 'Z', color='red'):
-    #     """
-    #     TODO label,colors
-    #     mic
-    #     method
-    #     type in ['squeal', 'flanging']
-    #     """
-    #     #todo
-    #     KG = self.KG[test]
-    #     except KeyError as e:
-    #         print('No mic')
-    #         raise(e)
-    #     else:
-    #         try:
-    #             KG = KG_mic[method]
-    #         except KeyError as e:
-    #             print('No method')
-    #             raise(e)
-    #         else:
-    #             try:
-    #                 KG_sn = KG[types[type]]
-    #                 t = KG_sn['t']
-    #                 y = KG_sn['y']
-    #             except (KeyError, ValueError) as e:
-    #                 print('no type')
-    #                 raise(e)
-    #             else:
-    #                 ymin, ymax = ax.get_ylim()
-    #                 ax.fill_between(t, y1 = 130, y2 = 0 , where= y, alpha=0.3, color=color)
-    #                 ax.set_ybound(ymin, ymax)
