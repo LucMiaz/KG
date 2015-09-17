@@ -5,9 +5,10 @@
 - time signals:
 - dsp  : Calculate the squeal and flanging of a set of microphones given a set of signal during a passby
 - vizualise Widget
-- Interval: Create an interval. Needs two floats as bounds. 
+- Interval: Create an interval. Needs two floats as bounds.
+
 Attributes | type
--------- | -----
+--------   | -------
 `xmin` | float
 `xmax` | float
 
@@ -26,7 +27,8 @@ Method     | Description | Return type
 `self != other` | the two intervals are not intersecting | boolean
 `self <= other` | not `self > other` | boolean
 `self >= other` | not `self < other` | boolean
-- SetOfIntervals: Create a list of intervals. No initialisation variables. 
+- SetOfIntervals: Create a list of intervals. No initialisation variables.
+
 Attributes | type
 ---------- | ------
 `RangeInter` | list of Intervals
