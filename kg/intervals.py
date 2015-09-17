@@ -1,3 +1,4 @@
+import numpy as np
 class RangeOfIntervals(object):
 
     def __init__(self):
@@ -27,11 +28,32 @@ class RangeOfIntervals(object):
         """remove the given interval from the list"""
         self.RangeInter.remove(bounds)
     
+    def isin(self, element):
+        """Return boolean telling if element is in self"""
+        if not self.sorted:
+            self.sort()
+        continuer=True
+        k=-1
+        while continuer:
+            k+=1
+            continuer=(self.RangeInter[k].get_x()[1]<element)
+        return (self.RangeInter[k].get_x()[0]< element and k<len(self.RangeInter))
+
+    def discretize(self, zerotime, endtime, deltatime):
+        """return the boolean values of the characteristic function of the set RangeInter for the deltatimes from zerotime to endtime (return type numpy array of booleans)"""
+        k=zerotime
+        ret=[]
+        while k<=endtime:
+            ret.append(self.isin(k))
+            k += deltatime
+        return ret
+    
     def __repr__(self):
         a=""
         for i in self.RangeInter:
             a=a+" ["+str(i)+"] "
         return a
+        
     def __str__(self):
         return "Range of intervals. Number of intervals : "+str(self.length)+"\n"+ self.__repr__()
 
@@ -48,19 +70,21 @@ class Interval(object):
         self.xmin=min(xmin,xmax)
         self.xmax=max(xmin,xmax)
         
-    def get_min(self):
-        return self.xmin
-    def get_max(self):
-        return self.xmax
+    def get_x(self):
+        return self.xmin, self.xmax
+        
     #representations, string format
     def __repr__(self):
         return '{}, {}'.format(self.__class__.__name__, self.xmin, self.xmax)
+        
     def __str__(self):
         return str(self.xmin) + ', '+ str(self.xmax)
+        
     #interval operations
     def intersect(self,other):
         """Tells if intervals are intesecting"""
         return not self != other
+        
     def intersection(self, other):
         """Gives the interval intersection"""
         if self.intersect(other):
@@ -71,22 +95,30 @@ class Interval(object):
             self.xmax=0
             self.xmin=0
             return self
+            
     def union(self, other):
         """merge self and other together"""
         self.xmax=max(self.xmax, other.xmax)
         self.xmin=min(self.xmin, other.xmin)
         return self
+        
     #sorting definitions
     def __lt__(self, other):
-        return self.xmax < other.xmin:
+        return self.xmax < other.xmin
+        
     def __gt__(self,other):
-        return self.xmin>other.xmax:
+        return self.xmin>other.xmax
+        
     def __eq__(self,other):
-        return 
+        return (self.xmax==other.xmax and self.xmin==other.xmin)
+        
     def __ne__(self, other):
         """Intervals are not intersecting"""
         return self < other or self > other
+        
     def __le__(self, other):
-        return self.xmax <= other.xmax:
+        return self.xmax <= other.xmax
+        
     def __ge__(self,other):
-        return self.xmin >= other.xmin:
+        return self.xmin >= other.xmin
+        
