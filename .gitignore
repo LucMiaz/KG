@@ -8,3 +8,5 @@ __pycache__/
 #
 old/
 /TODO
+kg/widgets.py
+kg/intervals.py

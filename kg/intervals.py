@@ -10,9 +10,9 @@ class RangeOfIntervals(object):
         need an Interval object"""
         self.sort()
         for i in self.RangeInter:
-            if interv==i:
+            if interv.intersect(i):
                 a=self.RangeInter.index(i)
-                interv.merge(i)
+                interv.union(i)
                 self.RangeInter.pop(a)
                 self.length-=1
         self.RangeInter.append(interv)
@@ -57,36 +57,36 @@ class Interval(object):
         return '{}, {}'.format(self.__class__.__name__, self.xmin, self.xmax)
     def __str__(self):
         return str(self.xmin) + ', '+ str(self.xmax)
-    #sorting definitions
-    #== tests if intervals are intersecting, not if they are equals. 
-    def __lt__(self, other):
-        if self.xmax < other.xmin:
-            return True
-        else:
-            return False
-    def __gt__(self,other):
-        if self.xmin>other.xmax:
-            return True
-        else:
-            return False
-    def __eq__(self,other):
-        """Intervals are intesecting"""
+    #interval operations
+    def intersect(self,other):
+        """Tells if intervals are intesecting"""
         return not self != other
-    def __ne__(self, other):
-        """Intervals are not intersecting"""
-        return self < other or self > other
-    def __le__(self, other):
-        if self.xmax <= other.xmax:
-            return True
+    def intersection(self, other):
+        """Gives the interval intersection"""
+        if self.intersect(other):
+            self.xmax=min(self.xmax, other.xmax)
+            self.xmin=max(self.xmin,other.xmin)
+            return self
         else:
-            return False
-    def __ge__(self,other):
-        if self.xmin >= other.xmin:
-            return True
-        else:
-            return False
-    def merge(self, other):
+            self.xmax=0
+            self.xmin=0
+            return self
+    def union(self, other):
         """merge self and other together"""
         self.xmax=max(self.xmax, other.xmax)
         self.xmin=min(self.xmin, other.xmin)
         return self
+    #sorting definitions
+    def __lt__(self, other):
+        return self.xmax < other.xmin:
+    def __gt__(self,other):
+        return self.xmin>other.xmax:
+    def __eq__(self,other):
+        return 
+    def __ne__(self, other):
+        """Intervals are not intersecting"""
+        return self < other or self > other
+    def __le__(self, other):
+        return self.xmax <= other.xmax:
+    def __ge__(self,other):
+        return self.xmin >= other.xmin:
