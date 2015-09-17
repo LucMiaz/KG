@@ -5,8 +5,43 @@
 - time signals:
 - dsp  : Calculate the squeal and flanging of a set of microphones given a set of signal during a passby
 - vizualise Widget
-- Interval: Create an interval. Needs two floats as bounds. Methods : `get_x()` returns xmin,xmax; `intersect(other)`, `intersection(other)`, `difference(other)` which returns self minus other; `ispoint()` returns True if xmin==xmax; `contains(other)` returns True if other is in self; `isin(other)` returns True if self is contained in other; `self < other` if `self.xmax < other.xmin`; `self > other` if `self.xmin > other.xmax`; `self==other` means the two intervals are the same; `self != other` if the two intervals are not intersecting; `self <= other` if the interval `self` is not greater than `other`; similarly for `self >= other`.
-- SetOfIntervals: Create a list of intervals. Intervals must be added with `R.append(a)`. To test if float `a` is in RangeOfIntervals `R` use `R.contains(a)`. To discretize `R` use `R.discretize(zerotime, endtime, deltatime)` where `zerotime` is the lower bound of the discretization, `endtime` is the greater bound and `deltatime` is the step. Other methods include : `remove()`, `removeIntersection()`, `haselement()` and `sort()`.
+- Interval: Create an interval. Needs two floats as bounds. 
+Attributes | type
+-------- | -----
+`xmin` | float
+`xmax` | float
+
+Method     | Description | Return type
+----------- | ----------- | ------------
+`get_x()` | gives xmin,xmax | two floats
+`intersect(other)` | tests if intersection | boolean
+`intersection(other)` | gives intesection | Interval
+`difference(other)` | gives self minus other | Interval
+`ispoint()` | tests if xmin==xmax | boolean
+`contains(other)` | Tests if other is in self | boolean
+`isin(other)` | tests if self is contained in other | boolean
+`self < other` | `self.xmax < other.xmin` | boolean
+`self > other` | `self.xmin > other.xmax` | boolean
+`self==other` | same intervals | boolean
+`self != other` | the two intervals are not intersecting | boolean
+`self <= other` | not `self > other` | boolean
+`self >= other` | not `self < other` | boolean
+- SetOfIntervals: Create a list of intervals. No initialisation variables. 
+Attributes | type
+---------- | ------
+`RangeInter` | list of Intervals
+`length` | integer
+`sorted` | boolean
+
+Method | Description | Return type
+------ | ----------- | -----------
+`R.append(a)` | add Interval `a` to `R` | none
+`R.contains(a)` | test if `a` in `R` | boolean
+`R.discretize(tb,te,dt)` | discretize `R` in `[tb,te]` step `dt` | list
+`R.remove(a)` | remove Interval `a` from `R` | none
+`R.removeIntersection(a)` | called by `remove()` | none
+`R.haselement(a)` | test if `a` is an element of the list `R.RangeInter` | boolean
+`R.sort()` | sorts Intervals in `R.RangeInter` | none
 
 ### measuredValues
 
