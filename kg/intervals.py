@@ -28,7 +28,7 @@ class RangeOfIntervals(object):
         """remove the given interval from the list"""
         self.RangeInter.remove(bounds)
     
-    def isin(self, element):
+    def contains(self, element):
         """Return boolean telling if element is in self"""
         if not self.sorted:
             self.sort()
@@ -44,7 +44,7 @@ class RangeOfIntervals(object):
         k=zerotime
         ret=[]
         while k<=endtime:
-            ret.append(self.isin(k))
+            ret.append(self.contains(k))
             k += deltatime
         return ret
     

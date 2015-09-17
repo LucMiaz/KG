@@ -1,10 +1,12 @@
-##Kurvengerüsche package
+##Kurvengerï¿½sche package
 
 ## class
 - measuredValues :
 - time signals:
 - dsp  : Calculate the squeal and flanging of a set of microphones given a set of signal during a passby
 - vizualise Widget
+- Interval: Create an interval. Needs two floats as bounds.
+- RangeOfIntervals: Create a list of intervals. Intervals must be added with `R.append(a)`. To test if float `a` is in RangeOfIntervals `R` use `R.contains(a)`. 
 
 ### measuredValues
 
