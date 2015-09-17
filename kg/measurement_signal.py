@@ -6,6 +6,7 @@ import wave
 import numpy as np
 import pandas as pd
 import copy
+import json
 
 import csv
 import struct
@@ -43,10 +44,11 @@ class measuredSignal():
         parameter:Measurement ID (string), channel. If channel is none then input is asked.
         return: dict with time array value array and sampling rate
         """
+        channel = str(channel)
         dataPath = self.path.joinpath('raw_signals')
         if not channel in self.signals.keys():
             signal = measuredSignal.SIGNALS[channel]
-            time = measuredSignal.SIGNALS[signal['time']]
+            time = measuredSignal.SIGNALS[str(signal['time'])]
             #load y vector
             path = str(dataPath.joinpath(signal['fileName'])).replace('ID',self.ID)
             arrN = self.ID 
@@ -63,11 +65,12 @@ class measuredSignal():
         '''
         return data frame with info of signal 
         '''
+        channel = str(channel)
         try:
             s = self.signals[channel]
             info = measuredSignal.SIGNALS[channel]
         except KeyError:
-            print('Channel '+ str(channel) + ' is not loaded.')
+            print('Channel '+ channel + ' is not loaded.')
         else:
             info['frames']= len(s['y'])
             info['tmin'] =  s['t'].min()
@@ -77,10 +80,11 @@ class measuredSignal():
         """
         return a copy of the signal
         """
+        channel = str(channel)
         try:
             s = self.signals[channel]
         except KeyError:
-            print('Channel '+ str(channel) + ' is not loaded.')
+            print('Channel '+ channel+ ' is not loaded.')
         else:
             signal = copy.deepcopy(self.signals[channel])
         return(signal['y'],signal['t'],signal['sR'],)
@@ -88,25 +92,9 @@ class measuredSignal():
     @classmethod
     def setup(cls, mesPath):
         mesPath = pathlib.Path(mesPath)
-        with mesPath.joinpath('raw_signals_info.csv').open('r+') as info:
-            reader = csv.reader(info,delimiter=';')
-            header = None
-            dict ={}
-            for row in reader:
-                if row[0][0]=='#':
-                    pass
-                elif header == None:
-                    header = row[1:]
-                else:
-                    for i,v in enumerate(row):
-                        try:
-                            row[i] = int(v)
-                        except ValueError:
-                            pass
-                    dict[row[0]] = { h:v for h,v in zip(header,row[1:])}
-            #set SIGNAl
-            cls.PATH = mesPath
-            cls.SIGNALS = dict
+        with mesPath.joinpath('raw_signals_info.json').open('r+') as config:
+            cls.SIGNALS = json.load(config)
+        cls.PATH = mesPath
         return(cls)
     
 ##tests 
