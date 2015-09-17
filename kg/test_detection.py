@@ -8,7 +8,7 @@ from kg.time_signal import timeSignal
 from kg.detect import Detect
 
 import datetime
-import pickle
+import json
 import pathlib
 import os
 
@@ -62,7 +62,8 @@ class Case(object):
         #add date
         dateTime =  datetime.datetime.now()
         self.case['date'] = dateTime.strftime( "%d-%m-%Y_%H-%M-%S")
-        pickle.dump( self.case, open(casePath.as_posix(), "wb" ))
+        with open(casePath.as_posix(), 'w') as fp:
+        json.dump(self.case, fp)
         
     def _compare(self, detect , noiseType = 'Z' , sum = True):
         '''
@@ -73,15 +74,8 @@ class Case(object):
         '''
         detResult = detect['noiseType']
         detTime = detect['t']
-        caseResult = np.zeros(len(detTime)).astype('bool')
-        #crete array from (union)
-        for t0,t1 in self.case[noiseType]:
-            i0,i1 = np.searchsorted(t,(t0,t1))
-            caseResult[i0:i1] = True
-        
+        caseResult = self.case[noiseType].discretize(tb,te,detTime)
         #evaluated interval
-        tb = np.max(detect['tb'], self.case['tb'])
-        te = np.min(detect['te'], self.case['te'])
         mask = np.logical_and(detTime > tb , detTime < te)
         #calculate TP, TN, FP, FN
         out = {}
@@ -110,7 +104,7 @@ class Case(object):
             
         Det = Detect(signal, mID, mic, **mesVar)
         Det.calc(**algorithm['param'])
-        return(self._compare(algorithm['test'],Det.get_results(), sum = sum))
+        return (self._compare(algorithm['test'],Det.get_results(), sum = sum))
         
     @classmethod
     def fromfile(cls, casePath):

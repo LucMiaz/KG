@@ -1,5 +1,9 @@
+<<<<<<< HEAD
 import numpy as np
 class SetOfIntervals(object):
+=======
+class RangeOfIntervals(object):
+>>>>>>> master
 
     def __init__(self):
         self.RangeInter=[]
@@ -10,6 +14,7 @@ class SetOfIntervals(object):
         """add a range to the list of intervals.
         need an Interval object"""
         self.sort()
+<<<<<<< HEAD
         try:
             interv.get_x()
             test=True
@@ -26,6 +31,17 @@ class SetOfIntervals(object):
             self.length+=1
             self.sort()
         return test
+=======
+        for i in self.RangeInter:
+            if interv.intersect(i):
+                a=self.RangeInter.index(i)
+                interv.union(i)
+                self.RangeInter.pop(a)
+                self.length-=1
+        self.RangeInter.append(interv)
+        self.length+=1
+        self.sort()
+>>>>>>> master
     
     def sort(self):
         self.RangeInter.sort()
@@ -33,6 +49,7 @@ class SetOfIntervals(object):
     
     def remove(self, bounds):
         """remove the given interval from the list"""
+<<<<<<< HEAD
         if self.haselement(bounds):
             self.RangeInter.remove(bounds)
         else:
@@ -76,13 +93,19 @@ class SetOfIntervals(object):
             ret.append(self.contains(k))
             k += deltatime
         return ret
+=======
+        self.RangeInter.remove(bounds)
+>>>>>>> master
     
     def __repr__(self):
         a=""
         for i in self.RangeInter:
             a=a+" ["+str(i)+"] "
         return a
+<<<<<<< HEAD
         
+=======
+>>>>>>> master
     def __str__(self):
         return "Range of intervals. Number of intervals : "+str(self.length)+"\n"+ self.__repr__()
 
@@ -99,6 +122,7 @@ class Interval(object):
         self.xmin=min(xmin,xmax)
         self.xmax=max(xmin,xmax)
         
+<<<<<<< HEAD
     def get_x(self):
         return self.xmin, self.xmax
         
@@ -109,10 +133,22 @@ class Interval(object):
     def __str__(self):
         return str(self.xmin) + ', '+ str(self.xmax)
         
+=======
+    def get_min(self):
+        return self.xmin
+    def get_max(self):
+        return self.xmax
+    #representations, string format
+    def __repr__(self):
+        return '{}, {}'.format(self.__class__.__name__, self.xmin, self.xmax)
+    def __str__(self):
+        return str(self.xmin) + ', '+ str(self.xmax)
+>>>>>>> master
     #interval operations
     def intersect(self,other):
         """Tells if intervals are intesecting"""
         return not self != other
+<<<<<<< HEAD
         
     def intersection(self, other):
         """Gives the interval intersection"""
@@ -151,11 +187,24 @@ class Interval(object):
         """Return True if self is in other"""
         return ((self <= other) and (self >= other))
         
+=======
+    def intersection(self, other):
+        """Gives the interval intersection"""
+        if self.intersect(other):
+            self.xmax=min(self.xmax, other.xmax)
+            self.xmin=max(self.xmin,other.xmin)
+            return self
+        else:
+            self.xmax=0
+            self.xmin=0
+            return self
+>>>>>>> master
     def union(self, other):
         """merge self and other together"""
         self.xmax=max(self.xmax, other.xmax)
         self.xmin=min(self.xmin, other.xmin)
         return self
+<<<<<<< HEAD
         
     #sorting definitions
     def __lt__(self, other):
@@ -186,3 +235,19 @@ e=Interval(0,1)
 f=Interval(3.6,3.7)
 R.append(a)
 R.append(b)
+=======
+    #sorting definitions
+    def __lt__(self, other):
+        return self.xmax < other.xmin:
+    def __gt__(self,other):
+        return self.xmin>other.xmax:
+    def __eq__(self,other):
+        return 
+    def __ne__(self, other):
+        """Intervals are not intersecting"""
+        return self < other or self > other
+    def __le__(self, other):
+        return self.xmax <= other.xmax:
+    def __ge__(self,other):
+        return self.xmin >= other.xmin:
+>>>>>>> master
