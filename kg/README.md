@@ -1,4 +1,4 @@
-##Kurvenger�sche package
+##Kurvengeräsche package
 
 ## class
 - measuredValues :
