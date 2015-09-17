@@ -22,7 +22,7 @@ class Case(object):
     The class contains methods to test a detection algorithm on the case
     '''
     def __init__(self, measurement, caseID, mID, mic, tb, te, author, date = None, \
-                    Z = [], K = []):
+                    Z = SetOfIntervals(), K = SetOfIntervals()):
         self.case = {'caseID': caseID,
                 'measurement':measurement, 
                 'mID': mID,
@@ -33,18 +33,21 @@ class Case(object):
                 'tb':tb,
                 'te':te,
                 'Z':Z,
-                'K':K
+                'K':K,
                 }
+        self.LastInterval=Interval(0,0)
             
     def add_kg_event(self, t0, t1, noiseType = 'Z'):
         '''
-        add intervall where noiseType is present
+        create an interval [t0,t1], update LastInterval and add this interval to noiseType
         '''
-        self.case[noiseType].append((t0,t1))
+        self.LastInterval=Interval(t0,t1)
+        self.case[noiseType].append(self.LastInterval)
         
-    def remove_last_event(self):
-        # todo
-        pass
+    def remove_last_event(self, noiseType='Z'):
+        """Remove the last interval selected from the set of interval.
+         The full interval is removed including the possible overlapping"""
+        self.case[noiseType].remove(LastInterval)
         
     def save(self, mesPath):
         '''

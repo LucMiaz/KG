@@ -1,5 +1,5 @@
 import numpy as np
-class RangeOfIntervals(object):
+class SetOfIntervals(object):
 
     def __init__(self):
         self.RangeInter=[]
@@ -10,15 +10,22 @@ class RangeOfIntervals(object):
         """add a range to the list of intervals.
         need an Interval object"""
         self.sort()
-        for i in self.RangeInter:
-            if interv.intersect(i):
-                a=self.RangeInter.index(i)
-                interv.union(i)
-                self.RangeInter.pop(a)
-                self.length-=1
-        self.RangeInter.append(interv)
-        self.length+=1
-        self.sort()
+        try:
+            interv.get_x()
+            test=True
+        except AttributeError:
+            test= False
+        if test:
+            for i in self.RangeInter:
+                if interv.intersect(i):
+                    a=self.RangeInter.index(i)
+                    interv.union(i)
+                    self.RangeInter.pop(a)
+                    self.length-=1
+            self.RangeInter.append(interv)
+            self.length+=1
+            self.sort()
+        return test
     
     def sort(self):
         self.RangeInter.sort()
@@ -26,18 +33,40 @@ class RangeOfIntervals(object):
     
     def remove(self, bounds):
         """remove the given interval from the list"""
-        self.RangeInter.remove(bounds)
+        if self.haselement(bounds):
+            self.RangeInter.remove(bounds)
+        else:
+            self.removeIntersection(bounds)
+        
+    def removeIntersection(self, bounds):
+        """remove the intersection between elements of RangeInter and the Interval bounds)"""
+        a=0
+        for inter in self.RangeInter:
+            if inter.intersect(bounds):
+                self.RangeInter.remove(inter)
+                ret=inter.difference(bounds)
+                self.RangeInter.append(ret[0])
+                self.RangeInter.append(ret[1])
+                a+=1
     
     def contains(self, element):
         """Return boolean telling if element is in self"""
         if not self.sorted:
             self.sort()
-        continuer=True
-        k=-1
-        while continuer:
-            k+=1
-            continuer=(self.RangeInter[k].get_x()[1]<element)
-        return (self.RangeInter[k].get_x()[0]< element and k<len(self.RangeInter))
+            continuer=True
+            k=-1
+            while continuer:
+                k+=1
+                continuer= not (self.RangeInter[k].contains(element)) and k<self.length-1
+                return (self.RangeInter[k].contains(element) and k<self.length)
+        elif not element:#check if emptyset
+            return True
+        else:
+            return False
+    
+    def haselement(self, element):
+        """Return True if element is in self"""
+        return bool(self.RangeInter.count(element))
 
     def discretize(self, zerotime, endtime, deltatime):
         """return the boolean values of the characteristic function of the set RangeInter for the deltatimes from zerotime to endtime (return type numpy array of booleans)"""
@@ -75,7 +104,7 @@ class Interval(object):
         
     #representations, string format
     def __repr__(self):
-        return '{}, {}'.format(self.__class__.__name__, self.xmin, self.xmax)
+        return '{}: {},{}'.format(self.__class__.__name__, self.xmin, self.xmax)
         
     def __str__(self):
         return str(self.xmin) + ', '+ str(self.xmax)
@@ -88,14 +117,40 @@ class Interval(object):
     def intersection(self, other):
         """Gives the interval intersection"""
         if self.intersect(other):
-            self.xmax=min(self.xmax, other.xmax)
-            self.xmin=max(self.xmin,other.xmin)
-            return self
+            ret=Interval(max(self.xmin,other.xmin),min(self.xmax, other.xmax))
         else:
-            self.xmax=0
-            self.xmin=0
-            return self
-            
+            ret=set()
+        return ret
+    
+    def difference(self, other):
+        """Return self minus intersection with other"""
+        if self.contains(other):
+            ret1=Interval(self.xmin,other.get_x()[0])
+            ret2=Interval(other.get_x()[1],self.xmax)
+            if ret1.ispoint():
+                if ret2.ispoint():
+                    return set(), set()
+                else:
+                    return set(), ret2
+            else:
+                return ret1, ret2
+        elif self <= other:
+            return Interval(self.xmin, other.get_x()[0]), set()
+        else:
+            return Interval(other.get_x()[1],self.xmax), set()
+    
+    def ispoint(self):
+        """check if interval is only a point"""
+        return self.xmin==self.xmax
+    
+    def contains(self,other):
+        """Return True if self contains other"""
+        return ((other <= self)and (other >= self))
+    
+    def isin(self,other):
+        """Return True if self is in other"""
+        return ((self <= other) and (self >= other))
+        
     def union(self, other):
         """merge self and other together"""
         self.xmax=max(self.xmax, other.xmax)
@@ -104,21 +159,30 @@ class Interval(object):
         
     #sorting definitions
     def __lt__(self, other):
-        return self.xmax < other.xmin
+        return self.xmax <= other.get_x()[0]
         
     def __gt__(self,other):
-        return self.xmin>other.xmax
+        return self.xmin >= other.get_x()[1]
         
     def __eq__(self,other):
         return (self.xmax==other.xmax and self.xmin==other.xmin)
         
     def __ne__(self, other):
         """Intervals are not intersecting"""
-        return self < other or self > other
+        return self <= other or self >= other
         
     def __le__(self, other):
-        return self.xmax <= other.xmax
+        return self.xmax <= other.get_x()[1]
         
     def __ge__(self,other):
-        return self.xmin >= other.xmin
-        
+        return self.xmin >= other.get_x()[0]
+    
+R=SetOfIntervals()
+a=Interval(0,1)
+b=Interval(3,4)
+c=Interval(2,2.5)
+d=Interval(2.5,3.5)
+e=Interval(0,1)
+f=Interval(3.6,3.7)
+R.append(a)
+R.append(b)
