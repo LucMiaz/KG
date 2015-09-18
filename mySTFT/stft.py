@@ -241,9 +241,9 @@ def stft_PSD(X, param, scaling = 'density', **kwargs):
     # TODO: CONTROL NORMALIZATION
     win =  scipy.signal.get_window(param['window'], param['M'], fftbins = True)
     if scaling == 'density':
-        scale = 1.0 / (sR * (win*win).sum())
+        scale = 1.0 / (sR * (win*win).mean())
     elif scaling == 'spectrum':
-        scale = 1.0 / win.sum()**2
+        scale = 1.0 / win.mean()**2
     else:
         raise ValueError('Unknown scaling: %r' % scaling)
     if  param['invertible']:
@@ -276,8 +276,9 @@ def stft_welch(X, param, scaling = 'density',  **kwargs):
     '''return spectrum N points,
        if N > len x sameresult
     '''
+    M = param['M'] 
     PS_i, freq, t_i = stft_PSD(X, param, scaling, **kwargs)
-    return(PS_i.mean(axis=0), freq)
+    return((PS_i/M).mean(axis=0), freq)
     
 def stft_prms(X, param, **kwargs):
     '''prms value from stft
