@@ -108,7 +108,12 @@ class Case(object):
         
     @classmethod
     def fromfile(cls, casePath):
-        return(cls(**pickle.load( open( casePath, "rb" ))))
+        """@classmethod is used to pass the class to the method as implicit argument. Then we open a file in JSON located at casePath and give it to the class with **kwargs (meaning that we pass an arbitrary number of arguments to the class)
+        """
+        try:
+            return cls(**json.load(open(casePath, 'r')))
+        except FileNotFoundError:
+            raise Error("The file in path" + casePath + " has not be found.")
  
         
 class DetectionTester(object):
