@@ -1,11 +1,12 @@
 import matplotlib
 from matplotlib.widgets import *  
 from pylab import *
+
 class SetOfIntervals(object):
     """Define a class of set of intervals, i.e. a closed of R"""
     def __init__(self):
         self.RangeInter=[]
-        self.length=0
+        self.length=len(self.RangeInter)
         self.sorted=False
         self.lastinterval=None
         
@@ -19,11 +20,14 @@ class SetOfIntervals(object):
             self.length=len(self.RangeInter)
             self.sort()
             self.lastinterval=interv
-        return test
+            return interv
+        else:
+            return None
     
     def sort(self):
         """Sort the set of Intervals and union adjacent intervals"""
         self.RangeInter.sort()
+        self.length=len(self.RangeInter)
         self.unionize()
         self.unionize()
     
@@ -47,18 +51,27 @@ class SetOfIntervals(object):
                         self.RangeInter.remove(self.RangeInter[k+1])
                         self.RangeInter.remove(inter)
                         self.RangeInter.append(new)
-                        self.length=len(self.RangeInter)
+                    self.length=len(self.RangeInter)
     
     def removeIntersection(self, bounds):
-        """remove the intersection between elements of RangeInter and the Interval bounds)"""
-        a=0
+        """remove the intersection between elements of RangeInter and the Interval bounds"""
+        toberemoved=[]
+        tobeadded=[]
         for inter in self.RangeInter:
             if inter.intersect(bounds):
-                self.RangeInter.remove(inter)
-                ret=inter.difference(bounds)
-                self.RangeInter.append(ret[0])
-                self.RangeInter.append(ret[1])
-                a+=1
+                if bounds.contains(inter):
+                    toberemoved.append(inter)
+                else:
+                    toberemoved.append(inter)
+                    ret=inter.difference(bounds)
+                    if ret[0]:
+                        tobeadded.append(ret[0])
+                    if ret[1]:
+                        tobeadded.append(ret[1])
+        for remo in toberemoved:
+            self.RangeInter.remove(remo)
+        for added in tobeadded:
+            self.RangeInter.append(added)
     
     def contains(self, element):
         """Return boolean telling if element is in self"""
@@ -113,42 +126,55 @@ class GraphicalIntervals(SetOfIntervals, AxesWidget):
         self.addremove=True
         toggle_selector.RS = RectangleSelector(ax, self.onselect, drawtype='line')
         connect('key_press_event', toggle_selector)
+        print("initialised")
     
     def _update(self):
-        """update Rectangles and plot it"""
-        self.Rectangles=[]
+        """update Rectangles and plot them"""
         for rect in self.Rectangles:
-            self.ax.remove(rect)
+            rect.remove()
+        self.Rectangles=[]
         for inter in self.RangeInter:
             coord=inter.get_x()
-            rect=ax.add_patch(patches.Rectangle((coord[0],0.0), coord[1]-coord[0], 1, alpha=0.4, facecolor="#c7eae5", edgecolor="none"))
+            rect=ax.add_patch(patches.Rectangle((coord[0],self.ax.get_xlim()[0]), coord[1]-coord[0], self.ax.get_ylim()[1], alpha=0.4, facecolor="#c7eae5", edgecolor="none"))
             self.Rectangles.append(rect)
         self.ax.figure.canvas.draw()
     
     def onselect(self, eclick, erelease):
-        """eclick and erelease are matplotlib events at press and release"""
-        if self.addremove:
-            self.LastInterval = self.RangeInter.append(Interval(eclick.xdata,erelease.xdata))
-        else:
-            self.LastInterval=None
-            self.RangeInter.remove(Interval(eclick.xdata,erelease.xdata))
+        """add the interval selectionned while holding left mouse click"""
+        self.LastInterval=Interval(eclick.xdata,erelease.xdata)
+        if not self.LastInterval.ispoint():
+            self.append(self.LastInterval)
+        print(self.LastInterval)
+        self._update()
+    
+    def onpick(self, event, button=3):
+        """remove the interval selectionned while holding right mouse click"""
+        self.remove(event.artist)
         self._update()  
         
 
-    def toggle_selector(self, event):
+    def ontype(self, event):
         if event.key in ['Q', 'q'] and toggle_selector.RS.active:
             toggle_selector.RS.set_active(False)
+            print("Key "+event.key+" pressed")
         if event.key in ['A', 'a'] and not toggle_selector.RS.active:
             toggle_selector.RS.set_active(True)
+            print("Key "+event.key+" pressed")
         if event.key in ['\b'] and self.lastinterval:
             self.remove(self.lastinterval)
         if event.key in ['r','R']:
-            self.addremove= not self.addremove
+            print("Key "+str(event.key)+" pressed")
+            self.LastInterval.remove()
             if self.addremove:
                 print("Adding intervals")
             else:
                 print("Removing intervals")
+        if event.key in ['u','U']:
+            print("Key "+event.key+" pressed")
+            self.update()
+                
     def __str__(self):
+        self.sort()
         return "Graphical representation of : " + SetOfIntervals.__str__(self)
 
 class Interval(object):
@@ -187,6 +213,8 @@ class Interval(object):
         """Gives the interval intersection"""
         if self.intersect(other):
             ret=Interval(max(self.xmin,other.xmin),min(self.xmax, other.xmax))
+            if ret.ispoint():
+                ret=None
         else:
             ret=None
         return ret
@@ -228,17 +256,17 @@ class Interval(object):
         
     #sorting definitions
     def __lt__(self, other):
-        return self.xmax <= other.get_x()[0]
+        return self.xmax < other.get_x()[0]
         
     def __gt__(self,other):
-        return self.xmin >= other.get_x()[1]
+        return self.xmin > other.get_x()[1]
         
     def __eq__(self,other):
         return (self.xmax==other.xmax and self.xmin==other.xmin)
         
     def __ne__(self, other):
         """Intervals are not intersecting"""
-        return self <= other or self >= other
+        return self < other or self > other
         
     def __le__(self, other):
         return self.xmax <= other.get_x()[1]
@@ -246,7 +274,7 @@ class Interval(object):
     def __ge__(self,other):
         return self.xmin >= other.get_x()[0]
     
-x = arange(100)/(99.0)
+x = arange(100)/(79.0)
 y = sin(x)
 fig = figure
 ax = subplot(111)
