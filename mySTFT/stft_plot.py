@@ -15,7 +15,7 @@ from mySTFT.stft import *
 
 
 def plot_spectrogram(X, param, ax, colorbar = True, title = 'Spectrogram', dB= True, freqscale = 'log', dBMax = None, scaling = 'density', **kwargs):
-    #todo: correct t axis scala
+    # TODO: correct t axis scala
     """
     plot the spectrogram of a STFT
     """
@@ -81,7 +81,6 @@ def plot_PDD_i(X, param, i , ax, orientation = 'horizontal', dB = True, \
         Y = 10*np.log10(PSD_i) - 20*np.log10(2e-5)
     else:
         Y = PSD_i
-    
     # plotting
     if orientation =='horizontal':
         ax.plot(freq,Y)
@@ -117,7 +116,7 @@ def plot_PDD_k(X, param, k, ax, dB = True, scaling = 'density', **kwargs):
     ax.plot(t_i,Y)
     ax.grid(True)
 
-
+##
 from matplotlib.figure import Figure
 matplotlib.use('Qt4Agg')
 matplotlib.rcParams['backend.qt4']='PySide'
