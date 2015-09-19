@@ -1,5 +1,5 @@
 from matplotlib.widgets import *  
-from pylab import *
+import matplotlib
 
 class SetOfIntervals(object):
     """Define a class of set of intervals, i.e. a closed of R"""
@@ -22,6 +22,17 @@ class SetOfIntervals(object):
             return interv
         else:
             return None
+    
+    def appendlistofduples(self,listofduples):
+        """Add a list of duples (viewed as an interval) to the SetOfRange. Alternatively one can give a list of lists containg two elements, e.g. [[1.0,2.0],[2.5,3.0],[2.8,4.0]]"""
+        try:
+            list(listofduples)
+        except TypeError:
+            print("Please give me a list")
+            return False
+        for inter in listofduples:
+            self.append(Interval(inter[0],inter[1]))
+            return True
     
     def sort(self):
         """Sort the set of Intervals and union adjacent intervals"""
@@ -110,15 +121,10 @@ class SetOfIntervals(object):
         return "Range of intervals. Number of intervals : "+str(self.length)+"\n"+ self.__repr__()
 
 class GraphicalIntervals(SetOfIntervals, AxesWidget):
-    """Set of intervals with graphical support"""
-    def __init__(self, ax, useblit = True, **lineprops):
-        """
-        Add intervals to *ax*.  If ``useblit=True``, use the backend-
-        dependent blitting features for faster updates (GTKAgg
-        only for now).  *lineprops* is a dictionary of line properties.
-
-        .. plot :: mpl_examples/widgets/cursor.py
-        """
+    """Set of intervals with graphical support. Add a list called `Rectangles` to the class `SetOfIntervals`. This list containts duples : an Interval and a patch (displayed rectangle) linked to an axis (stored in self.ax). This allows to update `Rectangle` from the SetOfInterval attribute `RangeInter` and vice versa, i.e. when we want to delete a displayed patch, we look it up in `Rectangle` (by itering over its second argument), and then we can delete the corresponding `Interval` in `RangeInter`."""
+    
+    def __init__(self, ax, Range=SetOfIntervals(), useblit = True):
+        """initialisation of object. Needs an axis to be displayed on. Optional SetOfIntervals."""
         AxesWidget.__init__(self, ax)
         SetOfIntervals.__init__(self)
         self.Rectangles=[]
@@ -126,10 +132,15 @@ class GraphicalIntervals(SetOfIntervals, AxesWidget):
         toggle_selector.RS = RectangleSelector(ax, self.on_select, drawtype='line',button=1)
         connect('key_press_event', self.toggle_selector)
         connect('pick_event', self.on_pick)
-        print("initialised")
+        if Range.length>0:
+            self.RangeInter=Range.RangeInter
+            self.sort()
+            print("Imported a Set Of Intervals")
+            self._update()
+        print("Initialised GraphicalIntervals.")
         
     def connect(self,rect):
-        """connect to all the events we need"""
+        """connect rect to figure"""
         cidonpick = rect.figure.canvas.mpl_connect(
             'pick_event', self.on_pick)
         return cidonpick
@@ -151,11 +162,11 @@ class GraphicalIntervals(SetOfIntervals, AxesWidget):
         self.LastInterval=Interval(eclick.xdata,erelease.xdata)
         if not self.LastInterval.ispoint():
             self.append(self.LastInterval)
-        print(self.LastInterval)
+            print("Added interval ["+ str(self.LastInterval)+"]")
         self._update()
     
-    def on_pick(self, event, button=3):
-        """remove the interval selectionned while holding right mouse click"""
+    def on_pick(self, event):
+        """remove the interval mouseclicked"""
         self.removerectangle(event.artist)
         self._update()  
     
@@ -167,7 +178,7 @@ class GraphicalIntervals(SetOfIntervals, AxesWidget):
                 self.Rectangles.remove(ele)
                 rect.remove()
                 self._update()
-                print("Removed")
+                print("Removed interval ["+str(ele[0])+"]")
                 break
     
     def toggle_selector(self, event):
@@ -279,12 +290,3 @@ class Interval(object):
         
     def __ge__(self,other):
         return self.xmin >= other.get_x()[0]
-    
-x = arange(100)/(79.0)
-y = sin(x)
-fig = figure
-ax = subplot(111)
-ax.plot(x,y)
-
-Hello=GraphicalIntervals(ax)
-show()
