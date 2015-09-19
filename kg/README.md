@@ -49,14 +49,16 @@ Method | Description | Return type
 `R.sort()` | sorts Intervals in `R.RangeInter` | none
 
 ### GraphicalInterval
-**Set of intervals with graphical support**. Add a list called `Rectangles` to the class `SetOfIntervals`. This list containts duples : an Interval and a patch (displayed rectangle) linked to an axis (stored in self.ax). This allows to update `Rectangle` from the SetOfInterval attribute `RangeInter` and vice versa, i.e. when we want to delete a displayed patch, we look it up in `Rectangle` (by itering over its second argument), and then we can delete the corresponding `Interval` in `RangeInter`.
+**Set of intervals with graphical support**. Requires an Axis. Optional SetOfRanges can be given. Add a list called `Rectangles` to the class `SetOfIntervals`. This list containts duples : an Interval and a patch (displayed rectangle) linked to an axis (stored in self.ax). This allows to update `Rectangle` from the SetOfInterval attribute `RangeInter` and vice versa, i.e. when we want to delete a displayed patch, we look it up in `Rectangle` (by itering over its second argument), and then we can delete the corresponding `Interval` in `RangeInter`.
 
 Method | Description
 ------- | ----------
-`_update(self)` | update Rectangles and plot them
-`on_select(self, eclick, erelease)` | add the interval selectionned while holding left mouse click
-`on_pick(self, event)` | remove the interval selectionned while holding right mouse click
-`toggle_selector(self, event)` | handle key_events
+`_update(self)` | updates Rectangles and plot them
+`on_select(self, eclick, erelease)` | adds the interval selectionned while holding left mouse click
+`connect(self,rect)` | connects the rectangle rect to the figure
+`removerectangle(self,rect)` | removes rect from the figure, from Rectangles list and removes the corresponding interval from RangesInter
+`on_pick(self, event)` | removes the interval selectionned while holding right mouse click
+`toggle_selector(self, event)` | handles key_events
 
 
 ### Case :
