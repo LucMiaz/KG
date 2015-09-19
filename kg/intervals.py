@@ -124,22 +124,23 @@ class GraphicalIntervals(SetOfIntervals, AxesWidget):
         SetOfIntervals.__init__(self)
         self.Rectangles=[]
         self.addremove=True
-        toggle_selector.RS = RectangleSelector(ax, self.onselect, drawtype='line')
-        connect('key_press_event', toggle_selector)
+        toggle_selector.RS = RectangleSelector(ax, self.on_select, drawtype='line',button=1)
+        connect('key_press_event', self.toggle_selector)
+        connect('pick_event', self.on_pick)
         print("initialised")
     
     def _update(self):
         """update Rectangles and plot them"""
         for rect in self.Rectangles:
-            rect.remove()
+            rect[1].remove()
         self.Rectangles=[]
         for inter in self.RangeInter:
             coord=inter.get_x()
             rect=ax.add_patch(patches.Rectangle((coord[0],self.ax.get_xlim()[0]), coord[1]-coord[0], self.ax.get_ylim()[1], alpha=0.4, facecolor="#c7eae5", edgecolor="none"))
-            self.Rectangles.append(rect)
+            self.Rectangles.append((inter,rect))
         self.ax.figure.canvas.draw()
     
-    def onselect(self, eclick, erelease):
+    def on_select(self, eclick, erelease):
         """add the interval selectionned while holding left mouse click"""
         self.LastInterval=Interval(eclick.xdata,erelease.xdata)
         if not self.LastInterval.ispoint():
@@ -147,13 +148,14 @@ class GraphicalIntervals(SetOfIntervals, AxesWidget):
         print(self.LastInterval)
         self._update()
     
-    def onpick(self, event, button=3):
+    def on_pick(self, event):
         """remove the interval selectionned while holding right mouse click"""
-        self.remove(event.artist)
-        self._update()  
+        print(str(event.artist))
+        print("here")
+        #self._update()  
         
 
-    def ontype(self, event):
+    def toggle_selector(self, event):
         if event.key in ['Q', 'q'] and toggle_selector.RS.active:
             toggle_selector.RS.set_active(False)
             print("Key "+event.key+" pressed")

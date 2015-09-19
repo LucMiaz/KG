@@ -60,8 +60,8 @@ Attribute | description | type | needed at init
 `date` | | string | []
 `tb` | begin time | float | [x]
 `te`| end time | float | [x]
-`Z` |  | SetOfIntervals | []
-`K` | screeching sound | SetOfIntervals  | []
+`Z` | Flanging noise | SetOfIntervals | []
+`K` | Squeal noise | SetOfIntervals  | []
 
 Method | Description | Return type
 ------ | ----------- | -----------
