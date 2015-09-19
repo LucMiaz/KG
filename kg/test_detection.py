@@ -3,6 +3,7 @@ import os
 import pandas as pd
 import numpy as np
 sys.path.append('D:\GitHub\myKG')
+sys.path.append('C:\lucmiaz\KG_dev_branch\KG')
 from kg.measurement_values import measuredValues
 from kg.time_signal import timeSignal
 from kg.detect import Detect
@@ -32,22 +33,9 @@ class Case(object):
                 #results
                 'tb':tb,
                 'te':te,
-                'Z':Z,
-                'K':K,
+                'Z':GraphicalIntervals(Z),
+                'K':GraphicalIntervals(K),
                 }
-        self.LastInterval=Interval(0,0)
-            
-    def add_kg_event(self, t0, t1, noiseType = 'Z'):
-        '''
-        create an interval [t0,t1], update LastInterval and add this interval to noiseType
-        '''
-        self.LastInterval=Interval(t0,t1)
-        self.case[noiseType].append(self.LastInterval)
-        
-    def remove_last_event(self, noiseType='Z'):
-        """Remove the last interval selected from the set of interval.
-         The full interval is removed including the possible overlapping"""
-        self.case[noiseType].remove(LastInterval)
         
     def save(self, mesPath):
         '''
@@ -63,7 +51,7 @@ class Case(object):
         dateTime =  datetime.datetime.now()
         self.case['date'] = dateTime.strftime( "%d-%m-%Y_%H-%M-%S")
         with open(casePath.as_posix(), 'w') as fp:
-        json.dump(self.case, fp)
+            json.dump(self.case, fp)
         
     def _compare(self, detect , noiseType = 'Z' , sum = True):
         '''
@@ -172,8 +160,13 @@ class DetectionTester(object):
         pickle.dump( testResults, open( path.as_posix(), "wb" ) )
     ##
 if __name__ == "__main__":
-    mesPath = 'D:\GitHub\myKG\Measurements_example\MBBMZugExample' 
-    author = 'esr'
+    try:
+        mesPath = 'D:\GitHub\myKG\Measurements_example\MBBMZugExample' 
+    except:
+        mesPath = 'C:\lucmiaz\KG_dev_branch\KG\Measurements_example\MBBMZugExample'
+    author = input("Who are you ?   ")
+    if not author:
+        author="esr"
     algorithm =  {'name':'Zischen1', 'mesVar':[], 'param': {}}    
     test = DetectionTester(mesPath, author, algorithm)
     test.test_detection()
