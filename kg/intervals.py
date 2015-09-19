@@ -1,4 +1,3 @@
-import matplotlib
 from matplotlib.widgets import *  
 from pylab import *
 
@@ -128,6 +127,12 @@ class GraphicalIntervals(SetOfIntervals, AxesWidget):
         connect('key_press_event', self.toggle_selector)
         connect('pick_event', self.on_pick)
         print("initialised")
+        
+    def connect(self,rect):
+        """connect to all the events we need"""
+        cidonpick = rect.figure.canvas.mpl_connect(
+            'pick_event', self.on_pick)
+        return cidonpick
     
     def _update(self):
         """update Rectangles and plot them"""
@@ -137,7 +142,8 @@ class GraphicalIntervals(SetOfIntervals, AxesWidget):
         for inter in self.RangeInter:
             coord=inter.get_x()
             rect=ax.add_patch(patches.Rectangle((coord[0],self.ax.get_xlim()[0]), coord[1]-coord[0], self.ax.get_ylim()[1], alpha=0.4, facecolor="#c7eae5", edgecolor="none"))
-            self.Rectangles.append((inter,rect))
+            rect.set_picker(0)
+            self.Rectangles.append((inter,rect, self.connect(rect)))
         self.ax.figure.canvas.draw()
     
     def on_select(self, eclick, erelease):
@@ -148,13 +154,22 @@ class GraphicalIntervals(SetOfIntervals, AxesWidget):
         print(self.LastInterval)
         self._update()
     
-    def on_pick(self, event):
+    def on_pick(self, event, button=3):
         """remove the interval selectionned while holding right mouse click"""
-        print(str(event.artist))
-        print("here")
-        #self._update()  
-        
-
+        self.removerectangle(event.artist)
+        self._update()  
+    
+    def removerectangle(self, rect):
+        """remove the object rect from Rectangle list and the corresponding Interval in RangeInter"""
+        for ele in self.Rectangles:
+            if ele[1]==rect:
+                self.RangeInter.remove(ele[0])
+                self.Rectangles.remove(ele)
+                rect.remove()
+                self._update()
+                print("Removed")
+                break
+    
     def toggle_selector(self, event):
         """Handle key_events"""
         if event.key in ['Q', 'q'] and toggle_selector.RS.active:
@@ -163,19 +178,7 @@ class GraphicalIntervals(SetOfIntervals, AxesWidget):
         if event.key in ['A', 'a'] and not toggle_selector.RS.active:
             toggle_selector.RS.set_active(True)
             print("Key "+event.key+" pressed")
-        if event.key in ['\b'] and self.lastinterval:
-            self.remove(self.lastinterval)
-        if event.key in ['r','R']:
-            print("Key "+str(event.key)+" pressed")
-            self.LastInterval.remove()
-            if self.addremove:
-                print("Adding intervals")
-            else:
-                print("Removing intervals")
-        if event.key in ['u','U']:
-            print("Key "+event.key+" pressed")
-            self.update()
-                
+
     def __str__(self):
         self.sort()
         return "Graphical representation of : " + SetOfIntervals.__str__(self)
