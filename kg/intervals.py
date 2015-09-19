@@ -111,7 +111,7 @@ class SetOfIntervals(object):
         return "Range of intervals. Number of intervals : "+str(self.length)+"\n"+ self.__repr__()
 
 class GraphicalIntervals(SetOfIntervals, AxesWidget):
-    """Set of interval with graphical support"""
+    """Set of intervals with graphical support"""
     def __init__(self, ax, useblit = True, **lineprops):
         """
         Add intervals to *ax*.  If ``useblit=True``, use the backend-
@@ -156,6 +156,7 @@ class GraphicalIntervals(SetOfIntervals, AxesWidget):
         
 
     def toggle_selector(self, event):
+        """Handle key_events"""
         if event.key in ['Q', 'q'] and toggle_selector.RS.active:
             toggle_selector.RS.set_active(False)
             print("Key "+event.key+" pressed")
