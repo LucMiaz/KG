@@ -29,7 +29,7 @@ Method     | Description | Return type
 `self <= other` | not `self > other` | boolean
 `self >= other` | not `self < other` | boolean
 
-###SetOfIntervals: 
+### SetOfIntervals: 
 **Create a list of intervals**. No initialisation variables.
 
 Attribute | type
@@ -48,6 +48,17 @@ Method | Description | Return type
 `R.haselement(a)` | test if `a` is an element of the list `R.RangeInter` | boolean
 `R.sort()` | sorts Intervals in `R.RangeInter` | none
 
+### GraphicalInterval
+**Set of intervals with graphical support**. Add a list called `Rectangles` to the class `SetOfIntervals`. This list containts duples : an Interval and a patch (displayed rectangle) linked to an axis (stored in self.ax). This allows to update `Rectangle` from the SetOfInterval attribute `RangeInter` and vice versa, i.e. when we want to delete a displayed patch, we look it up in `Rectangle` (by itering over its second argument), and then we can delete the corresponding `Interval` in `RangeInter`.
+
+Method | Description
+------- | ----------
+`_update(self)` | update Rectangles and plot them
+`on_select(self, eclick, erelease)` | add the interval selectionned while holding left mouse click
+`on_pick(self, event)` | remove the interval selectionned while holding right mouse click
+`toggle_selector(self, event)` | handle key_events
+
+
 ### Case :
     **Define a case of study**.
     
@@ -60,8 +71,8 @@ Attribute | description | type | needed at init
 `date` | | string | []
 `tb` | begin time | float | [x]
 `te`| end time | float | [x]
-`Z` |  | SetOfIntervals | []
-`K` | screeching sound | SetOfIntervals  | []
+`Z` | Flanging noise | SetOfIntervals | []
+`K` | Squeal noise | SetOfIntervals  | []
 
 Method | Description | Return type
 ------ | ----------- | -----------
