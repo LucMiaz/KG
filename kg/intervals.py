@@ -1,7 +1,9 @@
-from matplotlib.widgets import *  
-import matplotlib
+from matplotlib.widgets import *
+from matplotlib.widgets import  RectangleSelector
+from pylab import *
+import matplotlib.patches as patches 
 import matplotlib.pyplot as plt
-
+from pylab import *
 class SetOfIntervals(object):
     """Define a class of set of intervals, i.e. a closed of R"""
     def __init__(self):
@@ -31,9 +33,18 @@ class SetOfIntervals(object):
         except TypeError:
             print("Please give me a list")
             return False
-        for inter in listofduples:
-            self.append(Interval(inter[0],inter[1]))
-            return True
+        if len(listofduples)>0:
+            if isinstance(listofduples[0],Interval):
+                for inter in range(0,len(listofduples)):
+                    self.append(listofduples[inter])
+                return True
+            else:
+                for inter in range(0,len(listofduples)):
+                    self.append(Interval(listofduples[inter][0], listofduples[inter][1]))
+                return True
+        else:
+            print("empty list")
+            return False
     
     def sort(self):
         """Sort the set of Intervals and union adjacent intervals"""
@@ -92,15 +103,26 @@ class SetOfIntervals(object):
             k=-1
             while continuer:
                 k+=1
-                continuer= not (self.RangeInter[k].contains(element)) and k<self.length-1
-                return (self.RangeInter[k].contains(element) and k<self.length)
+                try:
+                    continuer= not (self.RangeInter[k].contains(element)) and k<self.length-1
+                    return (self.RangeInter[k].contains(element) and k<self.length)
+                except IndexError:
+                    print("Empty Range")
+                    return False
         elif not element:#check if emptyset
             return True
         else:
             return False
     
+    def containspoint(self, flt):
+        """checks if the float flt is inside one of the Interval of self.RangeIntervals"""
+        ret=False
+        for inter in self.RangeInter:
+            ret = ret or inter.containspoint(flt)
+        return ret
+        
     def haselement(self, element):
-        """Return True if element is in self"""
+        """Returns True if element is in self"""
         return bool(self.RangeInter.count(element))
 
     def discretize(self, zerotime, endtime, deltatime):
@@ -108,7 +130,7 @@ class SetOfIntervals(object):
         k=zerotime
         ret=([],[])
         while k<=endtime:
-            ret[1].append(self.contains(k))
+            ret[1].append(self.containspoint(k))
             ret[0].append(k)
             k += deltatime
         return ret
@@ -127,14 +149,18 @@ class GraphicalIntervals(SetOfIntervals, AxesWidget):
     
     def __init__(self, ax, Range=SetOfIntervals(), useblit = True):
         """initialisation of object. Needs an axis to be displayed on. Optional SetOfIntervals."""
+        #super classes init
         AxesWidget.__init__(self, ax)
         SetOfIntervals.__init__(self)
+        #attibutes
         self.Rectangles=[]
-        self.Characteristicpts=[]
-        
+        #last discretization points
+        self.drewdiscpts=None
+        #connecting
         toggle_selector.RS = RectangleSelector(ax, self.on_select, drawtype='line',button=1)
-        connect('key_press_event', self.toggle_selector)
+        connect('key_press_event', toggle_selector)
         connect('pick_event', self.on_pick)
+        #adding pre-existing intervals
         if Range.length>0:
             self.RangeInter=Range.RangeInter
             self.sort()
@@ -171,7 +197,7 @@ class GraphicalIntervals(SetOfIntervals, AxesWidget):
     def on_pick(self, event):
         """remove the interval mouseclicked"""
         self.removerectangle(event.artist)
-        self._update()  
+        self._update()
     
     def removerectangle(self, rect):
         """remove the object rect from Rectangle list and the corresponding Interval in RangeInter"""
@@ -184,29 +210,21 @@ class GraphicalIntervals(SetOfIntervals, AxesWidget):
                 print("Removed interval ["+str(ele[0])+"]")
                 break
     
-    def toggle_selector(self, event):
-        """Handle key_events"""
-        if event.key in ['Q', 'q'] and toggle_selector.RS.active:
-            toggle_selector.RS.set_active(False)
-            print("Key "+event.key+" pressed")
-        if event.key in ['A', 'a'] and not toggle_selector.RS.active:
-            toggle_selector.RS.set_active(True)
-            print("Key "+event.key+" pressed")
-    
     def discretize(self, zerotime, endtime, deltatime, axis=1):
         """return the characteristic function of range(zerotime,endtime, deltatime) in respect to RangeInter. Optional argument is the axis where one need to represent the points of the characteristic function. If one does not want any graphical representation, give None as axis"""
         if axis==1:
             axis=self.ax
-        #first remove the old discretized points
-        try:
-            self.Discretizedpts.remove()
-        except:
-            print("Empty discretized points")
-        self.Discretizedpts=SetOfIntervals.discretize(self,zerotime,endtime,deltatime)
-        if axis:
-            #add the new ones
-            axis.scatter(self.Discretizedpts[0],self.Discretizedpts[1], marker='.', s=150, c=a[1],linewidths=1, cmap= plt.cm.coolwarm)
-        return self.Discretizedpts
+        if self.length>0:
+            #first remove the old discretized points
+            try:
+                self.drewdiscpts.remove()
+            except:
+                print("Empty discretized points")
+            discpts=SetOfIntervals.discretize(self,zerotime,endtime,deltatime)
+            if axis:
+                #add the new ones
+                self.drewdiscpts = axis.scatter(discpts[0],discpts[1], marker='.', s=150, c=discpts[1],linewidths=1, cmap= plt.cm.coolwarm)
+            return discpts
             
 
     def __str__(self):
@@ -280,6 +298,10 @@ class Interval(object):
         """Return True if self contains other"""
         return ((other <= self)and (other >= self))
     
+    def containspoint(self, flt):
+        """check if float flt is in the interval self"""
+        return self.xmin<=flt and self.xmax>=flt
+    
     def isin(self,other):
         """Return True if self is in other"""
         return ((self <= other) and (self >= other))
@@ -310,11 +332,26 @@ class Interval(object):
     def __ge__(self,other):
         return self.xmin >= other.get_x()[0]
 
+def toggle_selector(event):
+    """Handle key_events"""
+    if event.key in ['Q', 'q'] and toggle_selector.RS.active:
+        toggle_selector.RS.set_active(False)
+        print("Key "+event.key+" pressed")
+    if event.key in ['A', 'a'] and not toggle_selector.RS.active:
+        toggle_selector.RS.set_active(True)
+        print("Key "+event.key+" pressed")   
+
 x = arange(100)/(79.0)
 y = sin(x)
-fig = figure
-ax = subplot(111)
+fig = plt.figure()
+
+ax = subplot(111,axisbg='#FFFFFF')
+plt.subplots_adjust(bottom=0.2)
 ax.plot(x,y)
 
 Hello=GraphicalIntervals(ax)
+axnext = plt.axes([0.81, 0.05, 0.1, 0.075])
+bprev = matplotlib.widgets.Button(axnext, 'Discretize')
+bprev.on_clicked(Hello.discretize(0.,1.,0.1))
 show()
+
