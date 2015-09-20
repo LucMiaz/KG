@@ -40,12 +40,12 @@ Attribute | type
 
 Method | Description | Return type
 ------ | ----------- | -----------
-`R.append(a)` | add Interval `a` to `R` | none
-`R.contains(a)` | test if `a` in `R` | boolean
-`R.discretize(tb,te,dt)` | discretize `R` in `[tb,te]` step `dt` | list
-`R.remove(a)` | remove Interval `a` from `R` | none
+`R.append(a)` | adds Interval `a` to `R` | none
+`R.contains(a)` | tests if `a` in `R` | boolean
+`R.discretize(tb,te,dt)` | discretizes `R` in `[tb,te]` step `dt`. Gives $\Xi_{\text{RangeInter}}(\text{Range(tb,te,dt)})$ | list
+`R.remove(a)` | removes Interval `a` from `R` | none
 `R.removeIntersection(a)` | called by `remove()` | none
-`R.haselement(a)` | test if `a` is an element of the list `R.RangeInter` | boolean
+`R.haselement(a)` | tests if `a` is an element of the list `R.RangeInter` | boolean
 `R.sort()` | sorts Intervals in `R.RangeInter` | none
 
 ### GraphicalInterval
@@ -59,6 +59,7 @@ Method | Description
 `removerectangle(self,rect)` | removes rect from the figure, from Rectangles list and removes the corresponding interval from RangesInter
 `on_pick(self, event)` | removes the interval selectionned while holding right mouse click
 `toggle_selector(self, event)` | handles key_events
+`discretize(self, zerotime, endtime, deltatime, axis=self.axis) | returns the characteristic function of range(zerotime,endtime, deltatime) in respect to RangeInter. Optional argument is the axis where one need to represent the points of the characteristic function. If one does not want any graphical representation, give None as axis
 
 
 ### Case :

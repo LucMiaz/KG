@@ -1,5 +1,6 @@
 from matplotlib.widgets import *  
 import matplotlib
+import matplotlib.pyplot as plt
 
 class SetOfIntervals(object):
     """Define a class of set of intervals, i.e. a closed of R"""
@@ -103,11 +104,12 @@ class SetOfIntervals(object):
         return bool(self.RangeInter.count(element))
 
     def discretize(self, zerotime, endtime, deltatime):
-        """return the boolean values of the characteristic function of the set RangeInter for the deltatimes from zerotime to endtime (return type numpy array of booleans)"""
+        """return the characteristic function of the set RangeInter for the deltatimes from zerotime to endtime (return type is a duple of lists)"""
         k=zerotime
-        ret=[]
+        ret=([],[])
         while k<=endtime:
-            ret.append(self.contains(k))
+            ret[1].append(self.contains(k))
+            ret[0].append(k)
             k += deltatime
         return ret
     
@@ -128,7 +130,8 @@ class GraphicalIntervals(SetOfIntervals, AxesWidget):
         AxesWidget.__init__(self, ax)
         SetOfIntervals.__init__(self)
         self.Rectangles=[]
-        self.addremove=True
+        self.Characteristicpts=[]
+        
         toggle_selector.RS = RectangleSelector(ax, self.on_select, drawtype='line',button=1)
         connect('key_press_event', self.toggle_selector)
         connect('pick_event', self.on_pick)
@@ -189,6 +192,22 @@ class GraphicalIntervals(SetOfIntervals, AxesWidget):
         if event.key in ['A', 'a'] and not toggle_selector.RS.active:
             toggle_selector.RS.set_active(True)
             print("Key "+event.key+" pressed")
+    
+    def discretize(self, zerotime, endtime, deltatime, axis=1):
+        """return the characteristic function of range(zerotime,endtime, deltatime) in respect to RangeInter. Optional argument is the axis where one need to represent the points of the characteristic function. If one does not want any graphical representation, give None as axis"""
+        if axis==1:
+            axis=self.ax
+        #first remove the old discretized points
+        try:
+            self.Discretizedpts.remove()
+        except:
+            print("Empty discretized points")
+        self.Discretizedpts=SetOfIntervals.discretize(self,zerotime,endtime,deltatime)
+        if axis:
+            #add the new ones
+            axis.scatter(self.Discretizedpts[0],self.Discretizedpts[1], marker='.', s=150, c=a[1],linewidths=1, cmap= plt.cm.coolwarm)
+        return self.Discretizedpts
+            
 
     def __str__(self):
         self.sort()
@@ -290,3 +309,12 @@ class Interval(object):
         
     def __ge__(self,other):
         return self.xmin >= other.get_x()[0]
+
+x = arange(100)/(79.0)
+y = sin(x)
+fig = figure
+ax = subplot(111)
+ax.plot(x,y)
+
+Hello=GraphicalIntervals(ax)
+show()

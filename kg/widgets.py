@@ -94,11 +94,7 @@ class CaseCreatorWidget(DetectControlWidget):
     kg_ event duration is selected with mouse cursor
     case is saved using a button
     '''
-<<<<<<< HEAD
     def __init__(self, micSn, wavPath, canvas ,t0 = 0, bar = [], parent = None):
-=======
-    def __init__(self, micSn):
->>>>>>> devCaseCreator
         measurement = ''
         #initiate new Case
         #todo
