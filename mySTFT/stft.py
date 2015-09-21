@@ -213,7 +213,6 @@ def stft_spectrum(X, param, **kwargs):
     '''return spectrum N points,
        if N > len x sameresult
     '''
-    # TODO: normalization
     R = param['R']
     N = param['N']
     sR = param['sR']
@@ -238,7 +237,6 @@ def stft_PSD(X, param, scaling = 'density', **kwargs):
     freq = fftfreq(N, 1/sR)
     f_i = np.arange(0,lenf_i*R , R)
     #normalization
-    # TODO: CONTROL NORMALIZATION
     win =  scipy.signal.get_window(param['window'], param['M'], fftbins = True)
     if scaling == 'density':
         scale = 1.0 / (sR * (win*win).mean())
