@@ -160,14 +160,14 @@ class DetectionTester(object):
         pickle.dump( testResults, open( path.as_posix(), "wb" ) )
     ##
 if __name__ == "__main__":
-    try:
-        mesPath = 'D:\GitHub\myKG\Measurements_example\MBBMZugExample' 
-    except:
-        mesPath = 'C:\lucmiaz\KG_dev_branch\KG\Measurements_example\MBBMZugExample'
+    #try:
+    #    mesPath = 'D:\GitHub\myKG\Measurements_example\MBBMZugExample' 
+    #except:
+    mesPath = 'C:\lucmiaz\KG_dev_branch\KG\Measurements_example\MBBMZugExample'
     author = input("Who are you ?   ")
     if not author:
         author="esr"
     algorithm =  {'name':'Zischen1', 'mesVar':[], 'param': {}}    
     test = DetectionTester(mesPath, author, algorithm)
-    test.test_detection()
+    test.test_Detection()
     test.save_test_results()
