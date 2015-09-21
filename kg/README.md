@@ -3,11 +3,14 @@
 ## Classes
 ### measuredValues :
 ### time signals:
+
 ### dsp  : 
 **Calculate the squeal and flanging** of a set of microphones given a set of signal during a passby 
+
 ### vizualise Widget
-### Interval: 
-    **Create an interval**. Needs two floats as bounds.
+
+### Interval:
+**Create an interval**. Needs two floats as bounds.
 
 Attribute | type
 --------   | -------
@@ -51,6 +54,7 @@ Method | Description | Return type
 
 ### GraphicalInterval
 **Set of intervals with graphical support**. Requires an Axis. Optional SetOfRanges can be given. Optional argument for Discretization button display. Default value is `True`.
+
 Adds a list called `Rectangles` to the class `SetOfIntervals`. This list containts duples : an Interval and a patch (displayed rectangle) linked to an axis (stored in self.ax). This allows to update `Rectangle` from the SetOfInterval attribute `RangeInter` and vice versa, i.e. when we want to delete a displayed patch, we look it up in `Rectangle` (by itering over its second argument), and then we can delete the corresponding `Interval` in `RangeInter`. 
 
 Method | Description
@@ -67,7 +71,7 @@ Method | Description
 
 
 ### Case :
-    **Define a case of study**.
+**Define a case of study**.
     
 Attribute | description | type | needed at init
 --------- | ----------- | --------- | ----------------
