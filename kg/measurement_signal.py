@@ -21,10 +21,12 @@ class measuredSignal():
     PATH = ''
     SIGNALS = {}
 
-    def __init__(self, ID):
+    def __init__(self, ID, mic = None):
         self.ID = ID
         self.path = measuredSignal.PATH
         self.signals = {}
+        if not mic == None:
+            self.read_signal(mic)
         
     def list_signals(self):
         data = []
@@ -92,10 +94,10 @@ class measuredSignal():
     @classmethod
     def setup(cls, mesPath):
         mesPath = pathlib.Path(mesPath)
-        with mesPath.joinpath('raw_signals_info.json').open('r+') as config:
+        with mesPath.joinpath('raw_signals_config.json').open('r+') as config:
             cls.SIGNALS = json.load(config)
         cls.PATH = mesPath
-        return(cls)
+        #return(cls)
     
 ##tests 
 if __name__ == "__main__":
