@@ -3,7 +3,8 @@
 ## Classes
 ### measuredValues :
 ### time signals:
-### dsp  : Calculate the squeal and flanging of a set of microphones given a set of signal during a passby 
+### dsp  : 
+**Calculate the squeal and flanging** of a set of microphones given a set of signal during a passby 
 ### vizualise Widget
 ### Interval: 
     **Create an interval**. Needs two floats as bounds.
@@ -49,7 +50,8 @@ Method | Description | Return type
 `R.sort()` | sorts Intervals in `R.RangeInter` | none
 
 ### GraphicalInterval
-**Set of intervals with graphical support**. Requires an Axis. Optional SetOfRanges can be given. Add a list called `Rectangles` to the class `SetOfIntervals`. This list containts duples : an Interval and a patch (displayed rectangle) linked to an axis (stored in self.ax). This allows to update `Rectangle` from the SetOfInterval attribute `RangeInter` and vice versa, i.e. when we want to delete a displayed patch, we look it up in `Rectangle` (by itering over its second argument), and then we can delete the corresponding `Interval` in `RangeInter`. Optional argument for Discretization button display. Default value is `True`.
+**Set of intervals with graphical support**. Requires an Axis. Optional SetOfRanges can be given. Optional argument for Discretization button display. Default value is `True`.
+Adds a list called `Rectangles` to the class `SetOfIntervals`. This list containts duples : an Interval and a patch (displayed rectangle) linked to an axis (stored in self.ax). This allows to update `Rectangle` from the SetOfInterval attribute `RangeInter` and vice versa, i.e. when we want to delete a displayed patch, we look it up in `Rectangle` (by itering over its second argument), and then we can delete the corresponding `Interval` in `RangeInter`. 
 
 Method | Description
 ------- | ----------
@@ -59,9 +61,9 @@ Method | Description
 `removerectangle(self,rect)` | removes rect from the figure, from Rectangles list and removes the corresponding interval from RangesInter
 `on_pick(self, event)` | removes the interval selectionned while holding right mouse click
 `toggle_selector(self, event)` | handles key_events
-`call_discretize(self,event)' | calls the method `discretize` from an event, such as a button
+`call_discretize(self,event)` | calls the method `discretize` from an event, such as a button
 `changeDiscretizeParameters(self, listofparams)` | changes the parameters of the discretization (usefull if calling with button). Give list or tuple of length 3
-`discretize(self, zerotime, endtime, deltatime, axis=self.axis) | returns the characteristic function of range(zerotime,endtime, deltatime) in respect to RangeInter. Optional argument is the axis where one need to represent the points of the characteristic function. If one does not want any graphical representation, give None as axis
+`discretize(self, zerotime, endtime, deltatime, axis=self.axis)` | returns the characteristic function of range(zerotime,endtime, deltatime) in respect to RangeInter. Optional argument is the axis where one need to represent the points of the characteristic function. If one does not want any graphical representation, give None as axis
 
 
 ### Case :
