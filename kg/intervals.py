@@ -147,7 +147,7 @@ class SetOfIntervals(object):
 class GraphicalIntervals(SetOfIntervals, AxesWidget):
     """Set of intervals with graphical support. Add a list called `Rectangles` to the class `SetOfIntervals`. This list containts duples : an Interval and a patch (displayed rectangle) linked to an axis (stored in self.ax). This allows to update `Rectangle` from the SetOfInterval attribute `RangeInter` and vice versa, i.e. when we want to delete a displayed patch, we look it up in `Rectangle` (by itering over its second argument), and then we can delete the corresponding `Interval` in `RangeInter`."""
     
-    def __init__(self, ax, Range=SetOfIntervals(), useblit = True):
+    def __init__(self, ax, Range=SetOfIntervals(), displaybutton=True, useblit = True):
         """initialisation of object. Needs an axis to be displayed on. Optional SetOfIntervals."""
         #super classes init
         AxesWidget.__init__(self, ax)
@@ -156,6 +156,8 @@ class GraphicalIntervals(SetOfIntervals, AxesWidget):
         self.Rectangles=[]
         #last discretization points
         self.drewdiscpts=None
+        #discretization arguments
+        self.discargs=(0.,1.,0.1)
         #connecting
         toggle_selector.RS = RectangleSelector(ax, self.on_select, drawtype='line',button=1)
         connect('key_press_event', toggle_selector)
@@ -167,7 +169,13 @@ class GraphicalIntervals(SetOfIntervals, AxesWidget):
             print("Imported a Set Of Intervals")
             self._update()
         print("Initialised GraphicalIntervals.")
-        
+        #displaying button for discretization
+        if displaybutton:
+            axdisc = plt.axes([0.01, 0.05, 0.1, 0.075])
+            bprev = matplotlib.widgets.Button(axdisc, 'Discretize')
+            bprev.on_clicked(self.call_discretize)
+
+    #operations on rectangles: displaying/removing
     def connect(self,rect):
         """connect rect to figure"""
         cidonpick = rect.figure.canvas.mpl_connect(
@@ -209,7 +217,28 @@ class GraphicalIntervals(SetOfIntervals, AxesWidget):
                 self._update()
                 print("Removed interval ["+str(ele[0])+"]")
                 break
+    #discretization        
+    def call_discretize(self,event):
+        """calls the method discretize from an event, such as a button"""
+        self.discretize(self.discargs[0],self.discargs[1],self.discargs[2])
     
+    def changeDiscretizeParameters(self, listofparams):
+        """method to change the parameters of the discretization (usefull if calling with button)"""
+        if listofparams:
+            if len(listofparams)==3:
+                try:
+                    self.discargs=tuple(listofparams)
+                    return True
+                except:
+                    print("Could not change discretization parameters : type not convertible to tuple")
+                    return False
+            else:
+                print("Wrong lenth of parameters given for discretization. Default values set : "+str(self.discargs))
+                return False
+        else:
+            print("Empty list of discretization parameters. Default values set : "+str(self.discargs))
+            return False
+            
     def discretize(self, zerotime, endtime, deltatime, axis=1):
         """return the characteristic function of range(zerotime,endtime, deltatime) in respect to RangeInter. Optional argument is the axis where one need to represent the points of the characteristic function. If one does not want any graphical representation, give None as axis"""
         if axis==1:
@@ -220,13 +249,13 @@ class GraphicalIntervals(SetOfIntervals, AxesWidget):
                 self.drewdiscpts.remove()
             except:
                 print("Empty discretized points")
-            discpts=SetOfIntervals.discretize(self,zerotime,endtime,deltatime)
+            discpts=super(GraphicalIntervals,self).discretize(zerotime,endtime,deltatime)
             if axis:
                 #add the new ones
                 self.drewdiscpts = axis.scatter(discpts[0],discpts[1], marker='.', s=150, c=discpts[1],linewidths=1, cmap= plt.cm.coolwarm)
             return discpts
-            
-
+    
+    #string representation
     def __str__(self):
         self.sort()
         return "Graphical representation of : " + SetOfIntervals.__str__(self)
@@ -247,13 +276,6 @@ class Interval(object):
     def get_x(self):
         return self.xmin, self.xmax
         
-    #representations, string format
-    def __repr__(self):
-        return '{}: {},{}'.format(self.__class__.__name__, self.xmin, self.xmax)
-        
-    def __str__(self):
-        return str(self.xmin) + ', '+ str(self.xmax)
-        
     #interval operations
     def intersect(self,other):
         """Tells if intervals are intesecting"""
@@ -272,6 +294,12 @@ class Interval(object):
         else:
             ret=None
         return ret
+    
+    def union(self, other):
+        """merge self and other together"""
+        self.xmax=max(self.xmax, other.xmax)
+        self.xmin=min(self.xmin, other.xmin)
+        return self
     
     def difference(self, other):
         """Return self minus intersection with other"""
@@ -298,19 +326,13 @@ class Interval(object):
         """Return True if self contains other"""
         return ((other <= self)and (other >= self))
     
-    def containspoint(self, flt):
-        """check if float flt is in the interval self"""
-        return self.xmin<=flt and self.xmax>=flt
-    
     def isin(self,other):
         """Return True if self is in other"""
         return ((self <= other) and (self >= other))
-        
-    def union(self, other):
-        """merge self and other together"""
-        self.xmax=max(self.xmax, other.xmax)
-        self.xmin=min(self.xmin, other.xmin)
-        return self
+    
+    def containspoint(self, flt):
+        """check if float flt is in the interval self"""
+        return self.xmin<=flt and self.xmax>=flt
         
     #sorting definitions
     def __lt__(self, other):
@@ -331,6 +353,13 @@ class Interval(object):
         
     def __ge__(self,other):
         return self.xmin >= other.get_x()[0]
+    
+    #representations, string format
+    def __repr__(self):
+        return '{}: {},{}'.format(self.__class__.__name__, self.xmin, self.xmax)
+        
+    def __str__(self):
+        return str(self.xmin) + ', '+ str(self.xmax)
 
 def toggle_selector(event):
     """Handle key_events"""
@@ -350,8 +379,5 @@ plt.subplots_adjust(bottom=0.2)
 ax.plot(x,y)
 
 Hello=GraphicalIntervals(ax)
-axnext = plt.axes([0.81, 0.05, 0.1, 0.075])
-bprev = matplotlib.widgets.Button(axnext, 'Discretize')
-bprev.on_clicked(Hello.discretize(0.,1.,0.1))
 show()
 
