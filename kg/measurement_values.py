@@ -76,6 +76,7 @@ def read_MBBM_tables(mesPath, save = False):
             data[ws.cell_value(row,0)] = ws.cell_value(row,selectCol)
         v['values'] = data
     print('\n\nFinish read values\n----------\n')
+    # return dict
     MBBM_data = collections.OrderedDict()
     MBBM_data['location'] = CONFIG['location']
     MBBM_data['measurement'] = CONFIG['measurement']
@@ -107,7 +108,7 @@ class measuredValues():
         self.micValues = micValues 
         self.idValues = idValues
         self.mic = mic
-        self.kgValues = {}
+        self.kgValues = {'algorithms':{},'results':{}}
                 
     def list_variables(self):
         """
@@ -145,98 +146,60 @@ class measuredValues():
         for id in ID: 
             for var in variables:
                 if var in self.idValues.keys():
-                    try:
-                        # if there is id 
-                        value = self.idValues[var]['values'][id]
-                    except KeyError:
-                        value = None
+                    val = self.idValues[var].get('values').get(id)
                 elif var in self.micValues.keys():
-                    try:
-                        value = self.micValues[var]['values'][id]
-                        value = {m:mv for m,mv in value.items() if int(m) in mic}
-                    except KeyError:
-                        value = None
-                #fill dict
-                try:
-                    dict[id][var] = value
-                except KeyError:
-                    dict[id] = {var: value}
+                    val = copy.deepcopy(self.micValues[var].get('values').get(id,{}))
+                    val = {m:mv for m,mv in val.items() if int(m) in mic}
+            #fill dict
+            dict.setdefault(id,{})[var] = val
         return(dict)
     
-    def set_kg_values(self, ID, mic, algorithm, results ):
+    def set_kg_values(self, algorithm, ID, mic, results ):
         """
-        calculated values with dsp are stored in kgValues[calc_id] as dict.
-        """
-        # Todo: algorithm
-        try:
-            dict = self.kgValues[calc_id]
-        except KeyError:
-            self.kgValues[calc_id] = {}
-            dict = self.kgValues[calc_id]
-        #raise error if ID already calculated
-        if ID in dict.keys():
-           print('ID is alredy calculated')
-        else:
-            dict[ID] = dspValues
+        set algorithm information in self.kgValues['algorithm'] 
+
+        set algorithm results in self.kgValues['results'] 
+        structure of self.kgValues['results']:
+        {ID:{
+             'mic':{
+                        mic:{
+                            str(algorithm):{...}
+                            }
+                        }
+            }
             
-    def set_kg_alg_description(self,calc_id, algorithmDescription,variableInfo):
-        # Todo: JSON
-        if not calc_id in self.kgValues.keys():
-            self.kgValues[calc_id] = {}
-        self.kgValues[calc_id]['description'] = algorithmDescription
-        self.kgValues[calc_id]['varInfo'] = variableInfo
+        parameter: algorithm, **{'ID':mID, 'mic': mic, 'results':{...}}
+        """
+        if not str(algorithm) in self.kgValues['algorithm'].keys():
+            self.kgValues['algorithm'][str(algorithm)] = algorithm.get_info()
+        # add results
+        dict = self.kgValues['results'].setdefault(ID,{}).setdefault(mic,{})
+        dict[str(algorithm)] = results
         
-    def export_to_json(self, algorithm, variables = []):
+    def kg_values_to_json(self, algorithm , variables = []):
         '''
+        export kgValues of given algorithm with added variables for R evaluation
         '''
-        # Todo: JSON
-        resultsPath = self.path.joinpath('results')
-        KG = self.kgValues[algorithm]
-        dateTime =  datetime.datetime.now()
-        fileName = 'results_'+ calc_id +'_'+ dateTime.strftime( "%d-%m-%Y_%H-%M-%S")
-        resultsPath = resultsPath.joinpath( fileName + '.csv').as_posix()
-        #header
-        header =   {'Description':'''
-                    ['# This file contains the Results of KG processing'],
-                    ['# Measurement and processing informations']''',
-                    'date': dateTime.strftime( "%d-%m-%Y"),
-                    'time':dateTime.strftime( "%H:%M:%S"),
-                    'location': self.location,
-                    'measurement': self.measurement,
-                    #['measurement date', measuredValues.MES_DATE],
-                    'kg_calc_id':calc_id,
-                    'algorithm':algorithm}
-        #colnames description
-        colNames = ''
-        #kgVariables
-        colNames += KG['varInfo']
-        #
-        varInfo = self.list_variables()
-        colNames += [[var, varInfo.ix[varInfo.variable =='v1','description']] for var in variables]
-        #write to csv
-        with open(resultsPath, 'w+', newline='') as file:
-            csv_writer = csv.writer(file, delimiter=';')
-            for row in header + colNames:
-                csv_writer.writerow(row)
-            # write table data
-            csv_writer.writerow(['## Table with processed data'])
-            # table header
-            KGColnames = [KGvar[0] for KGvar in KG['varInfo']]
-            csv_writer.writerow(['ID']+KGColnames+variables)
-            #table data
-            IDs = list(KG.keys())
-            IDs.remove('varInfo')
-            IDs.remove('description')
-            for ID in IDs:
-                kg = KG[ID]
-                for i,mic in enumerate(kg['mic']):
-                    row = [ID]
-                    row += [kg[col][i] for col in KGColnames]
-                    varValues = self.get_variables_values(ID,mic,variables)
-                    row+=[varValues[k] for k in variables ]
-                    csv_writer.writerow(row) 
-            #finish
-        print('Values writed to file')
+        fileName = 'results_'+ str(algorithm) +'_'+ dateTime.strftime( "%d-%m-%Y_%H-%M-%S")
+        resultsPath = self.path.joinpath('results').joinpath(fileName + '.json')
+        export = collections.OrderedDict()
+        export['Description']= '''
+                    This file contains the Results of KG processing'''
+        export.update({ 'date': dateTime.strftime( "%d-%m-%Y"),
+                        'time':dateTime.strftime( "%H:%M:%S"),
+                        'location': self.location,
+                        'measurement': self.measurement})
+        #todo : filter with alg
+        export.update(copy.deepcopy(self.kgValues))
+        # Add variables
+        #todo : implement
+        for var in variables:
+            if var in self.micValues.keys():
+                pass
+            if var in self.idValues.keys():
+                pass
+        with resultsPath.open('w+') as file:
+            json.dump(export,file)
         
     @classmethod
     def from_json(cls, mesPath):
@@ -256,7 +219,7 @@ if __name__ == "__main__":
     read_MBBM_tables(mesPath,True)
     #getexample
     mesVal = measuredValues.from_json(mesPath)
-    s = mesVal.get_variables_values(ID=['m_0100','m_0101'], mic= [1,2], variables=['v2','v1','direction','Ta', 'Te', 'Tp_a', 'Tp_e'])
+    s = mesVal.get_variables_values(ID=['m_0100','m_0101'], mic= [1,6], variables=['v2','v1','direction','Ta', 'Te', 'Tp_a', 'Tp_e'])
     print(s)
     ##
     
