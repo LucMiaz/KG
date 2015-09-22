@@ -1,1 +1,157 @@
-{"location": "Zug", "measurement": "Vormessung", "tables": {"Achszeiten": {"": null, "fileName": "Achszeiten.xls", "skip": 1, "description": null}, "Terzspektren": {"": null, "fileName": "Terzspektren.xls", "skip": 1, "description": null}, "Pegelzeitverlauf": {"": null, "fileName": "Pegelzeitverlauf.xls", "skip": 2, "description": null}, "Wetterstation": {"": null, "fileName": "Wetterstation.xls", "skip": 0, "description": null}}, "micValues": {"Te": {"table": "Pegelzeitverlauf", "colName": "Te_mic_i", "sheet": "TEL", "description": "Auswertezeitende"}, "LAmax": {"table": "Pegelzeitverlauf", "colName": "LAmax_mic_i", "sheet": "LAmax", "description": "max o"}, "LAf": {"table": "Terzspektren", "colName": [50, 63, 80, 100, 125, 160, 200, 250, 315, 400, 500, 630, 800, 1000, 1250, 1600, 2000, 2500, 3150, 4000, 5000, 6300, 8000, 10000], "sheet": "LpAeqTP_Mikrofone_Miki", "description": "spectrum"}, "TEL": {"table": "Pegelzeitverlauf", "colName": "TEL_mic_i", "sheet": "TEL", "description": "TEL"}, "Tb": {"table": "Pegelzeitverlauf", "colName": "Ta_mic_i", "sheet": "TEL", "description": "Auswertezeit beginn"}, "Tp_e": {"table": "Pegelzeitverlauf", "colName": "T_Pe_mic_i", "sheet": "TEL", "description": "Vorbeifahrtende"}, "Tp_b": {"table": "Pegelzeitverlauf", "colName": "T_Pa_mic_i", "sheet": "TEL", "description": "Vorbeifahrtbeginn"}, "LAEQ": {"table": "Pegelzeitverlauf", "colName": "LAEQ_mic_i", "sheet": "LAEQ", "description": "LAEQ"}}, "idValues": {"wind": {"table": "Wetterstation", "colName": "Windgeschw. [m/s]", "sheet": "Infos", "description": null}, "v2": {"table": "Achszeiten", "colName": "v2 [km/h]", "sheet": "Achszeiten", "description": "v letzes drehgestell"}, "mTime": {"table": "Wetterstation", "colName": "Uhrzeit", "sheet": "Infos", "description": null}, "humidity": {"table": "Wetterstation", "colName": "rel. Feuchte [%]", "sheet": "Infos", "description": null}, "mDate": {"table": "Wetterstation", "colName": "Datum", "sheet": "Infos", "description": null}, "Gleis": {"table": "Achszeiten", "colName": "Gleis", "sheet": "Achszeiten", "description": "Gleis"}, "direction": {"table": "Achszeiten", "colName": "Fahrtrichtung", "sheet": "Achszeiten", "description": "Fahrrichtung, 1 s\u00fcd,0 nord"}, "v1": {"table": "Achszeiten", "colName": "v1 [km/h]", "sheet": "Achszeiten", "description": "v erstes drehgestell"}, "trainType": {"table": "Achszeiten", "colName": "Zugart", "sheet": "Achszeiten", "description": null}, "axleProLenght": {"table": "Achszeiten", "colName": "Achsen pro L\u00e4nge", "sheet": "Achszeiten", "description": null}, "Temp": {"table": "Wetterstation", "colName": "Temperatur [K]", "sheet": "Infos", "description": null}, "trainLenght": {"table": "Achszeiten", "colName": "L\u00e4nge [m]", "sheet": "Achszeiten", "description": "zugsl\u00c3\u00a4nghe"}, "rain": {"table": "Wetterstation", "colName": "Regen [V]", "sheet": "Infos", "description": null}}, "microphones": [1, 2, 4, 5, 6, 7]}
+{
+	"location" : "Zug",
+	"measurement" : "Vormessung",
+	"tables" : {
+		"Achszeiten" : {
+			"fileName" : "Achszeiten.xls",
+			"skip" : 1,
+			"description" : null
+		},
+		"Terzspektren" : {
+			"fileName" : "Terzspektren.xls",
+			"skip" : 1,
+			"description" : null
+		},
+		"Pegelzeitverlauf" : {
+			"fileName" : "Pegelzeitverlauf.xls",
+			"skip" : 2,
+			"description" : null
+		},
+		"Wetterstation" : {
+			"fileName" : "Wetterstation.xls",
+			"skip" : 0,
+			"description" : null
+		}
+	},
+	"micValues" : {
+		"Te" : {
+			"table" : "Pegelzeitverlauf",
+			"colName" : "Te_mic_i",
+			"sheet" : "TEL",
+			"description" : "Auswertezeitende"
+		},
+		"LAmax" : {
+			"table" : "Pegelzeitverlauf",
+			"colName" : "LAmax_mic_i",
+			"sheet" : "LAmax",
+			"description" : "max o"
+		},
+		"LAf" : {
+			"table" : "Terzspektren",
+			"colName" : [50, 63, 80, 100, 125, 160, 200, 250, 315, 400, 500, 630, 800, 1000, 1250, 1600, 2000, 2500, 3150, 4000, 5000, 6300, 8000, 10000],
+			"sheet" : "LpAeqTP_Mikrofone_Miki",
+			"description" : "spectrum"
+		},
+		"TEL" : {
+			"table" : "Pegelzeitverlauf",
+			"colName" : "TEL_mic_i",
+			"sheet" : "TEL",
+			"description" : "TEL"
+		},
+		"Tb" : {
+			"table" : "Pegelzeitverlauf",
+			"colName" : "Ta_mic_i",
+			"sheet" : "TEL",
+			"description" : "Auswertezeit beginn"
+		},
+		"Tp_e" : {
+			"table" : "Pegelzeitverlauf",
+			"colName" : "T_Pe_mic_i",
+			"sheet" : "TEL",
+			"description" : "Vorbeifahrtende"
+		},
+		"Tp_b" : {
+			"table" : "Pegelzeitverlauf",
+			"colName" : "T_Pa_mic_i",
+			"sheet" : "TEL",
+			"description" : "Vorbeifahrtbeginn"
+		},
+		"LAEQ" : {
+			"table" : "Pegelzeitverlauf",
+			"colName" : "LAEQ_mic_i",
+			"sheet" : "LAEQ",
+			"description" : "LAEQ"
+		}
+	},
+	"idValues" : {
+		"wind" : {
+			"table" : "Wetterstation",
+			"colName" : "Windgeschw. [m/s]",
+			"sheet" : "Infos",
+			"description" : null
+		},
+		"v2" : {
+			"table" : "Achszeiten",
+			"colName" : "v2 [km/h]",
+			"sheet" : "Achszeiten",
+			"description" : "v letzes drehgestell"
+		},
+		"mTime" : {
+			"table" : "Wetterstation",
+			"colName" : "Uhrzeit",
+			"sheet" : "Infos",
+			"description" : null
+		},
+		"humidity" : {
+			"table" : "Wetterstation",
+			"colName" : "rel. Feuchte [%]",
+			"sheet" : "Infos",
+			"description" : null
+		},
+		"mDate" : {
+			"table" : "Wetterstation",
+			"colName" : "Datum",
+			"sheet" : "Infos",
+			"description" : null
+		},
+		"Gleis" : {
+			"table" : "Achszeiten",
+			"colName" : "Gleis",
+			"sheet" : "Achszeiten",
+			"description" : "Gleis"
+		},
+		"direction" : {
+			"table" : "Achszeiten",
+			"colName" : "Fahrtrichtung",
+			"sheet" : "Achszeiten",
+			"description" : "Fahrrichtung, 1 s\u00fcd,0 nord"
+		},
+		"v1" : {
+			"table" : "Achszeiten",
+			"colName" : "v1 [km/h]",
+			"sheet" : "Achszeiten",
+			"description" : "v erstes drehgestell"
+		},
+		"trainType" : {
+			"table" : "Achszeiten",
+			"colName" : "Zugart",
+			"sheet" : "Achszeiten",
+			"description" : null
+		},
+		"axleProLenght" : {
+			"table" : "Achszeiten",
+			"colName" : "Achsen pro L\u00e4nge",
+			"sheet" : "Achszeiten",
+			"description" : null
+		},
+		"Temp" : {
+			"table" : "Wetterstation",
+			"colName" : "Temperatur [K]",
+			"sheet" : "Infos",
+			"description" : null
+		},
+		"trainLenght" : {
+			"table" : "Achszeiten",
+			"colName" : "L\u00e4nge [m]",
+			"sheet" : "Achszeiten",
+			"description" : "zugsl\u00c3\u00a4nghe"
+		},
+		"rain" : {
+			"table" : "Wetterstation",
+			"colName" : "Regen [V]",
+			"sheet" : "Infos",
+			"description" : null
+		}
+	},
+	"microphones" : [1, 2, 4, 5, 6, 7]
+}
