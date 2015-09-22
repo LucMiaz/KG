@@ -7,7 +7,7 @@ sys.path.append('C:\lucmiaz\KG_dev_branch\KG')
 from kg.measurement_values import measuredValues
 from kg.time_signal import timeSignal
 from kg.detect import Detect
-
+from kg.intervals import *
 import datetime
 import json
 import pathlib
@@ -24,6 +24,10 @@ class Case(object):
     '''
     def __init__(self, measurement, caseID, mID, mic, tb, te, author, date = None, \
                     Z = SetOfIntervals(), K = SetOfIntervals()):
+        self.axz=subplot(111,axisbg='#FFFFFF')
+        plt.subplots_adjust(bottom=0.2)
+        self.axk=subplot(111,axisbg='#FFFFFF')
+        plt.subplots_adjust(bottom=0.2)
         self.case = {'caseID': caseID,
                 'measurement':measurement, 
                 'mID': mID,
@@ -33,8 +37,8 @@ class Case(object):
                 #results
                 'tb':tb,
                 'te':te,
-                'Z':GraphicalIntervals(Z),
-                'K':GraphicalIntervals(K),
+                'Z':GraphicalIntervals(self.axz,Z),
+                'K':GraphicalIntervals(self.axk, K),
                 }
         
     def save(self, mesPath):
@@ -93,7 +97,15 @@ class Case(object):
         Det = Detect(signal, mID, mic, **mesVar)
         Det.calc(**algorithm['param'])
         return (self._compare(algorithm['test'],Det.get_results(), sum = sum))
+    
+    def isemptyZ(self):
+        """Tells if the range of Z is empty"""
+        return self.Z.isempty()
         
+    def isemptyK(self):
+        """Tells if the range of K is empty"""
+        return self.K.isempty()   
+    
     @classmethod
     def fromfile(cls, casePath):
         """@classmethod is used to pass the class to the method as implicit argument. Then we open a file in JSON located at casePath and give it to the class with **kwargs (meaning that we pass an arbitrary number of arguments to the class)
@@ -167,7 +179,9 @@ if __name__ == "__main__":
     author = input("Who are you ?   ")
     if not author:
         author="esr"
+    #axcomp = plt.axes([0.01, 0.05, 0.1, 0.075])
+    #bcomp = matplotlib.widgets.Button(axcomp, 'Compare algorithm')
+    #bcomp.on_clicked(test.test_Detection())
     algorithm =  {'name':'Zischen1', 'mesVar':[], 'param': {}}    
     test = DetectionTester(mesPath, author, algorithm)
-    test.test_Detection()
-    test.save_test_results()
+    #test.save_test_results()

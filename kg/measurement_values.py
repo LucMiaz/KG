@@ -264,7 +264,7 @@ class measuredValues():
 
 if __name__ == "__main__":
     
-    AA = measuredValues('D:\GitHub\myKG\Measurements_example\MBBMZugExample')
+    AA = measuredValues('C:\lucmiaz\KG_dev_branch\KG\Measurements_example\MBBMZugExample')
     AA.list_variables()
     AA.read_variables_values()
     ##getexample

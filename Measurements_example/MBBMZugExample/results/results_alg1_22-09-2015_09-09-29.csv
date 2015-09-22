@@ -1,0 +1,19 @@
+# Description
+# This file contains the Results of KG processing
+# Measurement and processing informations
+date;22-09-2015
+time;09:09:29
+location;Zug
+measurement;Vormessung
+kg_calc_id;alg1
+algorithm_parameters;kkkkkkk
+# table column description
+colName;description
+var1;aaa
+var2;bbb
+mic;micro
+## Table with processed data
+ID;var1;var2;mic
+m_0101;22;9;1
+m_0101;33;9;2
+m_0101;44;9;7

@@ -112,7 +112,7 @@ if __name__ == "__main__":
     #perche 'm1020'noné compreso (tilo), 'm_0119' chefrastuono
     import pathlib
     import matplotlib.pyplot as plt
-    timeSignal.setup('D:\GitHub\myKG\Measurements_example\MBBMZugExample')
+    timeSignal.setup('C:\lucmiaz\KG_dev_branch\KG\Measurements_example\MBBMZugExample')
     #
     ts = timeSignal('m_0101')
     mic=[1,2,4,5,6,7]

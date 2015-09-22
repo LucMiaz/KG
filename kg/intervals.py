@@ -5,7 +5,30 @@ import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 from pylab import *
 class SetOfIntervals(object):
-    """Define a class of set of intervals, i.e. a closed of R"""
+    """
+    Defines a class of set of intervals, i.e. a closed of R
+    Attribute  | type
+    ---------- | ------------
+    RangeInter | list of Intervals
+    length     | integer
+    sorted     | boolean
+    
+    Method                  | Description              | Return type
+    ----------------------- | ------------------------ | -----------
+    R.append(a)             | adds Interval `a` to `R` | none
+    R.contains(a)           | tests if `a` in `R`      | boolean
+    R.discretize(tb,te,dt)  | discretizes `R` in `[tb,te]` step `dt`. Gives $\Xi_{\text{RangeInter}}(\text{Range(tb,te,dt)})$       | list
+    R.remove(a)             | removes Interval `a` from `R` | none
+    R.removeIntersection(a) | called by `remove()`     | none
+    R.haselement(a)         | tests if `a` is an element of the list  R.RangeInter | boolean
+    R.sort()                | sorts Intervals in `R.RangeInter` | none
+    isempty(self)`          | Tells if self is empty   | boolean
+    toJSON(self)`           | returns a JSON serializable representation of self
+    fromJSONfile(self, filename)` | adds Intervals to self from a JSON file directly   | boolean
+    fromJSON(self, data)`   | append data['SetOfIntervals'] | boolean
+    save(self, filename)`   | saves self to filename in json
+    """
+    
     def __init__(self):
         self.RangeInter=[]
         self.length=len(self.RangeInter)
@@ -13,7 +36,7 @@ class SetOfIntervals(object):
         self.lastinterval=None
         
     def append(self, interv):
-        """add a range to the list of intervals.
+        """adds a range to the list of intervals.
         need an Interval object"""
         self.sort()
         if interv: #check if not None
@@ -27,7 +50,7 @@ class SetOfIntervals(object):
             return None
     
     def appendlistofduples(self,listofduples):
-        """Add a list of duples (viewed as an interval) to the SetOfRange. Alternatively one can give a list of lists containg two elements, e.g. [[1.0,2.0],[2.5,3.0],[2.8,4.0]]"""
+        """adds a list of duples (viewed as an interval) to the SetOfRange. Alternatively one can give a list of lists containg two elements, e.g. [[1.0,2.0],[2.5,3.0],[2.8,4.0]]"""
         try:
             list(listofduples)
         except TypeError:
@@ -47,21 +70,21 @@ class SetOfIntervals(object):
             return False
     
     def sort(self):
-        """Sort the set of Intervals and union adjacent intervals"""
+        """sorts the set of Intervals and union adjacent intervals"""
         self.RangeInter.sort()
         self.length=len(self.RangeInter)
         self.unionize()
         self.unionize()
     
     def remove(self, bounds):
-        """remove the given interval from the list"""
+        """removes the given interval from the list"""
         if self.haselement(bounds):
             self.RangeInter.remove(bounds)
         else:
             self.removeIntersection(bounds)
     
     def unionize(self):
-        """Union intervals if adjacents"""
+        """Unions intervals if adjacents"""
         if not self.sorted:
             self.RangeInter.sort()
         if self.length>1:
@@ -76,7 +99,7 @@ class SetOfIntervals(object):
                     self.length=len(self.RangeInter)
     
     def removeIntersection(self, bounds):
-        """remove the intersection between elements of RangeInter and the Interval bounds"""
+        """removes the intersection between elements of RangeInter and the Interval bounds"""
         toberemoved=[]
         tobeadded=[]
         for inter in self.RangeInter:
@@ -96,7 +119,7 @@ class SetOfIntervals(object):
             self.RangeInter.append(added)
     
     def contains(self, element):
-        """Return boolean telling if element is in self"""
+        """returns boolean telling if element is in self"""
         if not self.sorted:
             self.sort()
             continuer=True
@@ -122,11 +145,15 @@ class SetOfIntervals(object):
         return ret
         
     def haselement(self, element):
-        """Returns True if element is in self"""
+        """returns True if element is in self"""
         return bool(self.RangeInter.count(element))
+    
+    def isempty(self):
+        """tells if self is empty"""
+        return self.length==0
 
     def discretize(self, zerotime, endtime, deltatime):
-        """return the characteristic function of the set RangeInter for the deltatimes from zerotime to endtime (return type is a duple of lists)"""
+        """returns the characteristic function of the set RangeInter for the deltatimes from zerotime to endtime (return type is a duple of lists)"""
         k=zerotime
         ret=([],[])
         while k<=endtime:
@@ -135,17 +162,65 @@ class SetOfIntervals(object):
             k += deltatime
         return ret
     
+    def toJSON(self):
+        """returns a JSON serializable representation of self"""
+        self.sort()
+        a={'SetOfIntervals':[]}
+        for i in self.RangeInter:
+            a['SetOfIntervals'].append(i.toJSON())
+        return a
+    
+    def fromJSONfile(self, filename):
+        """adds Intervals to self from a JSON file directly"""
+        fileJSON=open(filename,'r')
+        dataJSON=json.load(fileJSON)
+        return self.fromJSON(dataJSON)
+    
+    def fromJSON(self, data):
+        """adds Intervals to self from data (in JSON format). Takes the list of interval from 'SetOfIntervals' index"""
+        for i in data['SetOfIntervals']:
+            self.append(Interval(i['xmin'],i['xmax']))
+        return True
+    
     def __repr__(self):
         a=""
         for i in self.RangeInter:
-            a=a+" ["+str(i)+"] "
+            ind=self.RangeInter.index(i)
+            if ind>0:
+                a+=','
+            a+="["+str(i)+"]"
         return a
 
     def __str__(self):
         return "Range of intervals. Number of intervals : "+str(self.length)+"\n"+ self.__repr__()
+        
+    def save(self, filename):
+        """saves self to filename in json"""
+        try:
+            file=open(filename, "w")
+            json.dump(self.toJSON(),file)
+            print("data written in openned file : "+filename)
+        except NameError:
+            with open(filename, 'w'):
+                print(filename + "openned")
+                json.dump(self.toJSON(), filename)
+                print("data written in "+filename)
 
 class GraphicalIntervals(SetOfIntervals, AxesWidget):
-    """Set of intervals with graphical support. Add a list called `Rectangles` to the class `SetOfIntervals`. This list containts duples : an Interval and a patch (displayed rectangle) linked to an axis (stored in self.ax). This allows to update `Rectangle` from the SetOfInterval attribute `RangeInter` and vice versa, i.e. when we want to delete a displayed patch, we look it up in `Rectangle` (by itering over its second argument), and then we can delete the corresponding `Interval` in `RangeInter`."""
+    """
+    Set of intervals with graphical support. Add a list called `Rectangles` to the class `SetOfIntervals`. This list containts duples : an Interval and a patch (displayed rectangle) linked to an axis (stored in self.ax). This allows to update `Rectangle` from the SetOfInterval attribute `RangeInter` and vice versa, i.e. when we want to delete a displayed patch, we look it up in `Rectangle` (by itering over its second argument), and then we can delete the corresponding `Interval` in `RangeInter`.\n
+Method                | Description
+--------------------- | ----------
+_update()             | updates Rectangles and plot them
+on_select(eclick, erelease) | adds the interval selectionned while holding left mouse click
+connect(rect)         | connects the rectangle rect to the figure
+removerectangle(rect) | removes rect from the figure, from Rectangles list and removes the corresponding interval from RangesInter
+on_pick(event)        | removes the interval selectionned while holding right mouse click
+toggle_selector(event) | handles key_events
+call_discretize(event) | calls the method `discretize` from an event, such as a button
+changeDiscretizeParameters(listofparams) | changes the parameters of the discretization (usefull if calling with button). Give list or tuple of length 3
+discretize(zerotime, endtime, deltatime, axis=self.axis) | returns the characteristic function of range(zerotime,endtime, deltatime) in respect to RangeInter. Optional argument is the axis where one need to represent the points of the characteristic function. If one does not want any graphical representation, give None as axis
+    """
     
     def __init__(self, ax, Range=SetOfIntervals(), displaybutton=True, useblit = True):
         """initialisation of object. Needs an axis to be displayed on. Optional SetOfIntervals."""
@@ -177,13 +252,18 @@ class GraphicalIntervals(SetOfIntervals, AxesWidget):
 
     #operations on rectangles: displaying/removing
     def connect(self,rect):
-        """connect rect to figure"""
+        """connects rect to figure"""
         cidonpick = rect.figure.canvas.mpl_connect(
             'pick_event', self.on_pick)
         return cidonpick
     
+    def sort(self):
+        """sorts SetOfIntervals and update self"""
+        super(GraphicalIntervals,self).sort()
+        self._update()
+    
     def _update(self):
-        """update Rectangles and plot them"""
+        """updates Rectangles and plot them"""
         for rect in self.Rectangles:
             rect[1].remove()
         self.Rectangles=[]
@@ -195,7 +275,7 @@ class GraphicalIntervals(SetOfIntervals, AxesWidget):
         self.ax.figure.canvas.draw()
     
     def on_select(self, eclick, erelease):
-        """add the interval selectionned while holding left mouse click"""
+        """adds the interval selectionned while holding left mouse click"""
         self.LastInterval=Interval(eclick.xdata,erelease.xdata)
         if not self.LastInterval.ispoint():
             self.append(self.LastInterval)
@@ -203,12 +283,12 @@ class GraphicalIntervals(SetOfIntervals, AxesWidget):
         self._update()
     
     def on_pick(self, event):
-        """remove the interval mouseclicked"""
+        """removes the interval mouseclicked"""
         self.removerectangle(event.artist)
         self._update()
     
     def removerectangle(self, rect):
-        """remove the object rect from Rectangle list and the corresponding Interval in RangeInter"""
+        """removes the object rect from Rectangle list and the corresponding Interval in RangeInter"""
         for ele in self.Rectangles:
             if ele[1]==rect:
                 self.RangeInter.remove(ele[0])
@@ -240,7 +320,7 @@ class GraphicalIntervals(SetOfIntervals, AxesWidget):
             return False
             
     def discretize(self, zerotime, endtime, deltatime, axis=1):
-        """return the characteristic function of range(zerotime,endtime, deltatime) in respect to RangeInter. Optional argument is the axis where one need to represent the points of the characteristic function. If one does not want any graphical representation, give None as axis"""
+        """returns the characteristic function of range(zerotime,endtime, deltatime) in respect to RangeInter. Optional argument is the axis where one need to represent the points of the characteristic function. If one does not want any graphical representation, give None as axis"""
         if axis==1:
             axis=self.ax
         if self.length>0:
@@ -248,21 +328,45 @@ class GraphicalIntervals(SetOfIntervals, AxesWidget):
             try:
                 self.drewdiscpts.remove()
             except:
-                print("Empty discretized points")
+                print("Empty discretized points : no points removed")
             discpts=super(GraphicalIntervals,self).discretize(zerotime,endtime,deltatime)
             if axis:
                 #add the new ones
                 self.drewdiscpts = axis.scatter(discpts[0],discpts[1], marker='.', s=150, c=discpts[1],linewidths=1, cmap= plt.cm.coolwarm)
+                print("Drew discretization points")
             return discpts
-    
+                    
     #string representation
     def __str__(self):
         self.sort()
         return "Graphical representation of : " + SetOfIntervals.__str__(self)
 
 class Interval(object):
-    """Create an closed interval. It is an object of length 2, sorted"""
+    """
+    Creates an closed interval. It is an object of length 2, sorted\n
+    Attribute  | type
+    --------   | -------
+    xmin       | float
+    xmax       | float
+    
+    Method               | Description                            | Return type
+    -------------------- | -------------------------------------- | ------------
+    get_x()              | gives xmin,xmax                        | two floats
+    intersect(other)     | tests if intersection                  | boolean
+    intersection(other)  | gives intesection                      | Interval
+    difference(other)    | gives self minus other                 | Interval
+    ispoint()            | tests if xmin==xmax                    | boolean
+    contains(other)      | Tests if other is in self              | boolean
+    isin(other)          | tests if self is contained in other    | boolean
+    self < other         | `self.xmax < other.xmin`               | boolean
+    self > other         | `self.xmin > other.xmax`               | boolean
+    self==other          | same intervals                         | boolean
+    self != other        | the two intervals are not intersecting | boolean
+    self <= other        | not `self > other`                     | boolean
+    self >= other        | not `self < other`                     | boolean
+    """
     def __init__(self, xmin,xmax):
+        """initialization of an Interval. Required : two floats"""
         try: 
             xmin==float(xmin)
         except ValueError:
@@ -274,19 +378,20 @@ class Interval(object):
         self.xmax=max(xmin,xmax)
         
     def get_x(self):
+        """returns xmin and xmax"""
         return self.xmin, self.xmax
         
     #interval operations
     def intersect(self,other):
-        """Tells if intervals are intesecting"""
+        """tells if intervals are intesecting"""
         return not self != other
     
     def touch(self,other):
-        """Tells if intervals touch each other"""
+        """tells if intervals touch each other"""
         return (self.xmin==other.get_x()[1] or self.xmax==other.get_x()[0])
         
     def intersection(self, other):
-        """Gives the interval intersection"""
+        """gives the interval intersection"""
         if self.intersect(other):
             ret=Interval(max(self.xmin,other.xmin),min(self.xmax, other.xmax))
             if ret.ispoint():
@@ -296,13 +401,13 @@ class Interval(object):
         return ret
     
     def union(self, other):
-        """merge self and other together"""
+        """merges self and other together"""
         self.xmax=max(self.xmax, other.xmax)
         self.xmin=min(self.xmin, other.xmin)
         return self
     
     def difference(self, other):
-        """Return self minus intersection with other"""
+        """returns self minus intersection with other"""
         if self.contains(other):
             ret1=Interval(self.xmin,other.get_x()[0])
             ret2=Interval(other.get_x()[1],self.xmax)
@@ -319,19 +424,19 @@ class Interval(object):
             return Interval(other.get_x()[1],self.xmax), None
     
     def ispoint(self):
-        """check if interval is only a point"""
+        """checks if interval is only a point"""
         return self.xmin==self.xmax
     
     def contains(self,other):
-        """Return True if self contains other"""
+        """returns True if self contains other"""
         return ((other <= self)and (other >= self))
     
     def isin(self,other):
-        """Return True if self is in other"""
+        """returns True if self is in other"""
         return ((self <= other) and (self >= other))
     
     def containspoint(self, flt):
-        """check if float flt is in the interval self"""
+        """checks if float flt is in the interval self"""
         return self.xmin<=flt and self.xmax>=flt
         
     #sorting definitions
@@ -360,16 +465,21 @@ class Interval(object):
         
     def __str__(self):
         return str(self.xmin) + ', '+ str(self.xmax)
+    
+    def toJSON(self):
+        """returns a JSON compatible representation of self"""
+        return {'xmin':self.xmin, 'xmax':self.xmax}
+    
 
 def toggle_selector(event):
-    """Handle key_events"""
+    """handles key_events"""
     if event.key in ['Q', 'q'] and toggle_selector.RS.active:
         toggle_selector.RS.set_active(False)
         print("Key "+event.key+" pressed")
     if event.key in ['A', 'a'] and not toggle_selector.RS.active:
         toggle_selector.RS.set_active(True)
         print("Key "+event.key+" pressed")   
-
+### test
 x = arange(100)/(79.0)
 y = sin(x)
 fig = plt.figure()

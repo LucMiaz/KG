@@ -10,7 +10,7 @@
 ### vizualise Widget
 
 ### Interval:
-**Create an interval**. Needs two floats as bounds.
+**Creates an interval**. Needs two floats as bounds.
 
 Attribute | type
 --------   | -------
@@ -24,7 +24,7 @@ Method     | Description | Return type
 `intersection(other)` | gives intesection | Interval
 `difference(other)` | gives self minus other | Interval
 `ispoint()` | tests if xmin==xmax | boolean
-`contains(other)` | Tests if other is in self | boolean
+`contains(other)` | tests if other is in self | boolean
 `isin(other)` | tests if self is contained in other | boolean
 `self < other` | `self.xmax < other.xmin` | boolean
 `self > other` | `self.xmin > other.xmax` | boolean
@@ -32,9 +32,10 @@ Method     | Description | Return type
 `self != other` | the two intervals are not intersecting | boolean
 `self <= other` | not `self > other` | boolean
 `self >= other` | not `self < other` | boolean
+`toJSON(self)` | return a JSON compatible representation of self
 
 ### SetOfIntervals: 
-**Create a list of intervals**. No initialisation variables.
+**Creates a list of intervals**. No initialisation variables.
 
 Attribute | type
 ---------- | ------
@@ -51,6 +52,11 @@ Method | Description | Return type
 `R.removeIntersection(a)` | called by `remove()` | none
 `R.haselement(a)` | tests if `a` is an element of the list `R.RangeInter` | boolean
 `R.sort()` | sorts Intervals in `R.RangeInter` | none
+`isempty(self)` | tells if self is empty
+`toJSON(self)` | returns a JSON serializable representation of self
+`fromJSONfile(self, filename)` | adds Intervals to self from a JSON file directly
+`fromJSON(self, data)` | adds Intervals to self from data (in JSON format). Takes the list of interval from 'SetOfIntervals' index
+`save(self, filename)` | saves self to filename in json
 
 ### GraphicalInterval
 **Set of intervals with graphical support**. Requires an Axis. Optional SetOfRanges can be given. Optional argument for Discretization button display. Default value is `True`.
@@ -59,15 +65,15 @@ Adds a list called `Rectangles` to the class `SetOfIntervals`. This list contain
 
 Method | Description
 ------- | ----------
-`_update(self)` | updates Rectangles and plot them
-`on_select(self, eclick, erelease)` | adds the interval selectionned while holding left mouse click
-`connect(self,rect)` | connects the rectangle rect to the figure
-`removerectangle(self,rect)` | removes rect from the figure, from Rectangles list and removes the corresponding interval from RangesInter
-`on_pick(self, event)` | removes the interval selectionned while holding right mouse click
-`toggle_selector(self, event)` | handles key_events
-`call_discretize(self,event)` | calls the method `discretize` from an event, such as a button
-`changeDiscretizeParameters(self, listofparams)` | changes the parameters of the discretization (usefull if calling with button). Give list or tuple of length 3
-`discretize(self, zerotime, endtime, deltatime, axis=self.axis)` | returns the characteristic function of range(zerotime,endtime, deltatime) in respect to RangeInter. Optional argument is the axis where one need to represent the points of the characteristic function. If one does not want any graphical representation, give None as axis
+`_update()` | updates Rectangles and plot them
+`on_select(eclick, erelease)` | adds the interval selectionned while holding left mouse click
+`connect(rect)` | connects the rectangle rect to the figure
+`removerectangle(rect)` | removes rect from the figure, from Rectangles list and removes the corresponding interval from RangesInter
+`on_pick(event)` | removes the interval selectionned while holding right mouse click
+`toggle_selector(event)` | handles key_events
+`call_discretize(event)` | calls the method `discretize` from an event, such as a button
+`changeDiscretizeParameters(listofparams)` | changes the parameters of the discretization (usefull if calling with button). Please give a list or a tuple of length 3
+`discretize(zerotime, endtime, deltatime, axis=self.axis)` | returns the characteristic function of range(zerotime,endtime, deltatime) in respect to RangeInter. Optional argument is the axis where one need to represent the points of the characteristic function. If one does not want any graphical representation, give None as axis
 
 
 ### Case :
