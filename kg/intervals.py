@@ -4,6 +4,7 @@ from pylab import *
 import matplotlib.patches as patches 
 import matplotlib.pyplot as plt
 from pylab import *
+import json
 class SetOfIntervals(object):
     """
     Defines a class of set of intervals, i.e. a closed of R
@@ -162,12 +163,12 @@ class SetOfIntervals(object):
             k += deltatime
         return ret
     
-    def toJSON(self):
-        """returns a JSON serializable representation of self"""
+    def toJSON(self,rounding=0):
+        """returns a JSON serializable representation of self, rounding"""
         self.sort()
         a={'SetOfIntervals':[]}
         for i in self.RangeInter:
-            a['SetOfIntervals'].append(i.toJSON())
+            a['SetOfIntervals'].append(i.toJSON(rounding))
         return a
     
     def fromJSONfile(self, filename):
@@ -194,16 +195,16 @@ class SetOfIntervals(object):
     def __str__(self):
         return "Range of intervals. Number of intervals : "+str(self.length)+"\n"+ self.__repr__()
         
-    def save(self, filename):
+    def save(self, filename, rounding=0):
         """saves self to filename in json"""
         try:
             file=open(filename, "w")
-            json.dump(self.toJSON(),file)
+            json.dump(self.toJSON(rounding),file)
             print("data written in openned file : "+filename)
         except NameError:
             with open(filename, 'w'):
                 print(filename + "openned")
-                json.dump(self.toJSON(), filename)
+                json.dump(self.toJSON(rounding), filename)
                 print("data written in "+filename)
 
 class GraphicalIntervals(SetOfIntervals, AxesWidget):
@@ -249,6 +250,7 @@ discretize(zerotime, endtime, deltatime, axis=self.axis) | returns the character
             axdisc = plt.axes([0.01, 0.05, 0.1, 0.075])
             bprev = matplotlib.widgets.Button(axdisc, 'Discretize')
             bprev.on_clicked(self.call_discretize)
+        ax.grid(True)
 
     #operations on rectangles: displaying/removing
     def connect(self,rect):
@@ -364,6 +366,7 @@ class Interval(object):
     self != other        | the two intervals are not intersecting | boolean
     self <= other        | not `self > other`                     | boolean
     self >= other        | not `self < other`                     | boolean
+    toJSON(rounding)     | JSON format of Interval, wt rounding   | dict
     """
     def __init__(self, xmin,xmax):
         """initialization of an Interval. Required : two floats"""
@@ -466,9 +469,13 @@ class Interval(object):
     def __str__(self):
         return str(self.xmin) + ', '+ str(self.xmax)
     
-    def toJSON(self):
-        """returns a JSON compatible representation of self"""
-        return {'xmin':self.xmin, 'xmax':self.xmax}
+    def toJSON(self, rounding):
+        """returns a JSON compatible representation of self, if round==0, then no rounding"""
+        if rounding==0:
+            return {'xmin':self.xmin, 'xmax':self.xmax}
+        else:
+            ex=10**rounding
+            return {'xmin':int(self.xmin*ex+0.5)/ex, 'xmax':int(self.xmin*ex+0.5)/ex}
     
 
 def toggle_selector(event):

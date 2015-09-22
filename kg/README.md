@@ -32,7 +32,7 @@ Method     | Description | Return type
 `self != other` | the two intervals are not intersecting | boolean
 `self <= other` | not `self > other` | boolean
 `self >= other` | not `self < other` | boolean
-`toJSON(self)` | return a JSON compatible representation of self
+`toJSON(rounding)`     | JSON format of Interval, wt rounding   | dict
 
 ### SetOfIntervals: 
 **Creates a list of intervals**. No initialisation variables.
@@ -52,10 +52,10 @@ Method | Description | Return type
 `R.removeIntersection(a)` | called by `remove()` | none
 `R.haselement(a)` | tests if `a` is an element of the list `R.RangeInter` | boolean
 `R.sort()` | sorts Intervals in `R.RangeInter` | none
-`isempty(self)` | tells if self is empty
-`toJSON(self)` | returns a JSON serializable representation of self
-`fromJSONfile(self, filename)` | adds Intervals to self from a JSON file directly
-`fromJSON(self, data)` | adds Intervals to self from data (in JSON format). Takes the list of interval from 'SetOfIntervals' index
+`isempty()` | tells if self is empty
+`toJSON(rouding=0)` | JSON serializable representation of self, with optional rounding (0 = no rounding)
+`fromJSONfile(filename)` | adds Intervals to self from a JSON file directly
+`fromJSON(data)` | adds Intervals to self from data (in JSON format). Takes the list of interval from 'SetOfIntervals' index
 `save(self, filename)` | saves self to filename in json
 
 ### GraphicalInterval
