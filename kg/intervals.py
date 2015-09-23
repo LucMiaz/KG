@@ -3,7 +3,8 @@ from matplotlib.widgets import  RectangleSelector
 from pylab import *
 import matplotlib.patches as patches 
 import matplotlib.pyplot as plt
-from pylab import *
+
+##class SetOfIntervals
 class SetOfIntervals(object):
     """
     Defines a class of set of intervals, i.e. a closed of R
@@ -17,7 +18,7 @@ class SetOfIntervals(object):
     ----------------------- | ------------------------ | -----------
     R.append(a)             | adds Interval `a` to `R` | none
     R.contains(a)           | tests if `a` in `R`      | boolean
-    R.discretize(tb,te,dt)  | discretizes `R` in `[tb,te]` step `dt`. Gives $\Xi_{\text{RangeInter}}(\text{Range(tb,te,dt)})$       | list
+    R.discretize(timeparameters)  | discretizes `R` in `[tb,te]` step `dt`. Gives $\Xi_{\text{RangeInter}}(\text{Range(tb,te,dt)})$       | list
     R.remove(a)             | removes Interval `a` from `R` | none
     R.removeIntersection(a) | called by `remove()`     | none
     R.haselement(a)         | tests if `a` is an element of the list  R.RangeInter | boolean
@@ -152,22 +153,28 @@ class SetOfIntervals(object):
         """tells if self is empty"""
         return self.length==0
 
-    def discretize(self, zerotime, endtime, deltatime):
-        """returns the characteristic function of the set RangeInter for the deltatimes from zerotime to endtime (return type is a duple of lists)"""
-        k=zerotime
-        ret=([],[])
-        while k<=endtime:
-            ret[1].append(self.containspoint(k))
-            ret[0].append(k)
-            k += deltatime
-        return ret
+    def discretize(self, data, ordering=True):
+        """returns the characteristic function of the set RangeInter for the deltatimes from zerotime to endtime (return type is a duple of lists). Use ordering=False to avoid ordering (for example, with ordering, if you want to discretize on (0.1,10.1) with delta (1.), it will be changed to (1.,10.1) delta (0.1))"""
+        if ordering:
+            data=orderingForDiscretization(data,ordering)
+        print("Input data for discretization is : "+str(data))
+        if data:
+            k=data[0]
+            ret=([],[])
+            while k<=data[1]:
+                ret[1].append(self.containspoint(k))
+                ret[0].append(k)
+                k += data[2]
+            return ret
+        else:
+            print("No/Wrong input. Abord")
+            return None
     
     def toJSON(self):
         """returns a JSON serializable representation of self"""
-        self.sort()
-        a={'SetOfIntervals':[]}
-        for i in self.RangeInter:
-            a['SetOfIntervals'].append(i.toJSON())
+        a=[]
+        for i in range(0,self.length):
+            a.append(self.RangeInter[i].toJSON())
         return a
     
     def fromJSONfile(self, filename):
@@ -183,13 +190,7 @@ class SetOfIntervals(object):
         return True
     
     def __repr__(self):
-        a=""
-        for i in self.RangeInter:
-            ind=self.RangeInter.index(i)
-            if ind>0:
-                a+=','
-            a+="["+str(i)+"]"
-        return a
+        return str(self.toJSON())
 
     def __str__(self):
         return "Range of intervals. Number of intervals : "+str(self.length)+"\n"+ self.__repr__()
@@ -206,6 +207,7 @@ class SetOfIntervals(object):
                 json.dump(self.toJSON(), filename)
                 print("data written in "+filename)
 
+##Class GraphicalIntervals
 class GraphicalIntervals(SetOfIntervals, AxesWidget):
     """
     Set of intervals with graphical support. Add a list called `Rectangles` to the class `SetOfIntervals`. This list containts duples : an Interval and a patch (displayed rectangle) linked to an axis (stored in self.ax). This allows to update `Rectangle` from the SetOfInterval attribute `RangeInter` and vice versa, i.e. when we want to delete a displayed patch, we look it up in `Rectangle` (by itering over its second argument), and then we can delete the corresponding `Interval` in `RangeInter`.\n
@@ -300,27 +302,14 @@ discretize(zerotime, endtime, deltatime, axis=self.axis) | returns the character
     #discretization        
     def call_discretize(self,event):
         """calls the method discretize from an event, such as a button"""
-        self.discretize(self.discargs[0],self.discargs[1],self.discargs[2])
+        self.discretize(self.discargs)
     
     def changeDiscretizeParameters(self, listofparams):
         """method to change the parameters of the discretization (usefull if calling with button)"""
-        if listofparams:
-            if len(listofparams)==3:
-                try:
-                    self.discargs=tuple(listofparams)
-                    return True
-                except:
-                    print("Could not change discretization parameters : type not convertible to tuple")
-                    return False
-            else:
-                print("Wrong lenth of parameters given for discretization. Default values set : "+str(self.discargs))
-                return False
-        else:
-            print("Empty list of discretization parameters. Default values set : "+str(self.discargs))
-            return False
+        self.discargs=listofparams
             
-    def discretize(self, zerotime, endtime, deltatime, axis=1):
-        """returns the characteristic function of range(zerotime,endtime, deltatime) in respect to RangeInter. Optional argument is the axis where one need to represent the points of the characteristic function. If one does not want any graphical representation, give None as axis"""
+    def discretize(self, timeparam, axis=1, ordering=True):
+        """returns the characteristic function of range(zerotime,endtime, deltatime) in respect to RangeInter. Optional argument is the axis where one need to represent the points of the characteristic function. If one does not want any graphical representation, give None as axis. Use ordering=False to avoid ordering (for example, with ordering, if you want to discretize on (0.1,10.1) with delta (1.), it will be changed to (1.,10.1) delta (0.1)"""
         if axis==1:
             axis=self.ax
         if self.length>0:
@@ -329,18 +318,22 @@ discretize(zerotime, endtime, deltatime, axis=self.axis) | returns the character
                 self.drewdiscpts.remove()
             except:
                 print("Empty discretized points : no points removed")
-            discpts=super(GraphicalIntervals,self).discretize(zerotime,endtime,deltatime)
-            if axis:
-                #add the new ones
-                self.drewdiscpts = axis.scatter(discpts[0],discpts[1], marker='.', s=150, c=discpts[1],linewidths=1, cmap= plt.cm.coolwarm)
-                print("Drew discretization points")
+            discpts=super(GraphicalIntervals,self).discretize(timeparam, ordering)
+            if discpts:
+                if axis:
+                    #add the new ones
+                    self.drewdiscpts = axis.scatter(discpts[0],discpts[1], marker='.', s=150, c=discpts[1],linewidths=1, cmap= plt.cm.coolwarm)
+                    print("Drew discretization points")
             return discpts
-                    
+        else:
+            return None    
+    
     #string representation
     def __str__(self):
         self.sort()
         return "Graphical representation of : " + SetOfIntervals.__str__(self)
 
+##class Interval
 class Interval(object):
     """
     Creates an closed interval. It is an object of length 2, sorted\n
@@ -461,16 +454,16 @@ class Interval(object):
     
     #representations, string format
     def __repr__(self):
-        return '{}: {},{}'.format(self.__class__.__name__, self.xmin, self.xmax)
+        return self.toJSON()
         
     def __str__(self):
         return str(self.xmin) + ', '+ str(self.xmax)
     
     def toJSON(self):
         """returns a JSON compatible representation of self"""
-        return {'xmin':self.xmin, 'xmax':self.xmax}
+        return {"xmin":self.xmin, "xmax":self.xmax}
     
-
+##functions
 def toggle_selector(event):
     """handles key_events"""
     if event.key in ['Q', 'q'] and toggle_selector.RS.active:
@@ -479,15 +472,76 @@ def toggle_selector(event):
     if event.key in ['A', 'a'] and not toggle_selector.RS.active:
         toggle_selector.RS.set_active(True)
         print("Key "+event.key+" pressed")   
-### test
-x = arange(100)/(79.0)
-y = sin(x)
-fig = plt.figure()
-
-ax = subplot(111,axisbg='#FFFFFF')
-plt.subplots_adjust(bottom=0.2)
-ax.plot(x,y)
-
-Hello=GraphicalIntervals(ax)
-show()
+        
+def orderingForDiscretization(timeparam, ordering=True):
+    """takes data (list or dict) and returns a list with the first three arguments order by (a,b,c) with c = smallest non zero argument, b = greatest argument, a = last argument"""
+    if len(timeparam)>=3:
+        try:
+            timeparam=dict(timeparam)
+            timeparamkeys=list(timeparam.keys())
+            print("paramkeys"+str(timeparamkeys))
+            #change the dictionnary to a list by taking the first three row (no matter the order!)
+            timeparam=[timeparam[timeparamkeys[0]],timeparam[timeparamkeys[1]],timeparam[timeparamkeys[2]]]
+            print("BEWARE : changed dict to list ! New discretization values : ")
+            return orderfromlist(timeparam)
+        except TypeError:
+            try:
+                timeparam=list(timeparam)
+                #remove supplementary parameters
+                if ordering:
+                    timeparam=timeparam[0:3]
+                    return orderfromlist(timeparam)
+                else:
+                    return timeparam
+            
+            except:
+                print("Wrong input for timeparam not a list or a dict")
+                return None
+    else:
+        print("parameters for disretization are just too small! Abord!")
+        return None
+    
+def orderfromlist(timeparam):
+    """take a list and order it by c = smallest non zero argument, b = greatest argument, a = last argument"""
+    timeparam.sort()
+    print(str(timeparam))
+    if timeparam[2]<0:
+        #if only negative-> takes 20 steps
+        atimeparam=timeparam[0]
+        btimeparam=timeparam[2]
+        if atimeparam==btimeparam:
+            btimeparam+=1
+            ctimeparam=(btimeparam-atimeparam)/20
+    elif timeparam[0]<0:
+        atimeparam=timeparam[0]
+        if timeparam[1]<0:
+            btimeparam=timeparam[1]
+            ctimeparam=timeparam[2]
+        else:
+            btimeparam=timeparam[2]
+            ctimeparam=timeparam[2]
+    else:
+        if timeparam[0]>0:
+            ctimeparam=timeparam[0]
+            atimeparam=timeparam[1]
+            btimeparam=timeparam[2]
+        else:
+            atimeparam=timeparam[0]
+            btimeparam=timeparam[2]
+            ctimeparam=timeparam[1]
+    if ctimeparam > btimeparam-atimeparam:
+        ctimeparam=(btimeparam-atimeparam)/20
+    return [atimeparam, btimeparam, ctimeparam]
+## test
+if __name__ == "__main__":
+    x = arange(100)/(79.0)
+    y = sin(x)
+    fig = plt.figure()
+        
+    ax = subplot(111,axisbg='#FFFFFF')
+    plt.subplots_adjust(bottom=0.2)
+    ax.plot(x,y)
+        
+    Hello=GraphicalIntervals(ax)
+    show()
 
