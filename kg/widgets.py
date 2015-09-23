@@ -69,36 +69,56 @@ class DetectControlWidget(QMainWindow):
             bar.set_x_position(t/1000 + self.tShift )
             
     @classmethod
-    def from_micSignal(cls, micSn):
+    def from_micSignal(cls, micSn, mesPath):
         wavPath = micSn.export_to_Wav(mesPath)
         #Canvas
         plt.ioff()
         stftName = micSn.calc_stft(M=1024*4)
-        ca = FigureCanvas(plt.subplots(1,sharex=True)[0])
-        ax = ca.figure.get_axes()
-        micSn.plot_spectrogram(stftName,ax[0])    
+        fig, ax = plt.subplots(1,sharex=True)
+        micSn.plot_spectrogram(stftName,ax) 
+        micSn.plot_triggers(ax)
+        micSn.plot_KG(ax)
+        ca = FigureCanvas(fig)
         #Bar
-        bar1= Bar(ax[0])
-        return(cls(wavPath.as_posix(), {1:ca} , micSn.tmin, [bar1]))
-
+        bar1= Bar(ax)
+        return(cls(wavPath.as_posix(), {1:ca} , micSn.t.min(), [bar1]))
+        
+    @classmethod
+    def alg_results(cls, micSn, mesPath,algorithm):
+        wavPath = micSn.export_to_Wav(mesPath)
+        #Canvas
+        plt.ioff()
+        stftName = micSn.calc_stft(M=1024*4)
+        fig, axes = plt.subplots(2,sharex=True)
+        ax = axes[0]
+        micSn.plot_spectrogram(stftName,ax) 
+        micSn.plot_triggers(ax)
+        micSn.plot_KG(algorithm,ax)
+        bar1= Bar(ax)
+        ax = axes[1]
+        micSn.plot_BPR(algorithm,ax)
+        ca = FigureCanvas(fig)
+        bar2= Bar(ax)
+        
+        return(cls(wavPath.as_posix(), {1:ca} , micSn.t.min(), [bar1,bar2]))
+##
 if __name__ == "__main__":
     import pathlib
     sys.path.append('D:\GitHub\myKG')
     from kg.measurement_values import measuredValues
-    from kg.time_signal import timeSignal
+    from kg.measurement_signal import measuredSignal
     #setup measurement
     mesPath = pathlib.Path('D:\GitHub\myKG\Measurements_example\MBBMZugExample')
     mesVal = measuredValues(mesPath.as_posix())
     mesVal.read_variables_values()
-    timeSignal.setup(mesPath.as_posix())
+    measuredSignal.setup(mesPath.as_posix())
     
     mID = 'm_0100'
-    ts = timeSignal(mID)
     mic = 1
-    ts.read_signal(mic)
-    sn = ts.get_signal(mic)
+    mesSn = measuredSignal(mID,mic)
+    y, t, sR = mesSn.get_signal(mic)
     values = mesVal.get_variables_values(mID, mic, [ 'Tb','Te','Tp_b','Tp_e','LAEQ', 'besch'])
-    micSn = MicSignal(sn,mID,mic,values)
+    micSn = MicSignal(mID, mic,y, t, sR, values)
     ## Run
     W = DetectControlWidget.from_micSignal(micSn)
     W.show()

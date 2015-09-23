@@ -8,6 +8,8 @@ import xlrd
 import csv,json
 import datetime
 import pathlib
+import warnings
+import datetime
 
 def read_MBBM_tables(mesPath, save = False):
     '''
@@ -140,19 +142,25 @@ class measuredValues():
         """
         if not isinstance(ID,list):
             ID =  [ID]
-        if not isinstance(mic,list):
-            mic = [mic] 
         dict={}
         for id in ID: 
             for var in variables:
                 if var in self.idValues.keys():
                     val = self.idValues[var].get('values').get(id)
+                    dict.setdefault(id,{})[var] = val
                 elif var in self.micValues.keys():
                     val = copy.deepcopy(self.micValues[var].get('values').get(id,{}))
-                    val = {m:mv for m,mv in val.items() if int(m) in mic}
-            #fill dict
-            dict.setdefault(id,{})[var] = val
-        return(dict)
+                    if isinstance(mic,list):
+                        val = {m:mv for m,mv in val.items() if int(m) in mic}
+                    else:
+                        val = val[str(mic)]
+                    dict.setdefault(id,{})[var] = val
+                else:
+                    print('Variable '+ var+ ' is not in measurementValue')
+        if len(ID)==1:
+            return(dict[ID[0]])
+        else:
+            return(dict)
     
     def set_kg_values(self, algorithm, ID, mic, results ):
         """
@@ -170,17 +178,18 @@ class measuredValues():
             
         parameter: algorithm, **{'ID':mID, 'mic': mic, 'results':{...}}
         """
-        if not str(algorithm) in self.kgValues['algorithm'].keys():
-            self.kgValues['algorithm'][str(algorithm)] = algorithm.get_info()
+        if not str(algorithm) in self.kgValues['algorithms'].keys():
+            self.kgValues['algorithms'][str(algorithm)] = algorithm.get_info()
         # add results
         dict = self.kgValues['results'].setdefault(ID,{}).setdefault(mic,{})
         dict[str(algorithm)] = results
         
-    def kg_values_to_json(self, algorithm , variables = []):
+    def kg_values_to_json(self, variables = []):
         '''
         export kgValues of given algorithm with added variables for R evaluation
         '''
-        fileName = 'results_'+ str(algorithm) +'_'+ dateTime.strftime( "%d-%m-%Y_%H-%M-%S")
+        dateTime =  datetime.datetime.now()
+        fileName = 'results_'+ dateTime.strftime( "%d-%m-%Y_%H-%M-%S")
         resultsPath = self.path.joinpath('results').joinpath(fileName + '.json')
         export = collections.OrderedDict()
         export['Description']= '''
@@ -189,17 +198,16 @@ class measuredValues():
                         'time':dateTime.strftime( "%H:%M:%S"),
                         'location': self.location,
                         'measurement': self.measurement})
-        #todo : filter with alg
         export.update(copy.deepcopy(self.kgValues))
         # Add variables
-        #todo : implement
-        for var in variables:
-            if var in self.micValues.keys():
-                pass
-            if var in self.idValues.keys():
-                pass
+        # todo : implement
+        # for var in variables:
+        #     if var in self.micValues.keys():
+        #         pass
+        #     if var in self.idValues.keys():
+        #         pass
         with resultsPath.open('w+') as file:
-            json.dump(export,file)
+            json.dump(serialize(export),file)
         
     @classmethod
     def from_json(cls, mesPath):
@@ -212,14 +220,27 @@ class measuredValues():
     @classmethod    
     def from_MBBM(cls, mesPath):
         return(cls(mesPath = mesPath,**read_MBBM_tables(mesPath, save = False)))
+        
+def serialize(data):
+    if isinstance(data, list):
+        return [serialize(val) for val in data]
+    elif isinstance(data, dict):
+        return { serialize(k): serialize(v) for k, v in data.items()}
+    elif isinstance(data, np.ndarray):
+        return {"py/numpy.ndarray": {
+            "values": data.tolist(),
+            "dtype":  str(data.dtype)}}
+    else:
+        return(data)
 
 if __name__ == "__main__":
     #Read and save MBBM values
     mesPath = 'D:\GitHub\myKG\Measurements_example\MBBMZugExample'
-    read_MBBM_tables(mesPath,True)
+    #read_MBBM_tables(mesPath,True)
     #getexample
     mesVal = measuredValues.from_json(mesPath)
-    s = mesVal.get_variables_values(ID=['m_0100','m_0101'], mic= [1,6], variables=['v2','v1','direction','Ta', 'Te', 'Tp_a', 'Tp_e'])
+    s = mesVal.get_variables_values(ID= ['m_0100'], mic= 1,
+     variables = ['Tb', 'Ta', 'Tp_b', 'Tp_e'])
     print(s)
     ##
     

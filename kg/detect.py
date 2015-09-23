@@ -58,7 +58,14 @@ class MicSignal(object):
         self.KG = {'Z':{},'K':{}}
         
     def __str__(self):
-        return(self.ID +'_mic' + '_ch_' + str(self.mic))
+        return(self.ID +'_mic_' + str(self.mic))
+    
+    def overflow(self):
+        '''test if mic has an overflow
+        return: True if valid'''
+        self.y
+        # Todo :
+        pass
         
     def calc_stft(self, M , N = None, overlap = 2, window = 'hann',**kwargs):
         X, freq, frame_i, param = stft( self.y, M = M,\
@@ -130,8 +137,8 @@ class MicSignal(object):
         noiseType = algorithm.noiseType
         ret = collections.OrderedDict()  
         ret['ID'] = self.ID
-        ret[str(self.mic)] = {'mic': self.mic}
-        ret[self.mic][str(algorithm)] = copy.deepcopy(self.KG[noiseType][str(algorithm)])
+        ret['mic'] = self.mic
+        ret['results'] = copy.deepcopy(self.KG[noiseType][str(algorithm)])
         return(ret)
         
     def get_mask(self, t, tlim = None):
@@ -166,20 +173,18 @@ class MicSignal(object):
                                             dBMax=dBMax, **kwargs )
         
                 
-    def plot_triggers(self, ax, type ='eval', label=None, lw=1.5 ):
+    def plot_triggers(self, ax, type ='eval', **kwargs):
         """
         type: eval for MBBM evaluations bounds
         type passby passby times
         """
         if type == 'eval':
             bounds = ['Tb', 'Te']
-            col= 'R'
         elif type == 'passby':
             bounds = ['Tp_b', 'Tp_e']
-            col= 'B'
-        [ax.axvline(self.micValues[b], color= col, lw = lw) for b in bounds]
+        [ax.axvline(self.micValues[b], **kwargs) for b in bounds]
             
-    def plot_KG(self, algorithm, ax, color='red'):
+    def plot_KG(self, algorithm, ax, **kwargs):
         '''
         plot detection results for a given algorithm
         '''
@@ -192,13 +197,15 @@ class MicSignal(object):
         else:
             ymin, ymax = ax.get_ylim()
             ax.fill_between(detection['t'], where = detection['result'] ,\
-            y1 = ymin, y2 = ymax, alpha = 0.3, color=color)
+            y1 = ymin, y2 = ymax, alpha = 0.3, **kwargs)
             #ax.set_ybound(ymin, ymax)
             
-    def plot_BPR(self, algorithm, ax, color='red'):
+    def plot_BPR(self, algorithm, ax, label = None,**kwarks):
         '''
         plot detection results for a given algorithm
         '''
+        if label==None:
+            label = str(algorithm)
         KG = self.KG[algorithm.noiseType]
         try:
             detection = KG[str(algorithm)]
@@ -206,16 +213,16 @@ class MicSignal(object):
             print('No calculation for', algorithm)
             raise(e)
         else:
-            ax.plot(detection['t'], 20*np.log10(detection['BPR']), color=color)
+            ax.plot(detection['t'], 20*np.log10(detection['BPR']), label=label,**kwarks)
             #ax.set_ybound(ymin, ymax)
             
-    def plot_signal(self, ax , label = None):
+    def plot_signal(self, ax , label = None,**kwargs):
         """
         plot signal
         """
         if label == None:
             label = str(self)
-        ax.plot(self.t, self.y, label = label)
+        ax.plot(self.t, self.y, label = label, **kwargs)
             
     def plot_PS(self, ax, label = None):
         '''
@@ -260,7 +267,7 @@ class MicSignal(object):
         """
         wavPath = mesPath.joinpath('wav')
         os.makedirs(wavPath.as_posix(), exist_ok = True)
-        filename = self.ID + '_' + str(self.mic)+'.wav'
+        filename = str(self) + '.wav'
         filePath = wavPath.joinpath(filename)
         if not filename in [p.name for p in wavPath.glob('*.wav')]:
             scaled = np.int16(self.y/ np.abs(self.y).max() * 32767)
@@ -273,7 +280,8 @@ class MicSignal(object):
         mS = measuredSignal(ID,mic)
         y,t,sR = mS.get_signal(mic)
         var = ['Tb','Te','Tp_b','Tp_e','LAEQ', 'besch']
-        micValues = mesValues.get_values(ID, mic, var)
-        return(cls(ID,mic,y,t,sR,**micValues))
+        micValues = mesValues.get_variables_values(ID, mic, var)
+        print(micValues)
+        return(cls(ID,mic,y,t,sR, micValues))
         
         
