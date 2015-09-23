@@ -47,7 +47,7 @@ Method | Description | Return type
 ------ | ----------- | -----------
 `R.append(a)` | adds Interval `a` to `R` | none
 `R.contains(a)` | tests if `a` in `R` | boolean
-`R.discretize(timeparam)` | discretizes `R` in `[tb,te]` step `dt`. Gives $\Xi_{\text{RangeInter}}(\text{Range(tb,te,dt)})$ Use ordering=False to avoid ordering (for example, with ordering, if you want to discretize on (0.1,10.1) with delta (1.), it will be changed to (1.,10.1) delta (0.1) | list
+`R.discretize(tb,te,dt)` | discretizes `R` in `[tb,te]` step `dt`. Gives $\Xi_{\text{RangeInter}}(\text{Range(tb,te,dt)})$ | list
 `R.remove(a)` | removes Interval `a` from `R` | none
 `R.removeIntersection(a)` | called by `remove()` | none
 `R.haselement(a)` | tests if `a` is an element of the list `R.RangeInter` | boolean

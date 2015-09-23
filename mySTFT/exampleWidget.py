@@ -28,7 +28,7 @@ if __name__ == "__main__":
     y =np.cos(omega*t*(t+5)) + 10 **(-30/20)*noise
     sn = {'y':y,'t':t,'sR':sR}
 
-    path = 'C:\lucmiaz\KG_dev_branch\KG\Measurements_example\\various_passby'
+    path = 'C:\lucmiaz\KG_dev_branch\KG\Measurements_example\various_passby'
     s = acoustics.Signal.from_wav(path+'/kreischen.wav')
     sn = {'y':s.pick(),'t':s.times(),'sR':s.fs}
     sn['y'] = sn['y'][5*s.fs:8*s.fs]
