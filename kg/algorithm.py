@@ -65,7 +65,7 @@ class Algorithm(object):
             return({'TPR':TP/(TP + FN),'TNR':TN/(TN + FP)})
         
         for case, v in self.case_tests.items():
-            df.loc(case) = v
+            df.loc[case] = v
             self.rates['cases'][case]= rates(**v)
         #author
         sum = df.groupby(['auth'])[cols].aggregate(np.sum).T.to_dict()
@@ -75,7 +75,7 @@ class Algorithm(object):
         self.rates.update(rates(**df[cols].sum().to_dict()))
         return(rates)
     
-    def run_test(self, mesPath, save = True).
+    def run_test(self, mesPath, save = True):
         '''
         run test on cases of a mesurement and save results to json
         '''
@@ -90,8 +90,7 @@ class Algorithm(object):
         for case in cases:
             self.test_on_case(case, mesValues)
         self.calc_rates()
-        # 
-        export to json
+        # export to json
         if save:
             fileName = 'case_tests'+ str(self) +'_'+ dateTime.strftime( "%d-%m-%Y_%H-%M-%S")
             casePath = mesValues.path.joinpath('test_cases').joinpath(fileName + '.json')
@@ -103,12 +102,12 @@ class Algorithm(object):
                             'location': mesValues.location,
                             'measurement': mesValues.measurement})
             export['rates'] = copy.deepcopy(self.kgValues)
-            export['case_tests'] = copy.deepcopy(self.kgValues))
+            export['case_tests'] = copy.deepcopy(self.kgValues)
             with resultsPath.open('w+') as file:
                 json.dump(export,file)
         
     def __repr__(self):
-        s = '{} :{}\n'.format(self.__class__.__name__, self.name)
+        s = '{}\n'.format(self.__class__.__name__)
         s += 'description: {}\n'.format(self.description)
         s += 'parameter:\n{}'.format(self.param)
         return(s)
@@ -177,7 +176,7 @@ class ZischenDetetkt1(Algorithm):
         return(output)
         
     def __str__(self):
-        s = '{}_{}ms'.format( self.name, self.param['dt'])
+        s = '{}_{}s'.format( self.__class__.__name__, self.param['dt'])
         s += '_{}Hz_{}dB'.format(self.param['fc'],self.param['threshold'])
         return(s)
         
