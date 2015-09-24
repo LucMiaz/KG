@@ -254,7 +254,7 @@ def serialize(data):
 
 if __name__ == "__main__":
     #Read and save MBBM values
-    mesPath = 'D:\GitHub\myKG\Measurements_example\MBBMZugExample'
+    mesPath = 'Measurements_example\MBBMZugExample'
     #read_MBBM_tables(mesPath,True)
     #getexample
     mesVal = measuredValues.from_json(mesPath)

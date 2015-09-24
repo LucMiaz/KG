@@ -1,4 +1,7 @@
-import os,sys,pathlib
+# import sys
+# sys.path.append('D:\GitHub\myKG')
+
+import os,pathlib
 import numpy as np
 import scipy as sp
 import string
@@ -8,7 +11,6 @@ import struct
 import matplotlib.pyplot as plt
 import collections
 
-sys.path.append('D:\GitHub\myKG')
 from kg.measurement_signal import measuredSignal
 from mySTFT.stft import stft, stft_PSD
 from mySTFT.stft_plot import plot_spectrogram

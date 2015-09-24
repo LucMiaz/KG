@@ -1,8 +1,9 @@
-import sys
+# import sys
+# sys.path.append('D:\GitHub\myKG')
 import os
 import pandas as pd
 import numpy as np
-sys.path.append('D:\GitHub\myKG')
+
 from kg.measurement_values import measuredValues
 from kg.time_signal import timeSignal
 from kg.detect import Detect
@@ -10,7 +11,6 @@ from kg.detect import Detect
 import datetime
 import pickle
 import pathlib
-import os
 
 class Case(object):
     '''

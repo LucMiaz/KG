@@ -1,4 +1,6 @@
-import sys, os, pathlib
+# import sys
+# sys.path.append('D:\GitHub\myKG')
+import os, pathlib
 import numpy as np
 from PySide import QtGui, QtCore
 from PySide.phonon import Phonon
@@ -7,7 +9,6 @@ from PySide.QtGui import (QApplication, QMainWindow, QAction, QStyle,
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.pyplot as plt
                           
-sys.path.append('D:\GitHub\myKG')
 from kg.detect import MicSignal
 from kg.mpl_moving_bar import Bar
 
@@ -94,11 +95,11 @@ if __name__ == "__main__":
     from kg.measurement_signal import measuredSignal
     from kg.algorithm import ZischenDetetkt1
     #setup measurement
-    mesPath = 'D:\GitHub\myKG\Measurements_example\MBBMZugExample'
+    mesPath = 'Measurements_example\MBBMZugExample'
     mesVal = measuredValues.from_json(mesPath)
     measuredSignal.setup(mesPath)
     #algorithm
-    algorithm = ZischenDetetkt1(4000,0,0.2)
+    algorithm = ZischenDetetkt1(2000,0,0.1)
     mID = 'm_0100'
     mic = 6
     micSn = MicSignal.from_measurement(mesVal,mID, mic)

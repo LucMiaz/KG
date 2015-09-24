@@ -1,5 +1,4 @@
-import os
-import pathlib
+import os, pathlib
 import scipy as sp
 from scipy.io import loadmat, wavfile
 import wave
@@ -112,12 +111,11 @@ class measuredSignal():
     
 ##tests 
 if __name__ == "__main__":
-    #perche 'm1020'noné compreso (tilo), 'm_0119' chefrastuono
-    import pathlib
+    #perché 'm1020'noné compreso (tilo), 'm_0119' chefrastuono
     import matplotlib.pyplot as plt
-    measuredSignal.setup('D:\GitHub\myKG\Measurements_example\MBBMZugExample')
+    measuredSignal.setup('Measurements_example\MBBMZugExample')
     #
-    ts = measuredSignal('m_010100')
+    ts = measuredSignal('m_0100')
     mic=[1,2,4,5,6,7]
     for i,m in enumerate(mic):
         ts.read_signal(m)

@@ -1,4 +1,5 @@
-import sys
+# import sys
+# sys.path.append('D:\GitHub\myKG')
 import numpy as np
 import pandas as pd
 import copy 
@@ -6,7 +7,6 @@ import copy
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.pyplot as plt
 
-sys.path.append('D:\GitHub\myKG')
 from kg.mpl_moving_bar import Bar
 
 
