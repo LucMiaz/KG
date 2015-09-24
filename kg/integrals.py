@@ -234,8 +234,10 @@ discretize(zerotime, endtime, deltatime, axis=self.axis) | returns the character
         self.drewdiscpts=None
         #discretization arguments
         self.discargs=(0.,1.,0.1)
+        self.Background
+        #Todo : add background copy and blits
         #connecting
-        toggle_selector.RS = SpanSelector(ax, self.on_select, 'horizontal')
+        toggle_selector.RS = SpanSelector(ax, self.on_select, 'horizontal', rectprops=dict(alpha=0.5,facecolor='red'))
         connect('key_press_event', toggle_selector)
         connect('pick_event', self.on_pick)
         #adding pre-existing intervals
@@ -276,9 +278,9 @@ discretize(zerotime, endtime, deltatime, axis=self.axis) | returns the character
             self.Rectangles.append((inter,rect, self.connect(rect)))
         self.ax.figure.canvas.draw()
     
-    def on_select(self, eclick, erelease):
+    def on_select(self, xmin, xmax):
         """adds the interval selectionned while holding left mouse click"""
-        self.LastInterval=Interval(eclick.xdata,erelease.xdata)
+        self.LastInterval=Interval(xmin,xmax)
         if not self.LastInterval.ispoint():
             self.append(self.LastInterval)
             print("Added interval ["+ str(self.LastInterval)+"]")
