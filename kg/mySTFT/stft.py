@@ -11,7 +11,7 @@ plots:
 import numpy as np
 import scipy 
 from scipy.fftpack import fft,fftfreq, ifft, fftshift
-from scipy.signal import  hann,lfilter, filtfilt, decimate
+from scipy.signal import  hann,hamming,triang,blackman
 
 OLA_WINDOWS = ['hann', 'hamming', 'triang','blackman']
 

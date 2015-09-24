@@ -1,14 +1,21 @@
-import sys
-import os
+import sys,os
+import inspect
+#change dir form up/kg/thisfile.py to /up
+approot=os.path.dirname(os.path.dirname(inspect.stack()[0][1]))
+if __name__=='__main__':
+    print(approot)
+sys.path.append(approot)
 import numpy as np
 from PySide import QtGui, QtCore
 from PySide.phonon import Phonon
 from PySide.QtGui import (QApplication, QMainWindow, QAction, QStyle,
                           QFileDialog)
                           
-sys.path.append('D:\GitHub\myKG')
-from kg.detect import *
-from kg.mpl_moving_bar import Bar
+try:
+    approot = os.path.dirname(os.path.abspath(__file__))
+except NameError:
+    approot = os.path.dirname(os.path.abspath(sys.argv[0]))
+from kg import *
 from pandas.sandbox.qtpandas import DataFrameModel, DataFrameWidget
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.widgets import SpanSelector

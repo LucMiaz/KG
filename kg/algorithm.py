@@ -1,4 +1,10 @@
-import sys
+import sys,os
+import inspect
+#change dir form up/kg/thisfile.py to /up
+approot=os.path.dirname(os.path.dirname(inspect.stack()[0][1]))
+if __name__=='__main__':
+    print(approot)
+sys.path.append(approot)
 import numpy as np
 import scipy as sp
 import pandas as pd
@@ -8,10 +14,8 @@ from scipy.io import wavfile
 import copy 
 import matplotlib as mpl
 import struct
-import os
-sys.path.append('D:\GitHub\myKG')
-from mySTFT.stft import stft, stft_PSD
-from mySTFT.stft_plot import plot_spectrogram
+import mySTFT.stft
+import mySTFT.stft_plot
 
 
 class Algorithm(object):

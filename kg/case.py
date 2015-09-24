@@ -1,9 +1,14 @@
-import Case
-#import kg
+import sys,os
+import inspect
+#change dir form up/kg/thisfile.py to /up
+approot=os.path.dirname(os.path.dirname(inspect.stack()[0][1]))
+if __name__=='__main__':
+    print(approot)
+sys.path.append(approot)
+import kg
 import json
 import time
-import os
-import pathlib
+
 from pylab import *
 import matplotlib
 import prettyplotlib#makes nicer plots
@@ -34,9 +39,17 @@ class Case(object):
         self.case.setdefault('caseID',str(self))
         self._update()
     
-    def toJSON(self):
-        """returns the essential informations of self"""
-        return json.dumps(self.case, cls= ComplexEncoder)
+    def toJSON(self,filename=None):
+        """returns the essential informations of self, if Pathname or Path is given, save in file."""
+        if filename:
+            if not isinstance(filename, pathlib.Path):
+                fn=pathlib.Path(filename)
+            else:
+                fn=filename
+            with fn.open('w') as fn:
+                json.dump(self.case,fn,cls=ComplexEncoder)
+        else:
+            return json.dumps(self.case, cls= ComplexEncoder)
     
     def findtimes(self,AA=None,PathToFile='C:\lucmiaz\KG_dev_branch\KG\Measurements_example\MBBMZugExample'):
         """update the times attributes from the given data (mID, mic, measurement) give the measured values if possible (saves about 0.7s)"""
