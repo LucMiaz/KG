@@ -68,7 +68,7 @@ def pad_for_invertible(x,M,R):
     x = np.pad(x, (before,after), 'constant', constant_values = 0)
     return(x, before, after)
     
-def stft(x, M, N = None , R = None, overlap = 2, sR=1, window = 'hann', invertible = True):
+def stft(x, M, N = None , R = None, overlap = 2, sR = 1, window = 'hann', invertible = True):
     """Calculate short time fourier transform of x
     param:
     - M: window length
@@ -80,8 +80,8 @@ def stft(x, M, N = None , R = None, overlap = 2, sR=1, window = 'hann', invertib
     - invertible: test if window and hoop is COLA. 
       If True than window is normalized
     return:
-    - X: np.array of stft of x
-    - freq: np.array frequency vector of stft
+    - X:  X(i,k)
+    - freq: f_k
     - f_i: np.array with center frame of stft
     - param: parameter decribing stft
     
@@ -183,44 +183,52 @@ def istft(X, param):
             x[frame : frame + M] += np.real(ifft(X[i,:]))[0:M]
         return(x[M//2:-(M-1)//2 ])
         
-def _adjust_time(X, t_i, t0 = 0, tmin= None, tmax=None ):
+def _mask(x, xmin= None, xmax= None):
     '''
-    return a 
+    return mask for x according xmin xmax
+    '''
+    if xmin == None and xmax == None:
+        return(np.ones(len(x)).astype(bool))
+    else:
+        xMaskMin = True if xmin == None else  x >= xmin
+        xMaskMax = True if xmax == None else  x <= xmax
+        return(np.logical_and(xMaskMin, xMaskMax ))
+        
+def _adjust_time(X, t_i, t0 = 0, tmin = None, tmax = None, **kwargs):
+    '''
+    shift time accordinf t0 and mask X and t = t_i + t0 according tmin tmax
     '''
     t = t_i + t0
-    t_mask = np.all([(t >= tmin), (t <= tmax)], axis=0)
-    return(X[:,t_mask], t[t_mask])
-    
-def _adjust_PSD_time_freq(PS_i, freq, t_i, t0 = 0, tmin = None, tmax = None, fmax = None, fmin = None):
+    t_mask =_mask(t,tmin,tmax)
+    return(X[t_mask,:],t[t_mask])
+
+def _adjust_freq(X, freq, fmax = None, fmin = None, **kwargs):
     '''
-    return a 
+    mask X and freq according fmin fmax 
     '''
-    # todo inglobe NONE
-    t = t_i + t0
-    f_mask = np.logical_and( freq >= fmin, freq <= fmax )
-    t_mask = np.logical_and(t >= tmin, t <= tmax )
-    return(PS_i[t_mask,:][:,f_mask], freq[f_mask], t[t_mask])
+    f_mask =_mask(freq,fmin,fmax)
+    return(X[:,f_mask],freq[f_mask])
 
 def stft_spectrum(X, param, **kwargs):
     '''return spectrum N points,
        if N > len x sameresult
     '''
-    #todo normalization
     R = param['R']
     N = param['N']
     sR = param['sR']
     lenf_i,n = X.shape
     f_i = np.arange(0, lenf_i*R , R)
     
-    if kwargs:
+    if 't0' in kwargs.keys():
         t_i = (f_i - param['hoop_added'][0]*R)/sR
         X, _ = _adjust_time(X, t_i, **kwargs)
-    
     freq = fftfreq(N, 1/sR)
     return(X.sum(axis=0), freq)
     
 def stft_PSD(X, param, scaling = 'density', **kwargs):
-    #Magnitude singlesided
+    '''
+    return single sidede PSD of stft: PSD = 2*X^2
+    '''
     R = param['R']
     N = param['N']
     sR = param['sR']
@@ -229,13 +237,11 @@ def stft_PSD(X, param, scaling = 'density', **kwargs):
     freq = fftfreq(N, 1/sR)
     f_i = np.arange(0,lenf_i*R , R)
     #normalization
-
-    # TODO: CONTROL NORMALIZATION
     win =  scipy.signal.get_window(param['window'], param['M'], fftbins = True)
     if scaling == 'density':
-        scale = 1.0 / (sR * (win*win).sum())
+        scale = 1.0 / (sR * (win*win).mean())
     elif scaling == 'spectrum':
-        scale = 1.0 / win.sum()**2
+        scale = 1.0 / win.mean()**2
     else:
         raise ValueError('Unknown scaling: %r' % scaling)
     if  param['invertible']:
@@ -243,7 +249,7 @@ def stft_PSD(X, param, scaling = 'density', **kwargs):
 
     # calculate PSD    
     PS_i = np.real(np.conjugate(X)*X)*scale
-    
+
     #onesided
     if N % 2:
         freq = freq[:(N+1)//2]
@@ -255,12 +261,12 @@ def stft_PSD(X, param, scaling = 'density', **kwargs):
         PS_i = PS_i[:,:N//2+1]
         # Last point is unpaired Nyquist freq point, don't double
         PS_i[:,1:-1] *= 2
-
     t_i = f_i / sR
-    
     if kwargs:
         t_i = (f_i - param['hoop_added'][0]*R)/sR
-        return(_adjust_PSD_time_freq(PS_i, freq, t_i, **kwargs))
+        PS_i, t_i = _adjust_time(PS_i, t_i, **kwargs)
+        PS_i, freq = _adjust_freq(PS_i, freq, **kwargs)
+        return(PS_i, freq, t_i)
     else:
         return(PS_i, freq, t_i)
 
@@ -268,8 +274,9 @@ def stft_welch(X, param, scaling = 'density',  **kwargs):
     '''return spectrum N points,
        if N > len x sameresult
     '''
+    M = param['M'] 
     PS_i, freq, t_i = stft_PSD(X, param, scaling, **kwargs)
-    return(PS_i.mean(axis=0), freq)
+    return((PS_i/M).mean(axis=0), freq)
     
 def stft_prms(X, param, **kwargs):
     '''prms value from stft
