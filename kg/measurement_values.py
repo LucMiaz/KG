@@ -1,15 +1,10 @@
-import scipy as sp
-import scipy.io
 import numpy as np
 import pandas as pd
-import copy
+import copy,sys,pathlib
 import collections
-import xlrd
-import csv,json
+import xlrd,json
 import datetime
-import pathlib
-import warnings
-import datetime
+
 
 def read_MBBM_tables(mesPath, save = False):
     '''
@@ -22,6 +17,7 @@ def read_MBBM_tables(mesPath, save = False):
     MICVALUES = CONFIG['micValues']
     IDVALUES = CONFIG['idValues']
     Mic = CONFIG['microphones']
+    mID=[]
     tablesPath = mesPath.joinpath('measurement_values')
     print('----------\n')
     print('Read MBBM exel tables \n----------\n\nMIC VALUES \n-----------')
@@ -58,10 +54,11 @@ def read_MBBM_tables(mesPath, save = False):
             selectCol = [colNames.index(i) for i in cN] 
             data = {}
             for row in range(wsRow0+1,ws.nrows):
+                id = ws.cell_value(row,0)
                 mic_val = {}
                 for i,mic in zip(selectCol,Mic):
                     mic_val[str(mic)] = ws.cell_value(row,i) 
-                data[ws.cell_value(row,0)] = mic_val
+                data[id] = mic_val
             v['values'] = data
     #if IDVALUES value
     print('\n\nIDVALUES \n-----------')        
@@ -75,7 +72,11 @@ def read_MBBM_tables(mesPath, save = False):
         selectCol = colNames.index(v['colName']) 
         data = {}
         for row in range(table['skip']+1, ws.nrows):
-            data[ws.cell_value(row,0)] = ws.cell_value(row,selectCol)
+            id = ws.cell_value(row,0)
+            data[id] = ws.cell_value(row,selectCol)
+            if not id in mID:
+                mID.append(id)
+            
         v['values'] = data
     print('\n\nFinish read values\n----------\n')
     # return dict
@@ -86,6 +87,7 @@ def read_MBBM_tables(mesPath, save = False):
     MBBM_data['micValues'] = MICVALUES
     MBBM_data['idValues'] = IDVALUES
     MBBM_data['mic'] = Mic
+    MBBM_data['mID'] = mID
     if save:
         dataPath = mesPath.joinpath('measurement_values/MBBM_mes_values.json')
         with dataPath.open('w+') as data:
@@ -95,7 +97,7 @@ def read_MBBM_tables(mesPath, save = False):
         
 
 class measuredValues():
-    def __init__(self,mesPath, location, measurement, tables, micValues, idValues , mic):
+    def __init__(self,mesPath, location, measurement, tables, micValues, idValues , mic, mID):
         '''
         handle  the measurement database
         parameters
@@ -109,6 +111,7 @@ class measuredValues():
         self.tables = tables
         self.micValues = micValues 
         self.idValues = idValues
+        self.mID = mID
         self.mic = mic
         self.kgValues = {'algorithms':{},'results':{}}
                 
@@ -125,10 +128,9 @@ class measuredValues():
 
     def get_IDs(self, evaluated = False):
         if not evaluated:
-            Index = self.idInfo['mTime']['values'].index.tolist()
+            return(self.mID)
         else:
-            Index = self.micValues['LAEQ']['values'].index.tolist()
-        return(Index)
+            return(self.micValues['LAEQ']['values'].keys())
         
     def get_variables_values(self,ID, mic, variables):
         """
@@ -146,14 +148,25 @@ class measuredValues():
         for id in ID: 
             for var in variables:
                 if var in self.idValues.keys():
-                    val = self.idValues[var].get('values').get(id)
+                    try:
+                        values = self.idValues[var].get('values')[id]
+                    except KeyError as e:
+                        dict[id]=None
+                        print('ID '+id +' not found.')
+                        break
                     dict.setdefault(id,{})[var] = val
                 elif var in self.micValues.keys():
-                    val = copy.deepcopy(self.micValues[var].get('values').get(id,{}))
+                    try:
+                        values = self.micValues[var].get('values')[id]
+                    except KeyError as e:
+                        dict[id]=None
+                        print('ID '+id +' not found.')
+                        break
+                    val = copy.deepcopy(values)
                     if isinstance(mic,list):
                         val = {m:mv for m,mv in val.items() if int(m) in mic}
                     else:
-                        val = val[str(mic)]
+                        val = val.get(str(mic))
                     dict.setdefault(id,{})[var] = val
                 else:
                     print('Variable '+ var+ ' is not in measurementValue')
@@ -222,6 +235,12 @@ class measuredValues():
         return(cls(mesPath = mesPath,**read_MBBM_tables(mesPath, save = False)))
         
 def serialize(data):
+    '''
+    serialize np.array to be saved in .json format
+    parameter:
+    ----------
+    data: nested data of dicts and lists containing np.arrays
+    '''
     if isinstance(data, list):
         return [serialize(val) for val in data]
     elif isinstance(data, dict):
@@ -239,28 +258,19 @@ if __name__ == "__main__":
     #read_MBBM_tables(mesPath,True)
     #getexample
     mesVal = measuredValues.from_json(mesPath)
-    s = mesVal.get_variables_values(ID= ['m_0100'], mic= 1,
-     variables = ['Tb', 'Ta', 'Tp_b', 'Tp_e'])
-    print(s)
     ##
-    
-    
-    # ## get evaluated signals
-    # allID = mesVal.get_IDs(evaluated = False)
-    # print( 'Total N. of IDs:' , len(allID))
-    # evalID = mesVal.get_IDs(evaluated = True)
-    # print( 'evaluated IDs:' , len(evalID))
-    # nonEvalID = list(set(allID)-set(evalID))
-    # print(nonEvalID)
-    # print('m_0120'in allID)
+    s = mesVal.get_variables_values(ID= ['m_01000','m_01091'], mic= 1,
+     variables = ['Tb', 'v1', 'Tp_b', 'Tp_e'])
+    print(s)
 
-   ##   ##expot example
-    # mesVal.set_kg_alg_description( 'alg1','kkkkkkk',[['var1','aaa'],['var2','bbb'],['mic','micro']])
-    # mesVal.set_kg_values('alg1','m_0101',{'mic':[1,2,7],'var1':[22,33,44],'var2':[9,9,9]})
-    # mesVal.export_kg_results('alg1',variables= ['Te','v2','mTime'])
-    # mesVal.export_kg_results('alg1')
-
-        
+    ## get evaluated signals
+    allID = mesVal.get_IDs(evaluated = False)
+    print( 'Total N. of IDs:' , len(allID))
+    evalID = mesVal.get_IDs(evaluated = True)
+    print( 'evaluated IDs:' , len(evalID))
+    nonEvalID = list(set(allID)-set(evalID))
+    print(nonEvalID)
+    print('m_0120'in allID)
 
 
 

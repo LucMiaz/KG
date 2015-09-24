@@ -18,8 +18,8 @@ class measuredSignal():
     import time signal and info fro MBBM
    
     """
-    PATH = ''
-    SIGNALS = {}
+    _PATH = ''
+    _SIGNALS = {}
 
     def __init__(self, ID, mic = None):
         self.ID = ID
@@ -31,7 +31,7 @@ class measuredSignal():
     def list_signals(self):
         data = []
         index = []
-        for k, v in measuredSignal.SIGNALS.items(): 
+        for k, v in measuredSignal._SIGNALS.items(): 
             df = pd.DataFrame(v, index= [k])
             if k in list(self.signals.keys()):
                 df['loaded'] = True
@@ -48,13 +48,23 @@ class measuredSignal():
         """
         channel = str(channel)
         dataPath = self.path.joinpath('raw_signals')
+        try:
+            signal = measuredSignal._SIGNALS[channel]
+        except KeyError:
+            print( 'Channel' +channel+ 'is missing')
+            raise e
+        
         if not channel in self.signals.keys():
-            signal = measuredSignal.SIGNALS[channel]
-            time = measuredSignal.SIGNALS[str(signal['time'])]
+            signal = measuredSignal._SIGNALS[channel]
+            time = measuredSignal._SIGNALS[str(signal['time'])]
             #load y vector
             path = str(dataPath.joinpath(signal['fileName'])).replace('ID',self.ID)
-            arrN = self.ID 
-            y = np.ravel(loadmat(path, variable_names = arrN)[arrN])
+            arrN = self.ID
+            try:
+                y = np.ravel(loadmat(path, variable_names = arrN)[arrN])
+            except FileNotFoundError as e:
+                print(e)
+                raise(Exception('Class instance is invalid: ID ' + self.ID + ' is missing'))
             #load t vector
             path = str(dataPath.joinpath(time['fileName'])).replace('ID',self.ID)
             arrN = self.ID + '_X'
@@ -70,9 +80,10 @@ class measuredSignal():
         channel = str(channel)
         try:
             s = self.signals[channel]
-            info = measuredSignal.SIGNALS[channel]
-        except KeyError:
-            print('Channel '+ channel + ' is not loaded.')
+            info = copy.deepcopy(measuredSignal._SIGNALS[channel])
+        except KeyError as e:
+            print( 'Channel' +channel+ 'is not loaded')
+            raise(e)
         else:
             info['frames']= len(s['y'])
             info['tmin'] =  s['t'].min()
@@ -95,7 +106,7 @@ class measuredSignal():
     def setup(cls, mesPath):
         mesPath = pathlib.Path(mesPath)
         with mesPath.joinpath('raw_signals_config.json').open('r+') as config:
-            cls.SIGNALS = json.load(config)
+            cls._SIGNALS = json.load(config)
         cls.PATH = mesPath
         #return(cls)
     
@@ -106,7 +117,7 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
     measuredSignal.setup('D:\GitHub\myKG\Measurements_example\MBBMZugExample')
     #
-    ts = measuredSignal('m_0101')
+    ts = measuredSignal('m_010100')
     mic=[1,2,4,5,6,7]
     for i,m in enumerate(mic):
         ts.read_signal(m)
