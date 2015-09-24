@@ -7,7 +7,6 @@ Example using myStft
 if __name__ == "__main__":
     
     import sys
-    import acoustics
     sys.path.append('D:\GitHub\myKG')
     import mySTFT
     from mySTFT.stft import *
