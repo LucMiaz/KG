@@ -1,45 +1,68 @@
 import sys,os
 import inspect
-#change dir form up/kg/thisfile.py to /up
-if __name__=='__main__':
-    approot=os.path.dirname(os.path.dirname(inspect.stack()[0][1]))
-    sys.path.append(approot)
-    print(approot)
 from kg.intervals import *
-from kg.measurement_values import *
+from kg.measurement_values import measuredValues
 import json
 import time
-
-from pylab import *
-import matplotlib
-import prettyplotlib#makes nicer plots
-import matplotlib.pyplot as plt
-import matplotlib.patches as patches
 
 ##Class Case
 class Case(object):
     """
     Defines a case of study
     """
-    def __init__(self, ax, measurement, mID, mic, author, noiseType):
+    def __init__(self, ax, location ,measurement, mID, mic, Tb, Te, author, noiseType):
         """
         Takes a set of data as dict and an axis to display the data on.
         """
         self.case = {
+                "location":location,
                 "measurement": measurement, 
                 "mID":  mID,
                 "mic":  mic,
-                "author":author,
+                "author": author,
                 "date":time.strftime('%d.%m.%Y'),
-                "tb": 0.,
-                "te": 1.,
+                "tb": Tb,
+                "te": Te,
                 "noiseType":noiseType,
-                "Set": SetOfIntervals(),
+                "Set": SetOfIntervals()
                 }
-        self.findtimes()
-        self.case.setdefault('caseID',str(self))
-        self._update()
+        self.case['caseID'] = str(self)
     
+    def compare(self, otherdisc, zerotime, endtime, deltatime):
+        """Compares the discretization of this case with the one of an algorithm whose results are given in otherdisc. timeparam variable contains the variables for the discretization. Returns a dictionnary with the number of True positives, True negatives, False positives and False negatives"""
+        try:
+            discret = selfcase['Set'].discretize(zerotime, endtime, deltatime)
+        except:
+            discret = 0
+        disc = self.discretize(timeparam)
+        assert len(otherdisc) == len(disc)
+        retTF={'FP':[], 'TP':[], 'FN':[],'TN':[]}
+        retTF['TP'] = np.logical_and(otherdisc,disc)
+        retTF['TN'] = np.logical_and(np.logical_not(otherdisc), np.logical_not(disc))
+        retTF['FP'] = np.logical_and(otherdisc, np.logical_not(disc))
+        retTF['FN'] = np.logical_and(np.logical_not(otherdisc),  disc)
+        return(retTF)
+        
+    def save(self, mesPath):
+        '''
+        save Case to file
+        '''
+        mesPath = pathlib.Path(mesPath)
+        casePath = mesPath.joinpath('test_cases').joinpath(self.case['author'])
+        os.makedirs(casePath.as_posix(), exist_ok = True)
+        name = str(self) + '.json'
+        casePath = casePath.joinpath(name)
+        self.toJSON(casepath)
+    
+    def __str__(self):
+        """prints the name of the case"""
+        return( "case_"+str(self.case['mID'])+"_"+str(self.case['mic'])+\
+        str(self.case['author']))
+    
+    def __repr__(self):
+        """gives a representation of the case"""
+        return self.toJSON()
+
     def toJSON(self,filename=None):
         """returns the essential informations of self, if Pathname or Path is given, save in file."""
         if filename:
@@ -51,69 +74,7 @@ class Case(object):
                 json.dump(self.case,fn,cls=ComplexEncoder)
         else:
             return json.dumps(self.case, cls= ComplexEncoder)
-    
-    def findtimes(self,AA=None,PathToFile='C:\lucmiaz\KG_dev_branch\KG\Measurements_example\MBBMZugExample'):
-        """update the times attributes from the given data (mID, mic, measurement) give the measured values if possible (saves about 0.7s)"""
-        if not AA:
-            AA = measuredValues.from_json(PathToFile)
-        self.case['tb']=AA.getVariable(self.case['mID'],self.case['mic'], 'Tb')
-        self.case['te']=AA.getVariable(self.case['mID'],self.case['mic'], 'Te')
-        
             
-    
-    def _update(self):
-        """runs the initialisation of self.Set"""
-        self.case['Set']=GraphicalIntervals(ax,displaybutton=False)
-    
-    def comparediscretizations(self, otherdisc, timeparam):
-        """Compares the discretization of this case with the one of an algorithm whose results are given in otherdisc. timeparam variable contains the variables for the discretization. Returns a dictionnary with the number of True positives, True negatives, False positives and False negatives"""
-        
-        cont=False
-        disc=self.discretize(timeparam, sum=False)
-        if disc:
-            if len(otherdisc)==len(disc):
-                retTF={'FP':[], 'TP':[], 'FN':[],'TN':[]}
-                retTF['TP'] = list(np.logical_and(otherdisc,disc))
-                retTF['TN'] = list(np.logical_and(np.logical_not(otherdisc), np.logical_not(disc)))
-                retTF['FP'] = list(np.logical_and( otherdisc, np.logical_not(disc)))
-                retTF['FN'] = list(np.logical_and( np.logical_not(otherdisc),  disc))
-                return retTF
-            else:
-                return None
-        else:
-            return None
-    
-    def discretize(self, timeparam):
-        """discretize self in respect to parameters timeparam."""
-        if self.Set:
-            discret=self.Set.discretize(self,timeparam, None, False)#None means the param will not be displayed and the input will not be ordered.
-            print("Discretization result : " + discret)
-            return discret
-        else:
-            print("Empty set : no discretization possible")
-            return None
-    
-    def save(self, mesPath):
-        '''
-        save Case to file
-        '''
-        mesPath = pathlib.Path(mesPath)
-        casePath = mesPath.joinpath('test_cases').joinpath(self.case['author'])
-        os.makedirs(casePath.as_posix(), exist_ok = True)
-        name = str(self) + '.json'
-        casePath = casePath.joinpath(name)
-        print(casePath)
-        with open(casePath.as_posix(), 'w') as fp:
-            json.dump(self.case.__repr__(), fp)
-    
-    def __str__(self):
-        """prints the name of the case"""
-        return "case_"+str(self.case['mID'])+"_"+str(self.case['mic'])
-    
-    def __repr__(self):
-        """gives a representation of the case"""
-        return self.case.json
-    
     @classmethod
     def from_JSON(cls, casePath):
         """@classmethod is used to pass the class to the method as implicit argument. Then we open a file in JSON located at casePath and give it to the class with **kwargs (meaning that we pass an arbitrary number of arguments to the class)
@@ -125,11 +86,12 @@ class Case(object):
 
 ## Test
 if __name__ == "__main__":
-    x = arange(100)/(79.0)
-    y = sin(x)
-    fig = plt.figure()
-    ax = subplot(111,axisbg='#FFFFFF')
-
+    #import prettyplotlib #makes nicer plots
+    #import matplotlib.pyplot as plt
+    x = np.arange(100)/(79.0)
+    y = np.sin(x)
+    f, ax = plt.subplots(1)
     ax.plot(x,y)
-    plt.tight_layout()
-    Newcase=Case(ax,'useful','m_0100','1','luc','Z')
+    #new = GraphicalIntervals(ax)
+    Newcase=Case(ax,'Zug','Vormessung','m_0100','1',0,10,'luc','Z')
+    GraphicalIntervalsHandle(ax,Newcase.case['Set'])
