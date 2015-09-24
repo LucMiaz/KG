@@ -7,7 +7,6 @@ from PySide.QtGui import (QApplication, QMainWindow, QAction, QStyle,
                           QFileDialog)
                           
 sys.path.append('D:\GitHub\myKG')
-sys.path.append('C:\LucMiaz\KG')
 from kg.detect import *
 from kg.mpl_moving_bar import Bar
 from pandas.sandbox.qtpandas import DataFrameModel, DataFrameWidget
@@ -16,18 +15,14 @@ from matplotlib.widgets import SpanSelector
 import matplotlib.pyplot as plt
                           
 class DetectControlWidget(QMainWindow):
-    """General window creator. 
-        -Audio file
-        -Canvas
-        -Optional moving bar. 
-        """
+
     def __init__(self,  wavPath, canvas ,t0 = 0, bar = [], parent = None):
         QMainWindow.__init__(self, parent)
         self.setWindowTitle('listen and detect ;-)')
         #phonon 
-        self._init_phonon(wavPath)#Path to the audio file
+        self._init_phonon(wavPath)
         #Attributes
-        self.canvas = canvas #graphic
+        self.canvas = canvas
         self.bar = bar
         self.tShift = t0
        
@@ -74,108 +69,56 @@ class DetectControlWidget(QMainWindow):
             bar.set_x_position(t/1000 + self.tShift )
             
     @classmethod
-    def from_micSignal(cls, micSn):
+    def from_micSignal(cls, micSn, mesPath):
         wavPath = micSn.export_to_Wav(mesPath)
         #Canvas
         plt.ioff()
         stftName = micSn.calc_stft(M=1024*4)
-        ca = FigureCanvas(plt.subplots(1,sharex=True)[0])
-        ax = ca.figure.get_axes()
-        micSn.plot_spectrogram(stftName,ax[0])
+        fig, ax = plt.subplots(1,sharex=True)
+        micSn.plot_spectrogram(stftName,ax) 
+        micSn.plot_triggers(ax)
+        micSn.plot_KG(ax)
+        ca = FigureCanvas(fig)
         #Bar
-        bar1= Bar(ax[0])
-        return(cls(wavPath.as_posix(), {1:ca} , micSn.tmin, [bar1]))
+        bar1= Bar(ax)
+        return(cls(wavPath.as_posix(), {1:ca} , micSn.t.min(), [bar1]))
         
-##
-class CaseCreatorWidget(DetectControlWidget):
-    '''
-    this is a subclass of DetectControlWidget
-    this widget should allow to create cases in GUI style
-    kg_ event duration is selected with mouse cursor
-    case is saved using a button
-    '''
-<<<<<<< HEAD
-    def __init__(self, micSn, wavPath, canvas ,t0 = 0, bar = [], parent = None):
-=======
-    def __init__(self, micSn):
->>>>>>> devCaseCreator
-        measurement = ''
-        #initiate new Case
-        #todo
-        self.case = Case()
-
-        #span selector
-        self.span = SpanSelector(axSpan, self._onselect, 'horizontal',\
-        span_stays=True, useblit = True,
-                            rectprops=dict(alpha=0.5, facecolor='red'))
-                            
-        self.kg_events = []
-        #initiate superclass
-        super(DetectControlWidget, self).__init__(wavPath, canvas ,t0 = 0,\
-        bar = [], parent = None)
-        self.setWindowTitle('Create Case')
-        hBox = QtGui.QHBoxLayout()
-        label = QtGui.QLabel('''Select channel to play, first widget''')
-        self.buttonRm = QtGui.QPushButton("delete last event",self)
-        self.buttonSave = QtGui.QPushButton("Save Case",self)
-        hBox.addWidget(self.buttonLim)
-        hBox.addWidget(self.buttonR)
-        hBox.addStretch(1)
-        self.vBox.addLayout(hBox)
-        
-        # centralwidget
-        centralWidget = QtGui.QWidget()
-        centralWidget.setLayout(self.vBox)
-        self.setCentralWidget(centralWidget)
-        
-        # connections
-        self.buttonRm.clicked.connect(self.remove_last_event)
-        self.buttonSave.clicked.connect(self.save_case)
-        
-    def _initgraphics(self, micSn):
-        #create Graphics
+    @classmethod
+    def alg_results(cls, micSn, mesPath,algorithm):
+        wavPath = micSn.export_to_Wav(mesPath)
+        #Canvas
         plt.ioff()
         stftName = micSn.calc_stft(M=1024*4)
-        self.canvas = FigureCanvas(plt.subplots(2,sharex=True)[0])
-        ax0, axSpan = ca.figure.get_axes()
-        micSn.plot_spectrogram(stftName,ax0)
-        micSn.plot_spectrogram(stftName,axSpan)    
-        #Bar
-        self.bar = Bar(ax0)
+        fig, axes = plt.subplots(2,sharex=True)
+        ax = axes[0]
+        micSn.plot_spectrogram(stftName,ax) 
+        micSn.plot_triggers(ax)
+        micSn.plot_KG(algorithm,ax)
+        bar1= Bar(ax)
+        ax = axes[1]
+        micSn.plot_BPR(algorithm,ax)
+        ca = FigureCanvas(fig)
+        bar2= Bar(ax)
         
-    def _onselect(self, xmin, xmax):
-        self.case.add_kg_event()
-        self.kg_events.append(axSpan.axvspan(xmin, xmax, facecolor='g', alpha=0.5))
-        
-    def remove_last_event(self):
-        #todo
-        pass
-        
-    def save_case(self):
-        #todo
-        pass
-
+        return(cls(wavPath.as_posix(), {1:ca} , micSn.t.min(), [bar1,bar2]))
 ##
-
 if __name__ == "__main__":
     import pathlib
     sys.path.append('D:\GitHub\myKG')
     from kg.measurement_values import measuredValues
-    from kg.time_signal import timeSignal
+    from kg.measurement_signal import measuredSignal
     #setup measurement
-    #mesPath = pathlib.Path('D:\GitHub\myKG\Measurements_example\MBBMZugExample')
-    mesPath = pathlib.Path('C:\LucMiaz\KG\Measurements_example\MBBMZugExample')
+    mesPath = pathlib.Path('D:\GitHub\myKG\Measurements_example\MBBMZugExample')
     mesVal = measuredValues(mesPath.as_posix())
     mesVal.read_variables_values()
-    timeSignal.setup(mesPath.as_posix())
+    measuredSignal.setup(mesPath.as_posix())
     
     mID = 'm_0100'
-    ts = timeSignal(mID)
     mic = 1
-    ts.read_signal(mic)
-    sn = ts.get_signal(mic)
+    mesSn = measuredSignal(mID,mic)
+    y, t, sR = mesSn.get_signal(mic)
     values = mesVal.get_variables_values(mID, mic, [ 'Tb','Te','Tp_b','Tp_e','LAEQ', 'besch'])
-    micSn = MicSignal(sn,mID,mic,values)
+    micSn = MicSignal(mID, mic,y, t, sR, values)
     ## Run
     W = DetectControlWidget.from_micSignal(micSn)
     W.show()
