@@ -1,0 +1,98 @@
+{
+	"1" : {
+		"gleis" : 1,
+		"type" : "mic",
+		"description" : "Zeitsignal mic 1 Pa + Zeitachse",
+		"sec" : 1,
+		"fileName" : "zrd_ID_1.mat",
+		"time" : 1
+	},
+	"2" : {
+		"gleis" : 4,
+		"type" : "mic",
+		"description" : "Zeitsignal mic 2",
+		"sec" : 1,
+		"fileName" : "zrd_ID_2.mat",
+		"time" : 1
+	},
+	"4" : {
+		"gleis" : 1,
+		"type" : "mic",
+		"description" : "Zeitsignal mic 4",
+		"sec" : 2,
+		"fileName" : "zrd_ID_4.mat",
+		"time" : 1
+	},
+	"5" : {
+		"gleis" : 4,
+		"type" : "mic",
+		"description" : "Zeitsignal mic 5",
+		"sec" : 2,
+		"fileName" : "zrd_ID_5.mat",
+		"time" : 1
+	},
+	"6" : {
+		"gleis" : 1,
+		"type" : "mic",
+		"description" : "Zeitsignal mic 6",
+		"sec" : 3,
+		"fileName" : "zrd_ID_6.mat",
+		"time" : 1
+	},
+	"7" : {
+		"gleis" : 4,
+		"type" : "mic",
+		"description" : "Zeitsignal mic 7",
+		"sec" : 3,
+		"fileName" : "zrd_ID_7.mat",
+		"time" : 1
+	},
+	"prms2" : {
+		"gleis" : 4,
+		"type" : "p_rms",
+		"description" : "A-prms Fast  in Pa mic2",
+		"sec" : 1,
+		"fileName" : "ID_2.mat",
+		"time" : "prms1"
+	},
+	"prms7" : {
+		"gleis" : 4,
+		"type" : "p_rms",
+		"description" : "A-prms Fast  in Pa mic7",
+		"sec" : 3,
+		"fileName" : "ID_7.mat",
+		"time" : "prms1"
+	},
+	"prms6" : {
+		"gleis" : 1,
+		"type" : "p_rms",
+		"description" : "A-prms Fast  in Pa mic6",
+		"sec" : 3,
+		"fileName" : "ID_6.mat",
+		"time" : "prms1"
+	},
+	"prms1" : {
+		"gleis" : 1,
+		"type" : "p_rms",
+		"description" : "A-prms Fast  in Pa mic1 + Zeitachse",
+		"sec" : 1,
+		"fileName" : "ID_1.mat",
+		"time" : "prms1"
+	},
+	"prms5" : {
+		"gleis" : 4,
+		"type" : "p_rms",
+		"description" : "A-prms Fast  in Pa mic5",
+		"sec" : 2,
+		"fileName" : "ID_5.mat",
+		"time" : "prms1"
+	},
+	"prms4" : {
+		"gleis" : 1,
+		"type" : "p_rms",
+		"description" : "A-prms Fast  in Pa mic4",
+		"sec" : 2,
+		"fileName" : "ID_4.mat",
+		"time" : "prms1"
+	}
+}

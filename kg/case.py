@@ -1,8 +1,15 @@
-#from case import intervals
+import sys,os
+import inspect
+#change dir form up/kg/thisfile.py to /up
+if __name__=='__main__':
+    approot=os.path.dirname(os.path.dirname(inspect.stack()[0][1]))
+    sys.path.append(approot)
+    print(approot)
+from kg.intervals import *
+from kg.measurement_values import *
 import json
 import time
-import os
-import pathlib
+
 from pylab import *
 import matplotlib
 import prettyplotlib#makes nicer plots
@@ -29,17 +36,30 @@ class Case(object):
                 "noiseType":noiseType,
                 "Set": SetOfIntervals(),
                 }
+        self.findtimes()
         self.case.setdefault('caseID',str(self))
         self._update()
     
-    def toJSON(self):
-        """returns the essential informations of self"""
-        return json.dumps(self.case.__repr__(), sort_keys=False, indent=0, separators=(',',': '))
+    def toJSON(self,filename=None):
+        """returns the essential informations of self, if Pathname or Path is given, save in file."""
+        if filename:
+            if not isinstance(filename, pathlib.Path):
+                fn=pathlib.Path(filename)
+            else:
+                fn=filename
+            with fn.open('w') as fn:
+                json.dump(self.case,fn,cls=ComplexEncoder)
+        else:
+            return json.dumps(self.case, cls= ComplexEncoder)
     
-    def findtimes(self):
-        """update the times attributes from the given data (mID, mic, measurement)"""
-        # Todo
-        pass
+    def findtimes(self,AA=None,PathToFile='C:\lucmiaz\KG_dev_branch\KG\Measurements_example\MBBMZugExample'):
+        """update the times attributes from the given data (mID, mic, measurement) give the measured values if possible (saves about 0.7s)"""
+        if not AA:
+            AA = measuredValues.from_json(PathToFile)
+        self.case['tb']=AA.getVariable(self.case['mID'],self.case['mic'], 'Tb')
+        self.case['te']=AA.getVariable(self.case['mID'],self.case['mic'], 'Te')
+        
+            
     
     def _update(self):
         """runs the initialisation of self.Set"""
@@ -102,11 +122,6 @@ class Case(object):
             return cls(**json.load(open(casePath, 'r')))
         except FileNotFoundError:
             raise Error("The file in path" + casePath + " has not be found.")
-            
-    def importgraph(self):
-        """import and displays the corresponding sound/graphic"""
-        if self.case.get('caseId'):
-            pass
 
 ## Test
 if __name__ == "__main__":
@@ -117,4 +132,4 @@ if __name__ == "__main__":
 
     ax.plot(x,y)
     plt.tight_layout()
-    Newcase=Case(ax,'1001','m10','1','lm','Z')
+    Newcase=Case(ax,'useful','m_0100','1','luc','Z')

@@ -93,11 +93,12 @@ Attribute | description | type | needed at init
 
 Method | Description | Return type
 ------ | ----------- | -----------
-`add_kg_event(self, t0, t1, [noiseType])` | create an interval [t0,t1], update LastInterval and add this interval to noiseType | none
-`remove_last_event(self, [noiseType]) | Remove the last interval selected from the set of interval | none
+`add_kg_event(t0, t1, [noiseType])` | create an interval [t0,t1], update LastInterval and add this interval to noiseType | none
+`remove_last_event([noiseType]) | Remove the last interval selected from the set of interval | none
 `save(self, mesPath)` | save Case to file | none
-`_compare(self, detect , [noiseType], bool[sum]) | compare detection algorithm results with Case, True/False Positive/Negative | list, list, list, list 
-`test(self, algorithm, mesVar, [signal], [sum])` | test algorithm  on Case | list
+`_compare(detect , [noiseType], bool[sum]) | compare detection algorithm results with Case, True/False Positive/Negative | list, list, list, list 
+`test(algorithm, mesVar, [signal], [sum])` | test algorithm  on Case | list
+`toJSON(filename=None) | returns the essential informations of self, if Pathname or Path is given, save in file.
 
 ### measuredValues
 
