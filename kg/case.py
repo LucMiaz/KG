@@ -5,7 +5,8 @@ if __name__=='__main__':
     approot=os.path.dirname(os.path.dirname(inspect.stack()[0][1]))
     sys.path.append(approot)
     print(approot)
-import kg
+from kg.intervals import *
+from kg.measurement_values import *
 import json
 import time
 
@@ -121,11 +122,6 @@ class Case(object):
             return cls(**json.load(open(casePath, 'r')))
         except FileNotFoundError:
             raise Error("The file in path" + casePath + " has not be found.")
-            
-    def importgraph(self):
-        """import and displays the corresponding sound/graphic"""
-        if self.case.get('caseId'):
-            pass
 
 ## Test
 if __name__ == "__main__":

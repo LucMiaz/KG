@@ -8,13 +8,7 @@ if __name__=='__main__':
 import numpy as np
 from PySide import QtGui, QtCore
 from PySide.phonon import Phonon
-from PySide.QtGui import (QApplication, QMainWindow, QAction, QStyle,
-                          QFileDialog)
-                          
-try:
-    approot = os.path.dirname(os.path.abspath(__file__))
-except NameError:
-    approot = os.path.dirname(os.path.abspath(sys.argv[0]))
+from PySide.QtGui import (QApplication, QMainWindow, QAction, QStyle, QFileDialog)
 from kg import *
 from pandas.sandbox.qtpandas import DataFrameModel, DataFrameWidget
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
