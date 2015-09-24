@@ -98,7 +98,7 @@ Method | Description | Return type
 `save(self, mesPath)` | save Case to file | none
 `_compare(detect , [noiseType], bool[sum]) | compare detection algorithm results with Case, True/False Positive/Negative | list, list, list, list 
 `test(algorithm, mesVar, [signal], [sum])` | test algorithm  on Case | list
-`toJSON(filename=None) | returns the essential informations of self, if Pathname or Path is given, save in file.
+`toJSON(filename=None)` | returns the essential informations of self, if Pathname or Path is given, save in file.
 
 ### measuredValues
 
