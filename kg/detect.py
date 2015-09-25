@@ -43,6 +43,7 @@ class MicSignal(object):
     
     """    
     def __init__(self, ID, mic, y, t, sR, micValues, mesPath = None):
+
         self.ID = ID
         self.mic = mic
         self.y = y
@@ -98,7 +99,7 @@ class MicSignal(object):
             #set interval to evaluate spectrum
             kwargs['t0'] = self.t.min()
         return(stft_PSD(stft['X'], stft['param'], scaling = 'density', **kwargs))
-        
+
     def calc_kg(self, algorithm):
         '''
         run algorithm on MicSignal object
@@ -130,7 +131,7 @@ class MicSignal(object):
             else:
                 kwargs['tmax'],kwargs['tmin'] = tlim
             sectrum ,freq = stft_welch(stft['X_i'], stft['param'],'density', **kwargs)
-            
+                
     def get_stft_name(self,algorithm):
         par = algorithm.get_stft_param(self.sR)
         return(str(par['M']) +'_'+ str(par['N']) +'_'+ str(par['overlap']))
@@ -211,7 +212,7 @@ class MicSignal(object):
         '''
         plot detection results for a given algorithm
         '''
-        
+
         if label==None:
             label = str(algorithm)
         KG = self.KG[algorithm.noiseType]
@@ -265,6 +266,58 @@ class MicSignal(object):
         
     def visualize_results_widget(self,algorithm):
         pass
+        # Todo:
+    #     ax.set_title('Spectrum', fontsize=12)
+    #     freq = np.array(self.micValues['LAf']['colName'])
+    #     PS_i = np.array(self.get_variables_values(ID,mic,['LAf'])['LAf'])
+    #     if label == None:
+    #         label = 'Spectrum_ch_' + str(mic)
+    #     ax.plot(freq, PS_i, label = label)
+    #     ax.set_xscale('log')
+    #     ax.grid(True)
+    #     ax.minorticks_off()
+    #     ax.set_xticks(freq)
+    #     ax.set_xticklabels([ f if  i%3 == 0  else '' for i,f in enumerate(freq) ])
+    #     ax.set_xlim([freq.min(),freq.max()])
+    #     ax.set_xlabel('f (Hz)', fontsize=10)
+    #     ax.set_ylabel(' (dBA)', fontsize=10)
+        
+                
+    def plot_prms(self, ax ,label = None):
+        # todo:
+        pass
+        # ax.plot(sn['t'], np.abs(20*np.log10(sn['y']/(2e-5))), label= label)
+        
+    def export_to_Wav(self, mesPath):
+        """
+        Export a .wav file of the signal in mesPath\wav
+        
+        param
+        ------
+        mesPath: main measurement path
+        
+        return
+        ------
+        libpath Obj: path of wavfile
+        """
+        wavPath = mesPath.joinpath('wav')
+        os.makedirs(wavPath.as_posix(), exist_ok = True)
+        filename = str(self) + '.wav'
+        filePath = wavPath.joinpath(filename)
+        if not filename in [p.name for p in wavPath.glob('*.wav')]:
+            scaled = np.int16(self.y/ np.abs(self.y).max() * 32767)
+            wavfile.write(filePath.as_posix(), self.sR , scaled)
+        self.wavPath = wavPath.joinpath(filename)
+        return(self.wavPath)
+        
+    @ classmethod
+    def from_measurement(cls, mesValues, ID, mic):
+        mS = measuredSignal(ID,mic)
+        y,t,sR = mS.get_signal(mic)
+        var = ['Tb','Te','Tp_b','Tp_e','LAEQ', 'besch']
+        micValues = mesValues.get_variables_values(ID, mic, var)
+        print(micValues)
+        return(cls(ID,mic,y,t,sR, micValues))
         
     def export_to_Wav(self,wawPath = None):
         """
@@ -297,5 +350,4 @@ class MicSignal(object):
         micValues = mesValues.get_variables_values(ID, mic, var)
         micValues.update(ch_info)
         return(cls(ID,mic,y,t,sR, micValues, str(mesValues.path)))
-        
-        
+

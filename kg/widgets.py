@@ -89,6 +89,49 @@ class DetectControlWidget(QMainWindow):
         plt.ioff()
         ca, Bars = algorithm.visualize(micSn)
         return(cls(wavPath.as_posix(), {str(micSn):ca} , micSn.t.min(), Bars ))
+
+class CaseCreatorWidget(DetectControlWidget):
+    '''
+    this is a subclass of DetectControlWidget
+    this widget should allow to create cases in GUI style
+    kg_ event duration is selected with mouse cursor
+    case is saved using a button
+    '''
+    def __init__(self, micSn, wavPath, canvas ,t0 = 0, bar = [], parent = None):
+        measurement = ''
+        #initiate new Case
+        #todo
+        self.case = Case()
+
+        #span selector
+        self.span = SpanSelector(axSpan, self._onselect, 'horizontal',\
+        span_stays=True, useblit = True,
+                            rectprops=dict(alpha=0.5, facecolor='red'))
+                            
+        self.kg_events = []
+        #initiate superclass
+        super(DetectControlWidget, self).__init__(wavPath, canvas ,t0 = 0,\
+        bar = [], parent = None)
+        self.setWindowTitle('Create Case')
+        hBox = QtGui.QHBoxLayout()
+        label = QtGui.QLabel('''Select channel to play, first widget''')
+        self.buttonRm = QtGui.QPushButton("delete last event",self)
+        self.buttonSave = QtGui.QPushButton("Save Case",self)
+        hBox.addWidget(self.buttonLim)
+        hBox.addWidget(self.buttonR)
+        hBox.addStretch(1)
+        self.vBox.addLayout(hBox)
+        
+        # centralwidget
+        centralWidget = QtGui.QWidget()
+        centralWidget.setLayout(self.vBox)
+        self.setCentralWidget(centralWidget)
+        
+        # connections
+        self.buttonRm.clicked.connect(self.remove_last_event)
+        self.buttonSave.clicked.connect(self.save_case)
+        
+   
 ##
 if __name__ == "__main__":
     from kg.measurement_values import measuredValues

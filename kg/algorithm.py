@@ -1,3 +1,4 @@
+
 # import sys
 # sys.path.append('D:\GitHub\myKG')
 import numpy as np
@@ -8,7 +9,6 @@ from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.pyplot as plt
 
 from kg.mpl_moving_bar import Bar
-
 
 
 class Algorithm(object):

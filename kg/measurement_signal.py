@@ -14,8 +14,7 @@ import itertools
 
 class measuredSignal():
     """
-    import time signal and info fro MBBM
-   
+    import time signal and info from MBBM
     """
     _PATH = ''
     _SIGNALS = {}
@@ -114,6 +113,7 @@ if __name__ == "__main__":
     #perché 'm1020'noné compreso (tilo), 'm_0119' chefrastuono
     import matplotlib.pyplot as plt
     measuredSignal.setup('Measurements_example\MBBMZugExample')
+
     #
     ts = measuredSignal('m_0100')
     mic=[1,2,4,5,6,7]

@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 sys.path.append('D:\GitHub\KG')
 from kg.measurement_values import measuredValues
-from kg.time_signal import timeSignal, __create_wav__
+from kg.time_signal import *
 from kg.dsp import DSP
 from kg.grafics import BarCanvas
 from kg.audio_visual_app import PlaybackWindow
@@ -22,12 +22,10 @@ def process_ID( ID, mvalues, method='method2', Mic = None, plot = True):
     # load mic signal and add to dsp
     for mic in Mic:
         signal.load_signal(mic)
-        dsp.add_mic_signal(signal = signal.get_signal(mic), type = 'mic', 
-        mic = mic, 
-        besch =  '...', 
+        dsp.add_mic_signal(signal = signal.get_signal(mic), type = 'mic', mic = mic, besch =  '...', 
         #pass mValues
-        variables=['tb_mic_i', 'te_mic_i', 't1b_mic_i', 't1e_mic_i', 'LAEQ_mic_i', 'v1','v2']
-        vars = mvalues.get_variables_values(ID, mic , variables)
+        variables=['tb_mic_i', 'te_mic_i', 't1b_mic_i', 't1e_mic_i', 'LAEQ_mic_i', 'v1','v2'],
+        vars = mvalues.get_variables_values(ID, mic,variables))
 
     # select method and calculate KG
     #dsp.calc_kg2(5,highcut= 1500)

@@ -181,14 +181,6 @@ class measuredValues():
 
         set algorithm results in self.kgValues['results'] 
         structure of self.kgValues['results']:
-        {ID:{
-             'mic':{
-                        mic:{
-                            str(algorithm):{...}
-                            }
-                        }
-            }
-            
         parameter: algorithm, **{'ID':mID, 'mic': mic, 'results':{...}}
         """
         if not str(algorithm) in self.kgValues['algorithms'].keys():
@@ -233,7 +225,7 @@ class measuredValues():
     @classmethod    
     def from_MBBM(cls, mesPath):
         return(cls(mesPath = mesPath,**read_MBBM_tables(mesPath, save = False)))
-        
+
 def serialize(data):
     '''
     serialize np.array to be saved in .json format
@@ -271,7 +263,3 @@ if __name__ == "__main__":
     nonEvalID = list(set(allID)-set(evalID))
     print(nonEvalID)
     print('m_0120'in allID)
-
-
-
-
