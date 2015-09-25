@@ -81,6 +81,23 @@ class SetOfIntervals(object):
         else:
             self.removeIntersection(bounds)
     
+    def tolist(self):
+        """returns a list of list representing intervals"""
+        a=[]
+        for inter in self.RangeInter:
+            a.append(inter.tolist())
+        return a
+    
+    def tolistsep(self):
+        """ returns two lists with xmins and xmaxs """
+        a=[]
+        b=[]
+        for inter in self.RangeInter:
+            l=inter.get_x()
+            a.append(l[0])
+            b.append(l[1])
+        return a,b
+    
     def unionize(self):
         """Unions intervals if adjacents"""
         if not self.sorted:
@@ -242,18 +259,17 @@ discretize(zerotime, endtime, deltatime, axis=self.axis) | returns the character
         #super classes init
         AxesWidget.__init__(self, ax)
         self.Set = SetOfInt
+        self.tolerance = 10
+        self.rectanglecolor='#c7eae5'
         #attibutes
-        self.Rectangles=[]
+        self.Rectangles = None
+        self.background = None
         #last discretization points
         #self.drewdiscpts=None
         #discretization arguments
         #self.discargs=(0.,1.,0.1)
-        #self.Background
-        #Todo : add background copy and blits
         #connecting
-        toggle_selector.RS = SpanSelector(ax, self.on_select, 'horizontal',\
-                                    rectprops=dict(alpha=0.5,facecolor='red'))
-        plt.connect('key_press_event', toggle_selector)
+        SpanSelector(ax, self.on_select,'horizontal', useblit=True, rectprops=dict(alpha=0.5,facecolor='red'), minspan=0.01)
         plt.connect('pick_event', self.on_pick)
         # #adding pre-existing intervals
         # if Range.length>0:
@@ -283,38 +299,48 @@ discretize(zerotime, endtime, deltatime, axis=self.axis) | returns the character
     
     def _update(self):
         """updates Rectangles and plot them"""
-        for rect in self.Rectangles:
-            rect[1].remove()
-        self.Rectangles=[]
-        for inter in self.Set.RangeInter:
-            coord=inter.get_x()
-            rect=self.ax.add_patch(patches.Rectangle((coord[0],self.ax.get_xlim()[0]), coord[1]-coord[0], self.ax.get_ylim()[1], alpha=0.4, facecolor="#c7eae5", edgecolor="none"))
-            rect.set_picker(0)
-            self.Rectangles.append((inter,rect, self.connect(rect)))
-        self.ax.figure.canvas.draw()
+        if self.Rectangles:
+            [self.Rectangles[i].remove() for i in range(0,len(self.Rectangles))]
+        self.background = self.ax.figure.canvas.copy_from_bbox(self.ax.figure.bbox)
+        xywh, lxywh= self.xywidthheight()
+        self.Rectangles=[self.ax.add_patch(patches.Rectangle(xywh[i][0],xywh[i][1],xywh[i][2], color=self.rectanglecolor, picker=self.tolerance, alpha=0.4)) for i in range(0,lxywh)]
+        self.blit()
+    
+    def xywidthheight(self):
+        """returns a list of parameters to draw rectangles for all the interval in self.Set"""
+        xmins, xmaxs=self.Set.tolistsep()
+        ylim=self.ax.get_ylim()
+        rectparams= [((xmins[i],ylim[0]), (xmaxs[i]-xmins[i]), (ylim[1]-ylim[0])) for i in range(0,len(xmaxs))]
+        return rectparams,len(xmaxs)
+    
+    def blit(self):
+        """
+        Efficiently update the figure, without needing to redraw the
+        "background" artists.
+        """
+        self.ax.figure.canvas.restore_region(self.background)
+        [self.ax.draw_artist(self.Rectangles[i]) for i in range(0,len(self.Rectangles))]
+        self.ax.figure.canvas.blit(self.ax.figure.bbox)  
     
     def on_select(self, xmin, xmax):
-        """adds the interval selectionned while holding left mouse click"""
-        self.LastInterval = Interval(xmin,xmax)
-        if not self.LastInterval.ispoint():
-            self.Set.append(self.LastInterval)
-            print("Added interval ["+ str(self.LastInterval)+"]")
+        """Handles the rectangle selection"""
+        interv=Interval(xmin,xmax)
+        self.Set.append(interv)
+        print("Added interval ["+ str(interv)+"]")
         self._update()
     
     def on_pick(self, event):
         """removes the interval mouseclicked"""
-        self.removerectangle(event.artist)
+        self.removeevent(event.artist)
         self._update()
-    
-    def removerectangle(self, rect):
-        """removes the object rect from Rectangle list and the corresponding Interval in RangeInter"""
+        
+    def removeevent(self, rect):
+        """removes the object rect from the corresponding Interval in Set"""
         for ele in self.Rectangles:
-            if ele[1]==rect:
-                self.Set.RangeInter.remove(ele[0])
-                self.Rectangles.remove(ele)
-                rect.remove()
-                self._update()
-                print("Removed interval ["+str(ele[0])+"]")
+            if ele==rect:
+                inter=Interval(ele.get_x(),(ele.get_x()+ele.get_width()))
+                self.Set.RangeInter.remove(inter)
+                print("Removed interval ["+str(inter)+"]")
                 break
     #discretization        
     # def call_discretize(self,event):
@@ -481,15 +507,9 @@ class Interval(object):
             ex=10**rounding
             return {'xmin':int(self.xmin*ex+0.5)/ex, 'xmax':int(self.xmin*ex+0.5)/ex}
     
-
-def toggle_selector(event):
-    """handles key_events"""
-    if event.key in ['Q', 'q'] and toggle_selector.RS.active:
-        toggle_selector.RS.set_active(False)
-        print("Key "+event.key+" pressed")
-    if event.key in ['A', 'a'] and not toggle_selector.RS.active:
-        toggle_selector.RS.set_active(True)
-        print("Key "+event.key+" pressed")   
+    def tolist(self):
+        """returns a list representing the interval"""
+        return [self.xmin, self.xmax]
         
 class ComplexEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -503,10 +523,10 @@ class ComplexEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 ### test
 if __name__ == "__main__":
-    x = np.arange(100)/(79.0)
-    y = np.sin(x)
     f,ax = plt.subplots()
     plt.subplots_adjust(bottom=0.2)
-    ax.plot(x,y)
+    ax.pcolormesh(np.random.random((1000, 1000)), cmap='gray')
+
+    ax.set_title('Left click to add/drag a point\nRight-click to delete')
     
     Hello = GraphicalIntervalsHandle(ax,SetOfIntervals())
