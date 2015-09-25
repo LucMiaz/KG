@@ -11,11 +11,13 @@ import matplotlib.pyplot as plt
                           
 from kg.detect import MicSignal
 from kg.mpl_moving_bar import Bar
+from kg.case import Case
+from kg.intervals import GraphicalIntervalsHandle
 
                           
 class DetectControlWidget(QMainWindow):
 
-    def __init__(self,  wavPath, canvas ,t0 = 0, bar = [], parent = None):
+    def __init__(self,  wavPath, canvas , t0 = 0, bar = [], parent = None):
         QMainWindow.__init__(self, parent)
         self.setWindowTitle('listen and detect ;-)')
         #phonon 
@@ -97,39 +99,63 @@ class CaseCreatorWidget(DetectControlWidget):
     kg_ event duration is selected with mouse cursor
     case is saved using a button
     '''
-    def __init__(self, micSn, wavPath, canvas ,t0 = 0, bar = [], parent = None):
-        measurement = ''
-        #initiate new Case
-        #todo
-        self.case = Case()
 
-        #span selector
-        self.span = SpanSelector(axSpan, self._onselect, 'horizontal',\
-        span_stays=True, useblit = True,
-                            rectprops=dict(alpha=0.5, facecolor='red'))
-                            
-        self.kg_events = []
-        #initiate superclass
-        super(DetectControlWidget, self).__init__(wavPath, canvas ,t0 = 0,\
-        bar = [], parent = None)
+    def __init__(self, case, micSn, author, mesPath):
+        #plt.ioff()
+        self.case =  case
+        self.Z = self.case.get_SOI('Z')
+        #plots
+        canvas={}
+        bar = []
+        fig, ax = plt.subplots(1, sharex = True)
+        micSn.plot_signal(ax)
+        micSn.plot_triggers(ax)
+        canvas[0] = FigureCanvas(fig)
+        bar.append(Bar(ax))
+        self.ax = ax
+        #set Handle
+        fig, ax = plt.subplots(1, sharex = True)
+        micSn.plot_signal(ax)
+        micSn.plot_triggers(ax)
+        canvas[1] = FigureCanvas(fig)
+        self.HandleAxis = ax
+        self.SOIHandle = GraphicalIntervalsHandle(self.HandleAxis, self.Z)
+        #
+        t0 = micSn.t.min()
+        wavPath = micSn.export_to_Wav(mesPath)
+        #init super
+        super(CaseCreatorWidget, self).__init__(str(wavPath), canvas, t0, bar )
         self.setWindowTitle('Create Case')
+        #
+        #initiate superclass
         hBox = QtGui.QHBoxLayout()
-        label = QtGui.QLabel('''Select channel to play, first widget''')
-        self.buttonRm = QtGui.QPushButton("delete last event",self)
-        self.buttonSave = QtGui.QPushButton("Save Case",self)
-        hBox.addWidget(self.buttonLim)
-        hBox.addWidget(self.buttonR)
+        #label = QtGui.QLabel('''Select channel to play, first widget''')
+        self.buttonNext = QtGui.QPushButton("next",self)
+        self.buttonSave = QtGui.QPushButton("save",self)
+        hBox.addWidget(self.buttonNext)
+        hBox.addWidget(self.buttonSave)
         hBox.addStretch(1)
         self.vBox.addLayout(hBox)
         
-        # centralwidget
-        centralWidget = QtGui.QWidget()
-        centralWidget.setLayout(self.vBox)
-        self.setCentralWidget(centralWidget)
-        
         # connections
-        self.buttonRm.clicked.connect(self.remove_last_event)
+        self.buttonNext.clicked.connect(self.next_case)
         self.buttonSave.clicked.connect(self.save_case)
+    
+    def next_case(self):
+        pass
+        
+    def save_case(self):
+        self.case.save()
+        
+    @classmethod
+    def from_measurement(cls, mesVal,mID,mic):
+        case = Case()
+        wavPath = micSn.export_to_Wav()
+        #Canvas
+        plt.ioff()
+        ca, Bars = algorithm.visualize(micSn)
+        return(cls(wavPath.as_posix(), {str(micSn):ca} , micSn.t.min(), Bars ))
+        QMessageBox.information(w, "Message", "An information messagebox @ pythonspot.com ")
         
    
 ##
@@ -148,5 +174,13 @@ if __name__ == "__main__":
     micSn = MicSignal.from_measurement(mesVal,mID, mic)
     micSn.calc_kg(algorithm)
     #Run Widget
-    W = DetectControlWidget.alg_results(micSn,algorithm)
+    #W = DetectControlWidget.alg_results(micSn,algorithm)
+    caseParam = {'measurement':mesVal.measurement,\
+                'location': mesVal.location,
+                'mID':mID,'mic':mic,
+                'author':'esr'}
+    caseParam.update(mesVal.get_variables_values(mID,mic,['Tb','Te']))
+    newcase = Case(**caseParam)
+    W = CaseCreatorWidget(newcase,micSn,'esr',mesVal.path.as_posix())
     W.show()
+    

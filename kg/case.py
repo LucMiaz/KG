@@ -2,6 +2,8 @@ import sys,os,pathlib
 import inspect
 from kg.intervals import *
 from kg.measurement_values import measuredValues
+from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
+import matplotlib.pyplot as plt
 import json
 import time
 import numpy as np
@@ -98,14 +100,17 @@ class Case(object):
 if __name__ == "__main__":
     #import prettyplotlib #makes nicer plots
     #import matplotlib.pyplot as plt
+    plt.ioff()
     x = np.arange(100)/(79.0)
     y = np.sin(x)
-    f, ax = plt.subplots(1)
+    fig, ax = plt.subplots(1)
     ax.plot(x,y)
-    plt.show()
+    ax.fill_between([[1,2],[3,4]],10)
     #new = GraphicalIntervals(ax)
     Newcase = Case('Zug','Vormessung','m_0100','1',0,10,'esr')
+    ca = FigureCanvas(fig)
     GraphicalIntervalsHandle(ax, Newcase.get_SOI())
+    ca.show()
     ##save
     mesPath = 'Measurements_example\MBBMZugExample'
     casePath = Newcase.save(mesPath)
