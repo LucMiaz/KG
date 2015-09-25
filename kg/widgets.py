@@ -1,19 +1,17 @@
-import sys,os
-import inspect
-#change dir form up/kg/thisfile.py to /up
-if __name__=='__main__':
-    approot=os.path.dirname(os.path.dirname(inspect.stack()[0][1]))
-    sys.path.append(approot)
-    print(approot)
+# import sys
+# sys.path.append('D:\GitHub\myKG')
+import os, pathlib
 import numpy as np
 from PySide import QtGui, QtCore
 from PySide.phonon import Phonon
-from PySide.QtGui import (QApplication, QMainWindow, QAction, QStyle, QFileDialog)
-from kg import *
-from pandas.sandbox.qtpandas import DataFrameModel, DataFrameWidget
+from PySide.QtGui import (QApplication, QMainWindow, QAction, QStyle,
+                          QFileDialog)
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.widgets import SpanSelector
 import matplotlib.pyplot as plt
+                          
+from kg.detect import MicSignal
+from kg.mpl_moving_bar import Bar
+
                           
 class DetectControlWidget(QMainWindow):
 
@@ -75,16 +73,23 @@ class DetectControlWidget(QMainWindow):
         #Canvas
         plt.ioff()
         stftName = micSn.calc_stft(M=1024*4)
-        fig, ax = plt.subplots(1,sharex=True)
+        fig, axes = plt.subplots(1,sharex=True)
+        ax = axes
         micSn.plot_spectrogram(stftName,ax) 
         micSn.plot_triggers(ax)
-        micSn.plot_KG(ax)
         ca = FigureCanvas(fig)
         #Bar
-        bar1= Bar(ax[0])
-        return(cls(wavPath.as_posix(), {1:ca} , micSn.tmin, [bar1]))
+        Bars = [Bar(ax) for ax in axes] if isinstance(ax,list) else [Bar(ax)]
+        return(cls(wavPath.as_posix(), {1:ca} , micSn.t.min(), Bars))
         
-##
+    @classmethod
+    def alg_results(cls, micSn, algorithm):
+        wavPath = micSn.export_to_Wav()
+        #Canvas
+        plt.ioff()
+        ca, Bars = algorithm.visualize(micSn)
+        return(cls(wavPath.as_posix(), {str(micSn):ca} , micSn.t.min(), Bars ))
+
 class CaseCreatorWidget(DetectControlWidget):
     '''
     this is a subclass of DetectControlWidget
@@ -126,42 +131,22 @@ class CaseCreatorWidget(DetectControlWidget):
         self.buttonRm.clicked.connect(self.remove_last_event)
         self.buttonSave.clicked.connect(self.save_case)
         
-    @classmethod
-    def alg_results(cls, micSn, mesPath,algorithm):
-        wavPath = micSn.export_to_Wav(mesPath)
-        #Canvas
-        plt.ioff()
-        stftName = micSn.calc_stft(M=1024*4)
-        fig, axes = plt.subplots(2,sharex=True)
-        ax = axes[0]
-        micSn.plot_spectrogram(stftName,ax) 
-        micSn.plot_triggers(ax)
-        micSn.plot_KG(algorithm,ax)
-        bar1= Bar(ax)
-        ax = axes[1]
-        micSn.plot_BPR(algorithm,ax)
-        ca = FigureCanvas(fig)
-        bar2= Bar(ax)
-        
-        return(cls(wavPath.as_posix(), {1:ca} , micSn.t.min(), [bar1,bar2]))
+   
 ##
 if __name__ == "__main__":
-    import pathlib
-    sys.path.append('D:\GitHub\myKG')
     from kg.measurement_values import measuredValues
     from kg.measurement_signal import measuredSignal
+    from kg.algorithm import ZischenDetetkt1
     #setup measurement
-    mesPath = pathlib.Path('D:\GitHub\myKG\Measurements_example\MBBMZugExample')
-    mesVal = measuredValues(mesPath.as_posix())
-    mesVal.read_variables_values()
-    measuredSignal.setup(mesPath.as_posix())
-    
+    mesPath = 'Measurements_example\MBBMZugExample'
+    mesVal = measuredValues.from_json(mesPath)
+    measuredSignal.setup(mesPath)
+    #algorithm
+    algorithm = ZischenDetetkt1(2000,0,0.1)
     mID = 'm_0100'
-    mic = 1
-    mesSn = measuredSignal(mID,mic)
-    y, t, sR = mesSn.get_signal(mic)
-    values = mesVal.get_variables_values(mID, mic, [ 'Tb','Te','Tp_b','Tp_e','LAEQ', 'besch'])
-    micSn = MicSignal(mID, mic,y, t, sR, values)
-    ## Run
-    W = DetectControlWidget.from_micSignal(micSn)
+    mic = 6
+    micSn = MicSignal.from_measurement(mesVal,mID, mic)
+    micSn.calc_kg(algorithm)
+    #Run Widget
+    W = DetectControlWidget.alg_results(micSn,algorithm)
     W.show()

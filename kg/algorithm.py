@@ -1,21 +1,14 @@
-import sys,os
-import inspect
-#change dir form up/kg/thisfile.py to /up
-approot=os.path.dirname(os.path.dirname(inspect.stack()[0][1]))
-sys.path.append(approot)
-if __name__=='__main__':
-    print(approot)
 
+# import sys
+# sys.path.append('D:\GitHub\myKG')
 import numpy as np
-import scipy as sp
 import pandas as pd
-import string
-import wave
-from scipy.io import wavfile
 import copy 
-import matplotlib as mpl
-import struct
-import mySTFT
+
+from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
+import matplotlib.pyplot as plt
+
+from kg.mpl_moving_bar import Bar
 
 
 class Algorithm(object):
@@ -173,11 +166,30 @@ class ZischenDetetkt1(Algorithm):
             bandPower[k]= PSD_i.sum(axis = 1)
         # 3:build ratio and compare to threshold
         BPR = bandPower['high']/bandPower['low']
-        output['result'] = BPR > par['threshold']
+        output['result'] = BPR > 10**(par['threshold']/10)
         output['t'] = t
         output['dt'] = self.param['dt']
         output['BPR'] = BPR
         return(output)
+        
+    def visualize(self, MicSnObj):
+        'return Canvas and  bars for visualizations of algorithm results'
+        stftName = MicSnObj.get_stft_name(self)
+        fig, axes = plt.subplots(3,sharex=True)
+        ax = axes[0]
+        MicSnObj.plot_spectrogram(stftName,ax) 
+        MicSnObj.plot_triggers(ax)
+        MicSnObj.plot_KG(self,ax)
+        ax = axes[1]
+        MicSnObj.plot_BPR(self,ax)
+        MicSnObj.plot_triggers(ax)
+        ax = axes[2]
+        MicSnObj.plot_signal(ax)
+        MicSnObj.plot_triggers(ax)
+        ca = FigureCanvas(fig)
+        #Bar
+        Bars = [Bar(ax) for ax in axes] 
+        return(ca,Bars)
         
     def __str__(self):
         s = '{}_{}s'.format( self.__class__.__name__, self.param['dt'])
