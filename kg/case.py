@@ -1,9 +1,15 @@
 import sys,os
 import inspect
+#change dir form up/kg/thisfile.py to /up
+#if __name__=='__main__':
+#    approot=os.path.dirname(os.path.dirname(inspect.stack()[0][1]))
+#    sys.path.append(approot)
+#    print(approot)
 from kg.intervals import *
 from kg.measurement_values import measuredValues
 import json
 import time
+import pathlib #for saving
 
 ##Class Case
 class Case(object):

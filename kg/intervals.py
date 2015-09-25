@@ -177,12 +177,12 @@ class SetOfIntervals(object):
     #         print("Empty list of discretization parameters. Default values set : "+str(self.discargs))
     #         return False
     
-    def toJSON(self,rounding=0):
+    def toJSON(self,rounding=4):
         """returns a JSON serializable representation of self, rounding"""
         self.sort()
-        a={'SetOfIntervals':[]}
+        a=[]
         for i in self.RangeInter:
-            a['SetOfIntervals'].append(i.toJSON(rounding))
+            a.append(i.toJSON(rounding))
         return a
     
     def fromJSONfile(self, filename):
@@ -223,7 +223,7 @@ class SetOfIntervals(object):
 
 class GraphicalIntervalsHandle(AxesWidget):
     """
-    Set of intervals with graphical support. Add a list called `Rectangles` to the class `SetOfIntervals`. This list containts duples : an Interval and a patch (displayed rectangle) linked to an axis (stored in self.ax). This allows to update `Rectangle` from the SetOfInterval attribute `RangeInter` and vice versa, i.e. when we want to delete a displayed patch, we look it up in `Rectangle` (by itering over its second argument), and then we can delete the corresponding `Interval` in `RangeInter`.\n
+    Graphical support for SetOfIntervals. Have a list called `Rectangles` corresponding to intervals of the class `SetOfIntervals`. This list containts duples : an Interval and a patch (displayed rectangle) linked to an axis (stored in self.ax). This allows to update `Rectangle` from the SetOfInterval attribute `RangeInter` and vice versa, i.e. when we want to delete a displayed patch, we look it up in `Rectangle` (by itering over its second argument), and then we can delete the corresponding `Interval` in `RangeInter`.\n
 Method                | Description
 --------------------- | ----------
 _update()             | updates Rectangles and plot them
@@ -321,7 +321,9 @@ discretize(zerotime, endtime, deltatime, axis=self.axis) | returns the character
     #     """calls the method discretize from an event, such as a button"""
     #     self.discretize(self.discargs[0],self.discargs[1],self.discargs[2])
     
-    
+    def toJSON(self):
+        """Calls toJSON method for self.Set"""
+        return self.Set.toJSON()
            
     # def discretize(self, zerotime, endtime, deltatime, axis=1):
     #     """returns the characteristic function of range(zerotime,endtime, deltatime) in respect to RangeInter. Optional argument is the axis where one need to represent the points of the characteristic function. If one does not want any graphical representation, give None as axis"""
@@ -497,7 +499,7 @@ class ComplexEncoder(json.JSONEncoder):
            return obj.toJSON()
         if isinstance(obj, Interval):
             return obj.toJSON()
-       # Let the base class default method raise the TypeError
+        # Let the base class default method raise the TypeError
         return json.JSONEncoder.default(self, obj)
 ### test
 if __name__ == "__main__":
@@ -507,4 +509,4 @@ if __name__ == "__main__":
     plt.subplots_adjust(bottom=0.2)
     ax.plot(x,y)
     
-    Hello = GraphicalIntervals(ax,SetOfIntervals())
+    Hello = GraphicalIntervalsHandle(ax,SetOfIntervals())

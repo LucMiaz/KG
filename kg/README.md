@@ -59,9 +59,10 @@ Method | Description | Return type
 `save(self, filename)` | saves self to filename in json
 
 ### GraphicalInterval
-**Set of intervals with graphical support**. Requires an Axis. Optional SetOfRanges can be given. Optional argument for Discretization button display. Default value is `True`.
 
-Adds a list called `Rectangles` to the class `SetOfIntervals`. This list containts duples : an Interval and a patch (displayed rectangle) linked to an axis (stored in self.ax). This allows to update `Rectangle` from the SetOfInterval attribute `RangeInter` and vice versa, i.e. when we want to delete a displayed patch, we look it up in `Rectangle` (by itering over its second argument), and then we can delete the corresponding `Interval` in `RangeInter`. 
+ **Graphical support for SetOfIntervals.** 
+ 
+ Have a list called `Rectangles` corresponding to intervals of the class `SetOfIntervals`. This list containts duples : an Interval and a patch (displayed rectangle) linked to an axis (stored in self.ax). This allows to update `Rectangle` from the SetOfInterval attribute `RangeInter` and vice versa, i.e. when we want to delete a displayed patch, we look it up in `Rectangle` (by itering over its second argument), and then we can delete the corresponding `Interval` in `RangeInter`.\n
 
 Method | Description
 ------- | ----------
