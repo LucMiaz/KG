@@ -269,7 +269,7 @@ discretize(zerotime, endtime, deltatime, axis=self.axis) | returns the character
         #discretization arguments
         #self.discargs=(0.,1.,0.1)
         #connecting
-        SpanSelector(ax, self.on_select,'horizontal', useblit=True, rectprops=dict(alpha=0.5,facecolor='red'), minspan=0.01)
+        SpanSelector(ax, self.on_select,'horizontal', useblit=True, rectprops=dict(alpha=0.5,facecolor='red'), minspan=0.01, span_stays=True)
         plt.connect('pick_event', self.on_pick)
         # #adding pre-existing intervals
         # if Range.length>0:
@@ -300,8 +300,10 @@ discretize(zerotime, endtime, deltatime, axis=self.axis) | returns the character
     def _update(self):
         """updates Rectangles and plot them"""
         if self.Rectangles:
+            for i in range(0,len(self.Rectangles)):
+                self.Rectangles[i].set_visible(False)
+            self.background = self.ax.figure.canvas.copy_from_bbox(self.ax.figure.bbox)
             [self.Rectangles[i].remove() for i in range(0,len(self.Rectangles))]
-        self.background = self.ax.figure.canvas.copy_from_bbox(self.ax.figure.bbox)
         xywh, lxywh= self.xywidthheight()
         self.Rectangles=[self.ax.add_patch(patches.Rectangle(xywh[i][0],xywh[i][1],xywh[i][2], color=self.rectanglecolor, picker=self.tolerance, alpha=0.4)) for i in range(0,lxywh)]
         self.blit()
@@ -318,7 +320,6 @@ discretize(zerotime, endtime, deltatime, axis=self.axis) | returns the character
         Efficiently update the figure, without needing to redraw the
         "background" artists.
         """
-        self.ax.figure.canvas.restore_region(self.background)
         [self.ax.draw_artist(self.Rectangles[i]) for i in range(0,len(self.Rectangles))]
         self.ax.figure.canvas.blit(self.ax.figure.bbox)  
     
