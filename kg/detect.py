@@ -1,14 +1,17 @@
-import sys
+# import sys
+# sys.path.append('D:\GitHub\myKG')
+
+import os,pathlib
 import numpy as np
 import scipy as sp
 import string
-import wave
 from scipy.io import wavfile
 import copy 
 import struct
-import os
+import matplotlib.pyplot as plt
 import collections
-sys.path.append('D:\GitHub\myKG')
+
+from kg.measurement_signal import measuredSignal
 from mySTFT.stft import stft, stft_PSD
 from mySTFT.stft_plot import plot_spectrogram
 
@@ -39,32 +42,32 @@ class MicSignal(object):
     - filename, string
     
     """    
-    def __init__(self, ID, mic, y, t, sR, micValues, wavPath = None):
+    def __init__(self, ID, mic, y, t, sR, micValues, mesPath = None):
+
         self.ID = ID
         self.mic = mic
         self.y = y
         self.t = t
         self.sR = sR
         self.micValues = {}
-        for k in ['Tb','Te','Tp_b','Tp_e','LAEQ']:
+        for k in ['Tb','Te','Tp_b','Tp_e','LAEQ','description','gleis','sec']:
             try:
                 self.micValues[k] = micValues[k]
-            except KeyError:
-                pass
-                #self.micValues[k] = None
-                
-        self.wavPath = wavPath
+            except KeyError as e:
+                raise(Exception('__init__ '+ID+str(mic)+' incomplete'))
+        if not mesPath == None:
+            self.mesPath = pathlib.Path(mesPath)
         self.STFT = {}
         self.KG = {'Z':{},'K':{}}
         
     def __str__(self):
         return(self.ID +'_mic_' + str(self.mic))
     
-    def overflow(self):
-        '''test if mic has an overflow
+    def is_clipped(self):
+        '''test if clipping is occurring
         return: True if valid'''
         self.y
-        # Todo :
+        #todo :
         pass
         
     def calc_stft(self, M , N = None, overlap = 2, window = 'hann',**kwargs):
@@ -96,7 +99,7 @@ class MicSignal(object):
             #set interval to evaluate spectrum
             kwargs['t0'] = self.t.min()
         return(stft_PSD(stft['X'], stft['param'], scaling = 'density', **kwargs))
-        
+
     def calc_kg(self, algorithm):
         '''
         run algorithm on MicSignal object
@@ -109,12 +112,12 @@ class MicSignal(object):
         results = algorithm.func(self)
         # calc kenngrössen
         mask = self.get_mask(results['t'])
-        results['tPassby'] = np.sum(mask)*results['dt']
+        results['tEval'] = np.sum(mask)*results['dt']
         results['tNoise'] = np.sum(results['result'][mask]) * results['dt']
         self.KG[algInfo['noiseType']][str(algorithm)] = results
         #return(results)
         
-    def calc_spectrum_welch(stftName = None, tint = None):
+def calc_spectrum_welch(stftName = None, tint = None):
         try:
             stft = self.STFT[stftName]
         except KeyError:
@@ -129,6 +132,11 @@ class MicSignal(object):
                 kwargs['tmax'],kwargs['tmin'] = tlim
             sectrum ,freq = stft_welch(stft['X_i'], stft['param'],'density', **kwargs)
 
+    def get_stft_name(self,algorithm):
+        par = algorithm.get_stft_param(self.sR)
+        return(str(par['M']) +'_'+ str(par['N']) +'_'+ str(par['overlap']))
+        
+
     def get_KG_results(self, algorithm):
         '''
         get values in self.KG for algorithm
@@ -141,7 +149,7 @@ class MicSignal(object):
         ret['results'] = copy.deepcopy(self.KG[noiseType][str(algorithm)])
         return(ret)
         
-    def get_mask(self, t, tlim = None):
+    def get_mask(self, t , tlim = None):
         '''
         calculate mask for time vector according tlim,
         default with MBBM evaluation
@@ -151,7 +159,7 @@ class MicSignal(object):
             te = self.micValues['Te']
         else:
             tb,te = tlim
-        return(np.logical_and(t >= tb,t >= te))
+        return(np.logical_and(t >= tb,t <= te))
         
     def plot_spectrogram(self, name, ax, freqscale = 'lin', dBMax = 110):
         '''
@@ -204,6 +212,7 @@ class MicSignal(object):
         '''
         plot detection results for a given algorithm
         '''
+
         if label==None:
             label = str(algorithm)
         KG = self.KG[algorithm.noiseType]
@@ -213,8 +222,10 @@ class MicSignal(object):
             print('No calculation for', algorithm)
             raise(e)
         else:
-            ax.plot(detection['t'], 20*np.log10(detection['BPR']), label=label,**kwarks)
-            #ax.set_ybound(ymin, ymax)
+            l, = ax.plot(detection['t'], 10*np.log10(detection['BPR']),\
+                        label=label,**kwarks)
+            ax.axhline(algorithm.param['threshold'],lw=2,\
+                        color =plt.getp(l,'color'))
             
     def plot_signal(self, ax , label = None,**kwargs):
         """
@@ -230,6 +241,30 @@ class MicSignal(object):
         '''
         pass
     def plot_spectrum(self, ID, mic, ax, label=None):
+        pass
+        # Todo:
+    #     ax.set_title('Spectrum', fontsize=12)
+    #     freq = np.array(self.micValues['LAf']['colName'])
+    #     PS_i = np.array(self.get_variables_values(ID,mic,['LAf'])['LAf'])
+    #     if label == None:
+    #         label = 'Spectrum_ch_' + str(mic)
+    #     ax.plot(freq, PS_i, label = label)
+    #     ax.set_xscale('log')
+    #     ax.grid(True)
+    #     ax.minorticks_off()
+    #     ax.set_xticks(freq)
+    #     ax.set_xticklabels([ f if  i%3 == 0  else '' for i,f in enumerate(freq) ])
+    #     ax.set_xlim([freq.min(),freq.max()])
+    #     ax.set_xlabel('f (Hz)', fontsize=10)
+    #     ax.set_ylabel(' (dBA)', fontsize=10)
+        
+                
+    def plot_prms(self, ax ,label = None):
+        # todo:
+        pass
+        # ax.plot(sn['t'], np.abs(20*np.log10(sn['y']/(2e-5))), label= label)
+        
+    def visualize_results_widget(self,algorithm):
         pass
         # Todo:
     #     ax.set_title('Spectrum', fontsize=12)
@@ -284,4 +319,35 @@ class MicSignal(object):
         print(micValues)
         return(cls(ID,mic,y,t,sR, micValues))
         
+    def export_to_Wav(self,wawPath = None):
+        """
+        Export a .wav file of the signal in mesPath\wav
         
+        param
+        ------
+        mesPath: main measurement path
+        
+        return
+        ------
+        libpath Obj: path of wavfile
+        """
+        wavPath = self.mesPath.joinpath('wav')
+        os.makedirs(wavPath.as_posix(), exist_ok = True)
+        filename = str(self) + '.wav'
+        filePath = wavPath.joinpath(filename)
+        if not filename in [p.name for p in wavPath.glob('*.wav')]:
+            scaled = np.int16(self.y/ np.abs(self.y).max() * 32767)
+            wavfile.write(filePath.as_posix(), self.sR , scaled)
+        self.wavPath = wavPath.joinpath(filename)
+        return(self.wavPath)
+        
+    @ classmethod
+    def from_measurement(cls, mesValues, ID, mic):
+        mS = measuredSignal(ID,mic)
+        y,t,sR = mS.get_signal(mic)
+        ch_info = mS.channel_info(mic)
+        var = ['Tb','Te','Tp_b','Tp_e','LAEQ']
+        micValues = mesValues.get_variables_values(ID, mic, var)
+        micValues.update(ch_info)
+        return(cls(ID,mic,y,t,sR, micValues, str(mesValues.path)))
+

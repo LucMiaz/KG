@@ -1,4 +1,3 @@
-
 import matplotlib
 from matplotlib.widgets import *  
 
@@ -13,8 +12,7 @@ class Bar(AxesWidget):
     For the cursor to remain responsive you much keep a reference to
     it.
     """
-    def __init__(self, ax, useblit = True,
-                 **lineprops):
+    def __init__(self, ax, **lineprops):
         """
         Add a cursor to *ax*.  If ``useblit=True``, use the backend-
         dependent blitting features for faster updates (GTKAgg
@@ -25,12 +23,9 @@ class Bar(AxesWidget):
         AxesWidget.__init__(self, ax)
 
         self.connect_event('draw_event', self.clear)
-
         self.visible = True
-        self.useblit = True and self.canvas.supports_blit
         lineprops['animated'] = True
         self.linev = ax.axvline(ax.get_xbound()[0], visible=False, **lineprops)
-
         self.background = None
         self.needclear = False
 
@@ -47,12 +42,8 @@ class Bar(AxesWidget):
         self._update()
 
     def _update(self):
-        if self.useblit:
-            if self.background is not None:
-                self.canvas.restore_region(self.background)
-            self.ax.draw_artist(self.linev)
-            self.canvas.blit(self.ax.bbox)
-        else:
-            self.canvas.draw_idle()
-
+        if self.background is not None:
+            self.canvas.restore_region(self.background)
+        self.ax.draw_artist(self.linev)
+        self.canvas.blit(self.ax.bbox)
         return False
