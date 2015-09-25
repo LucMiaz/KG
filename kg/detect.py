@@ -117,7 +117,7 @@ class MicSignal(object):
         self.KG[algInfo['noiseType']][str(algorithm)] = results
         #return(results)
         
-def calc_spectrum_welch(stftName = None, tint = None):
+    def calc_spectrum_welch(stftName = None, tint = None):
         try:
             stft = self.STFT[stftName]
         except KeyError:
@@ -131,7 +131,7 @@ def calc_spectrum_welch(stftName = None, tint = None):
             else:
                 kwargs['tmax'],kwargs['tmin'] = tlim
             sectrum ,freq = stft_welch(stft['X_i'], stft['param'],'density', **kwargs)
-
+                
     def get_stft_name(self,algorithm):
         par = algorithm.get_stft_param(self.sR)
         return(str(par['M']) +'_'+ str(par['N']) +'_'+ str(par['overlap']))
