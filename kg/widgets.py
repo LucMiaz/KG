@@ -101,7 +101,7 @@ class CaseCreatorWidget(DetectControlWidget):
     '''
 
     def __init__(self, case, micSn, author, mesPath):
-        #plt.ioff()
+        plt.ioff()
         self.case =  case
         self.Z = self.case.get_SOI('Z')
         #plots
@@ -136,7 +136,6 @@ class CaseCreatorWidget(DetectControlWidget):
         hBox.addWidget(self.buttonSave)
         hBox.addStretch(1)
         self.vBox.addLayout(hBox)
-        
         # connections
         self.buttonNext.clicked.connect(self.next_case)
         self.buttonSave.clicked.connect(self.save_case)

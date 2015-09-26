@@ -105,7 +105,6 @@ if __name__ == "__main__":
     y = np.sin(x)
     fig, ax = plt.subplots(1)
     ax.plot(x,y)
-    ax.fill_between([[1,2],[3,4]],10)
     #new = GraphicalIntervals(ax)
     Newcase = Case('Zug','Vormessung','m_0100','1',0,10,'esr')
     ca = FigureCanvas(fig)
