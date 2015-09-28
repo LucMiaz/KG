@@ -1,19 +1,21 @@
 from matplotlib.widgets import AxesWidget
+from matplotlib.transforms import blended_transform_factory 
 import matplotlib.patches as patches
 from matplotlib.patches import Rectangle as Rectangle
 import matplotlib.pyplot as plt
 import matplotlib
-blended_transform_factory= matplotlib.transforms.blended_transform_factory 
-import copy
 
+import copy
 
 class _SelectorWidget(AxesWidget):
 
-    def __init__(self, ax, onselect, button=None, state_modifier_keys=None):
+    def __init__(self, ax, onselect, useblit=False, button=None,
+                 state_modifier_keys=None):
         AxesWidget.__init__(self, ax)
 
         self.visible = True
         self.onselect = onselect
+        self.useblit = useblit and self.canvas.supports_blit
         self.connect_default_events()
 
         self.state_modifier_keys = dict(move=' ', clear='escape',
@@ -44,7 +46,8 @@ class _SelectorWidget(AxesWidget):
         """force an update of the background"""
         # If you add a call to `ignore` here, you'll want to check edge case:
         # `release` can call a draw event even when `ignore` is True.
-        self.background = self.canvas.copy_from_bbox(self.ax.bbox)
+        if self.useblit:
+            self.background = self.canvas.copy_from_bbox(self.ax.bbox)
 
     def connect_default_events(self):
         """Connect the major canvas events to methods."""
@@ -89,18 +92,24 @@ class _SelectorWidget(AxesWidget):
         return (event.inaxes != self.ax or
                 event.button != self.eventpress.button)
 
-    def _update(self):
+    def update(self):
         """draw using newfangled blit or oldfangled draw depending on
         useblit
         """
         if not self.ax.get_visible():
             return False
-        
-        if self.background is not None:
-            self.canvas.restore_region(self.background)
-        for artist in self.artists:
-            self.ax.draw_artist(artist)
-        self.canvas.blit(self.ax.bbox)
+
+        if self.useblit:
+            if self.background is not None:
+                self.canvas.restore_region(self.background)
+            for artist in self.artists:
+                self.ax.draw_artist(artist)
+
+            self.canvas.blit(self.ax.bbox)
+
+        else:
+            self.canvas.draw_idle()
+        return False
 
     def _get_data(self, event):
         """Get the xdata and ydata for event, with limits"""
@@ -169,10 +178,8 @@ class _SelectorWidget(AxesWidget):
         if not self.ignore(event) and self.eventpress:
             event = self._clean_event(event)
             self._onmove(event)
-            #self.update()
             return True
         return False
-        
 
     def _onmove(self, event):
         """Cursor move event handler"""
@@ -195,7 +202,7 @@ class _SelectorWidget(AxesWidget):
             if key == self.state_modifier_keys['clear']:
                 for artist in self.artists:
                     artist.set_visible(False)
-                #self.update()
+                self.update()
                 return
             for (state, modifier) in self.state_modifier_keys.items():
                 if modifier in key:
@@ -226,7 +233,27 @@ class _SelectorWidget(AxesWidget):
         for artist in self.artists:
             artist.set_visible(visible)
 
-class SpanSelector2(_SelectorWidget):
+class _my_SelectorWidget(_SelectorWidget):
+    '''
+    matplotlib.widgets._SelectorWidget 
+    changed update. update has to be called externally
+    '''
+    def on_key_press(self, event):
+        """Key press event handler and validator for all selection widgets"""
+        if self.active:
+            key = event.key or ''
+            key = key.replace('ctrl', 'control')
+            if key == self.state_modifier_keys['clear']:
+                for artist in self.artists:
+                    artist.set_visible(False)
+                #self.update()
+                return
+            for (state, modifier) in self.state_modifier_keys.items():
+                if modifier in key:
+                    self.state.add(state)
+            self._on_key_press(event)
+
+class CaseSelector(_my_SelectorWidget):
     """
     Select a min/max range of the x or y axes for a matplotlib Axes.
     For the selector to remain responsive you much keep a reference to
@@ -241,12 +268,12 @@ class SpanSelector2(_SelectorWidget):
     move within the span range
     """
 
-    def __init__(self, ax, onselect, onclick, minspan= 0.1,
-                 rectprops=None, onmove_callback=None, span_stays = True, nrect=10,
-                 button=None):
+    def __init__(self, ax, onselect, onclick, minspan = 0.1, nrect = 10, 
+                    rectprops = None, stay_rectprops = None,lineprops = None, 
+                    onmove_callback = None, button = None):
         """
-        Create a span selector in *ax*.  When a selection is made, clear
-        the span and call *onselect* with::
+        Create a case selector in *ax*.  When a selection is made, call 
+        *onselect* with::
             onselect(vmin, vmax)
         and clear the span.
         *direction* must be 'horizontal' or 'vertical'
@@ -266,80 +293,78 @@ class SpanSelector2(_SelectorWidget):
          2 = center mouse button (scroll wheel)
          3 = right mouse button
         """
-        _SelectorWidget.__init__(self, ax, onselect, button=button)
+        _my_SelectorWidget.__init__(self, ax, onselect, button=button, useblit=True)
 
         if rectprops is None:
-            rectprops = dict(facecolor='red', alpha=0.5)
-        
-        rectprops['animated'] = True
+            self.rectprops = dict(facecolor='red', alpha=0.5)
+        else:
+            self.rectprops = rectprops
+        if rectprops is None:
+            self.stay_rectprops = dict(facecolor='green', alpha=0.5)
+        else:
+            self.stay_rectprops = stay_rectprops
+        if rectprops is None:
+            self.lineprops = dict(color='red',lw = 3)
+        else:
+            self.lineprops = lineprops
 
-        self.rect = None
         self.pressv = None
         
         self.onclick = onclick
-        self.rectprops = rectprops
         self.onmove_callback = onmove_callback
         self.minspan = minspan
-        self.span_stays = span_stays
-
+        
         # Needed when dragging out of axes
         self.prev = (0, 0)
 
         # Reset canvas so that `new_axes` connects events.
         self.canvas = None
-        self.new_axes(ax)
+        self.new_axes(ax, nrect)
 
-    def new_axes(self, ax):
+    def new_axes(self, ax, nrect):
         self.ax = ax
         if self.canvas is not ax.figure.canvas:
             if self.canvas is not None:
                 self.disconnect_events()
-
             self.canvas = ax.figure.canvas
             self.connect_default_events()
-
-        trans = blended_transform_factory(self.ax.transData,
-                                              self.ax.transAxes)
+        #span
+        trans = blended_transform_factory(self.ax.transData, self.ax.transAxes)
         w, h = 0, 1
-        self.rect = Rectangle((0, 0), w, h,
-                              transform=trans,
-                              visible=False,
-                              **self.rectprops)
+        self.rect = Rectangle((0, 0), w, h, transform = trans, visible=False,
+                              animated = True, **self.rectprops)
         self.ax.add_patch(self.rect)
         self.artists = [self.rect]
-        if self.span_stays:
-            self.stay_rects = []
-            for i in range(1,nrect):
-                stay_rect = Rectangle((0, 0), w, h,
-                                       transform=trans,
-                                       visible=False,
-                                       **self.rectprops)
-                self.ax.add_patch(stay_rect)
-                self.stay_rects.append(stay_rect)
-            self.artists.extend(self.stay_rects)
-        
+        #stay rect
+        self.stay_rects = []
+        for i in range(1,nrect):
+            stay_rect = Rectangle((0, 0), w, h, transform=trans, visible=False,
+                            animated = True, **self.stay_rectprops)
+            self.ax.add_patch(stay_rect)
+            self.stay_rects.append(stay_rect)
+        self.artists.extend(self.stay_rects)
         #bar
-        self.bar = ax.axvline(ax.get_xbound()[0], visible=False)
+        self.bar = ax.axvline(0,w,h,visible = False, animated = True,
+                                **self.lineprops)
         self.artists.append(self.bar)
 
         
-    def set_bar_position(self, t):
-        self.bar.set_xdata(t)
+    def set_bar_position(self, x):
+        self.bar.set_xdata(x)
         self.bar.set_visible(True)
         
-    def set_stay_rects_x(self,xarr):
-        if self.span_stays:
-            for n,stay_rect in enumerate(self.stay_rects):
-                try:
-                    xmin,xmax = xarr[n]
-                except IndexError:
-                    stay_rect.set_visible(False)
-                else:
-                    stay_rect.set_x(xmin)
-                    stay_rect.set_y(self.rect.get_y())
-                    stay_rect.set_width(abs(xmax-xmin))
-                    stay_rect.set_height(self.rect.get_height())
-                    stay_rect.set_visible(True)
+    def set_stay_rects_x_bounds(self,xarr):
+        for n,stay_rect in enumerate(self.stay_rects):
+            try:
+                xmin, xmax = xarr[n]
+            except IndexError:
+                stay_rect.set_visible(False)
+            else:
+                stay_rect.set_x(xmin)
+                stay_rect.set_y(self.rect.get_y())
+                stay_rect.set_width(abs(xmax-xmin))
+                stay_rect.set_height(self.rect.get_height())
+                stay_rect.set_visible(True)
 
     def ignore(self, event):
         """return *True* if *event* should be ignored"""
@@ -347,10 +372,6 @@ class SpanSelector2(_SelectorWidget):
 
     def _press(self, event):
         """on button press event"""
-        #self.rect.set_visible(self.visible)
-        #if self.span_stays:
-        #    self.stay_rect.set_visible(False)
-
         xdata, ydata = self._get_data(event)
         self.pressv = xdata
         return False
@@ -362,8 +383,6 @@ class SpanSelector2(_SelectorWidget):
         self.buttonDown = False
 
         self.rect.set_visible(False)
-
-        #self.canvas.draw()
         vmin = self.pressv
         xdata, ydata = self._get_data(event)
         vmax = xdata or self.prev[0]
@@ -404,112 +423,46 @@ class SpanSelector2(_SelectorWidget):
             if vmin > vmax:
                 vmin, vmax = vmax, vmin
             self.onmove_callback(vmin, vmax)
-        #self.update()
         return False
-
-
-# class GraphicalIntervalsHandle(AxesWidget):
-#     """
-#     Set of intervals with graphical support. Add a list called `Rectangles` to the class `SetOfIntervals`. This list containts duples : an Interval and a patch (displayed rectangle) linked to an axis (stored in self.ax). This allows to update `Rectangle` from the SetOfInterval attribute `RangeInter` and vice versa, i.e. when we want to delete a displayed patch, we look it up in `Rectangle` (by itering over its second argument), and then we can delete the corresponding `Interval` in `RangeInter`.\n
-# Method                | Description
-# --------------------- | ----------
-# _update()             | updates Rectangles and plot them
-# on_select(eclick, erelease) | adds the interval selectionned while holding left mouse click
-# connect(rect)         | connects the rectangle rect to the figure
-# removerectangle(rect) | removes rect from the figure, from Rectangles list and removes the corresponding interval from RangesInter
-# on_pick(event)        | removes the interval selectionned while holding right mouse click
-# toggle_selector(event) | handles key_events
-# call_discretize(event) | calls the method `discretize` from an event, such as a button
-# changeDiscretizeParameters(listofparams) | changes the parameters of the discretization (usefull if calling with button). Give list or tuple of length 3
-# discretize(zerotime, endtime, deltatime, axis=self.axis) | returns the characteristic function of range(zerotime,endtime, deltatime) in respect to RangeInter. Optional argument is the axis where one need to represent the points of the characteristic function. If one does not want any graphical representation, give None as axis
-#     """
-#     
-#     def __init__(self, ax, SetOfInt):#, displaybutton=True, useblit = True):
-#         """initialisation of object. Needs an axis to be displayed on. Optional SetOfIntervals."""
-#         super classes init
-#         AxesWidget.__init__(self, ax)
-#         handle
-#         self.Set = SetOfInt
-#         attibutes
-#         self.Background = None 
-#         self.ymin = -20
-#         self.Rectangles =[]
-#         for n in range(0,10):
-#             rect = ax.axvspan(0,0,-10,10,visible=False,alpha=0.5)
-#             self.Rectangles.append(rect)
-#         spanselector
-#         SpanSelector(ax, self.on_select, 'horizontal', useblit=True,minspan=0.01, rectprops=dict(alpha=0.5, facecolor='red'))
-#         connections
-#         self.connect_event('draw_event', self.clear)
-#         plt.connect('button_press_event', self.on_click)
-#     
-#     def _update(self):
-#         """updates Rectangles and plot them"""
-#         for n,vspan in enumerate(self.Rectangles):
-#             try:
-#                 int = self.Set.RangeInter[n]
-#             except IndexError:
-#                 vspan.set_visible(False)
-#             else:
-#                 vspan.set_visible(True)
-#                 xmin,xmax = int.get_x()
-#                 vspan.set_xy([[xmin,-10],[xmax,-10],[xmax,10],[xmin,10]])
-#                 self.ax.draw_artist(vspan)
-#         if self.background is not None:
-#             self.canvas.restore_region(self.background)
-#         self.canvas.blit(self.ax.bbox)
-#         return False
-#         
-#     def clear(self, event):
-#         """clear the cursor"""
-#         self.background = self.canvas.copy_from_bbox(self.ax.bbox)
-#         for rect in self.Rectangles:
-#             rect.set_visible(False)
-#         
-#     def on_select(self, xmin, xmax):
-#         """adds the interval selectionned while holding left mouse click"""
-#         int = Interval(xmin,xmax)
-#         self.Set.append(int)
-#         print("Added interval ["+ str(int)+"]")
-#         self._update()
-#     
-#     def on_click(self, event):
-#         """removes the interval mouseclicked"""
-#         self.remove_int(event.xdata)
-#         self._update()
-#             
-#     def remove_int(self, x):
-#         """removes the object rect from Rectangle list and the corresponding Interval in RangeInter"""
-#         for int in self.Set.RangeInter:
-#             xmin,xmax = int.get_x()
-#             if x>=xmin and  x<=xmax:
-#                 self.Set.RangeInter.remove(int)
-#                 break
-#  
-#  
-#  
-# def calc_fill_between_args(ymin):
-#     x = []
-#     y1 = []
-#     for interval in self.RangeInter:
-#         xmin,xmax = interval.get_x()
-#         x.extend([xmin,xmin,xmax,xmax])
-#         y1.extend([ymin,-ymin,-ymin,ymin])
-#     return(x,y1,ymin)
-##
-if __name__ == "__main__":
-    import numpy as np
-    #import prettyplotlib #makes nicer plots
-    #import matplotlib.pyplot as plt
-    def onselect(x1,x2):
-        print(x1,x2)
         
-    x = np.arange(100)/(79.0)
-    y = np.sin(x)
-    fig, ax = plt.subplots(1)
-    ax.plot(x,y)
-    SpanSelector2(ax,onselect,'horizontal')
-    
-    
-    
+class Bar(AxesWidget):
+    """
+    A vertical line span the axes that and move with
+    the pointer.  You can turn off the hline or vline spectively with
+    the attributes
+
+    and the visibility of the cursor itself with the *visible* attribute.
+
+    For the cursor to remain responsive you much keep a reference to
+    it.
+    """
+    def __init__(self, ax, **lineprops):
+        """
+        Add a bar to *ax*.  *lineprops* is a dictionary of line properties.
+        """
+        AxesWidget.__init__(self, ax)
+        self.connect_event('draw_event', self.clear)
+        self.visible = True
+        self.linev = ax.axvline(0, 0, 1 , visible=False, animated = True
+         **lineprops)
+        self.background = None
+        self.needclear = False
+
+    def clear(self, event):
+        """clear the cursor"""
+        if self.ignore(event):
+            return
+        self.background = self.canvas.copy_from_bbox(self.ax.bbox)
+        self.linev.set_visible(False)
+
+    def set_bar_position(self, x):
+        self.linev.set_xdata(x)
+        self.linev.set_visible(True)
+
+    def update(self):
+        if self.background is not None:
+            self.canvas.restore_region(self.background)
+        self.ax.draw_artist(self.linev)
+        self.canvas.blit(self.ax.bbox)
+        return False
     
