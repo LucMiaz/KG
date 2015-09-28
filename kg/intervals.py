@@ -36,11 +36,11 @@ class SetOfIntervals(object):
         self.sort()
         if interv: #check if not None
             if not interv.ispoint():
-                print("is not a point"+ str(interv))
+                #print("is not a point"+ str(interv))
                 self.remove(interv)
                 self.RangeInter.append(interv)
-                print("##0")
-                print(self.toJSON())
+                #print("##0")
+                #print(self.toJSON())
                 self.length=len(self.RangeInter)
                 self.sort()
                 self.lastinterval=interv
@@ -84,6 +84,11 @@ class SetOfIntervals(object):
             self.RangeInter.remove(bounds)
         else:
             self.removeIntersection(bounds)
+            
+    def removebyindex(self, index):
+        """removes the interval at index in RangeInter"""
+        interv=self.RangeInter[index]
+        self.remove(interv)
     
     def tolist(self):
         """returns a list of list representing intervals"""
@@ -166,9 +171,10 @@ class SetOfIntervals(object):
     
     def containspoint(self, flt):
         """checks if the float flt is inside one of the Interval of self.RangeIntervals"""
-        ret=False
+        ret=None
         for inter in self.RangeInter:
-            ret = ret or inter.containspoint(flt)
+            if inter.containspoint(flt):
+                ret=self.RangeInter.index(inter)
         return ret
         
     def haselement(self, element):

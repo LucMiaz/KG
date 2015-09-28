@@ -26,7 +26,7 @@ class Case(object):
                 "date":time.strftime('%d.%m.%Y'),
                 "Tb": Tb,
                 "Te": Te,
-                #"KG": SetOfIntervals(), #Kreischen
+                "KG": SetOfIntervals(), #Kreischen
                 "Z": SetOfIntervals() #Zischen
                 }
         self.case['caseID'] = str(self)
@@ -108,7 +108,12 @@ if __name__ == "__main__":
     #new = GraphicalIntervals(ax)
     Newcase = Case('Zug','Vormessung','m_0100','1',0,10,'esr')
     ca = FigureCanvas(fig)
-    GraphicalIntervalsHandle(ax, Newcase.get_SOI())
+    def f1(x1,x2):
+        case.case['Z'].append(Interval(x1,x2))
+        cs.set
+    def f2(x):
+        print(x)
+    cs= CaseSelector(ax,f1,f2, update_on_ext_event=False)
     ca.show()
     ##save
     mesPath = 'Measurements_example\MBBMZugExample'

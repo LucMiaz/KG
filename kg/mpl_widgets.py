@@ -238,6 +238,13 @@ class _my_SelectorWidget(_SelectorWidget):
     matplotlib.widgets._SelectorWidget 
     changed update. update has to be called externally
     '''
+
+    def __init__(self, ax, onselect, update_on_ext_event, button=None,
+                 state_modifier_keys=None):
+        _SelectorWidget.__init__(self, ax, onselect, useblit=True, button=None,
+                 state_modifier_keys=None)
+        self.update_on_ext_event = update_on_ext_event
+        
     def on_key_press(self, event):
         """Key press event handler and validator for all selection widgets"""
         if self.active:
@@ -246,7 +253,8 @@ class _my_SelectorWidget(_SelectorWidget):
             if key == self.state_modifier_keys['clear']:
                 for artist in self.artists:
                     artist.set_visible(False)
-                #self.update()
+                if not self.update_on_ext_event:
+                    self.update()
                 return
             for (state, modifier) in self.state_modifier_keys.items():
                 if modifier in key:
@@ -269,6 +277,7 @@ class CaseSelector(_my_SelectorWidget):
     """
 
     def __init__(self, ax, onselect, onclick, minspan = 0.1, nrect = 10, 
+                    update_on_ext_event = True,
                     rectprops = None, stay_rectprops = None,lineprops = None, 
                     onmove_callback = None, button = None):
         """
@@ -293,20 +302,26 @@ class CaseSelector(_my_SelectorWidget):
          2 = center mouse button (scroll wheel)
          3 = right mouse button
         """
-        _my_SelectorWidget.__init__(self, ax, onselect, button=button, useblit=True)
+        _my_SelectorWidget.__init__(self, ax, onselect, update_on_ext_event, button=button)
 
         if rectprops is None:
             self.rectprops = dict(facecolor='red', alpha=0.5)
         else:
             self.rectprops = rectprops
-        if rectprops is None:
-            self.stay_rectprops = dict(facecolor='green', alpha=0.5)
-        else:
-            self.stay_rectprops = stay_rectprops
-        if rectprops is None:
+        if lineprops is None:
             self.lineprops = dict(color='red',lw = 3)
         else:
             self.lineprops = lineprops
+        
+        if not isinstance(nrect,list):
+            nrect=[nrect]
+        if stay_rectprops is None:
+            cc= ['g','c','b','m']
+            color =[cc[i%len(cc)] for i in range(0,len(nrect))]
+            self.stay_rectprops = [dict(facecolor= c, alpha=0.5) for c in color]
+        else:
+            assert(len(nrect)==len(stay_rectprops))
+            self.stay_rectprops = stay_rectprops
 
         self.pressv = None
         
@@ -337,12 +352,14 @@ class CaseSelector(_my_SelectorWidget):
         self.artists = [self.rect]
         #stay rect
         self.stay_rects = []
-        for i in range(1,nrect):
-            stay_rect = Rectangle((0, 0), w, h, transform=trans, visible=False,
-                            animated = True, **self.stay_rectprops)
-            self.ax.add_patch(stay_rect)
-            self.stay_rects.append(stay_rect)
-        self.artists.extend(self.stay_rects)
+        for set in range(0,len(nrect)):
+            self.stay_rects.append([])
+            for n in range(0,nrect[set]):
+                stay_rect = Rectangle((0, 0), w, h, transform=trans, visible=False,
+                                animated = True, **self.stay_rectprops[set])
+                self.ax.add_patch(stay_rect)
+                self.stay_rects[set].append(stay_rect)
+            self.artists.extend(self.stay_rects[set])
         #bar
         self.bar = ax.axvline(0,w,h,visible = False, animated = True,
                                 **self.lineprops)
@@ -353,8 +370,8 @@ class CaseSelector(_my_SelectorWidget):
         self.bar.set_xdata(x)
         self.bar.set_visible(True)
         
-    def set_stay_rects_x_bounds(self,xarr):
-        for n,stay_rect in enumerate(self.stay_rects):
+    def set_stay_rects_x_bounds(self,xarr, set = 0):
+        for n,stay_rect in enumerate(self.stay_rects[set]):
             try:
                 xmin, xmax = xarr[n]
             except IndexError:
@@ -365,6 +382,10 @@ class CaseSelector(_my_SelectorWidget):
                 stay_rect.set_width(abs(xmax-xmin))
                 stay_rect.set_height(self.rect.get_height())
                 stay_rect.set_visible(True)
+                
+    def set_stay_rect_visible(self,b=True,set=0):
+        for stay_rect in self.stay_rects[set]:
+            stay_rect.set_visible(b)
 
     def ignore(self, event):
         """return *True* if *event* should be ignored"""
@@ -423,6 +444,8 @@ class CaseSelector(_my_SelectorWidget):
             if vmin > vmax:
                 vmin, vmax = vmax, vmin
             self.onmove_callback(vmin, vmax)
+        if not self.update_on_ext_event:
+            self.update()
         return False
         
 class Bar(AxesWidget):

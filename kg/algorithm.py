@@ -8,8 +8,7 @@ import copy
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.pyplot as plt
 
-from kg.mpl_moving_bar import Bar
-
+from kg.mpl_widgets import Bar
 
 class Algorithm(object):
     def __init__(self, noiseType, parameter, description =''):
