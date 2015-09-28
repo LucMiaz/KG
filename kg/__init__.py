@@ -13,6 +13,6 @@ import kg.intervals
 import kg.case
 import kg.mpl_moving_bar
 import kg.widgets
-import kg.mpl_moving_bar
+import kg.mpl_widgets
 
 
