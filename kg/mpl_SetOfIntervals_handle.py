@@ -68,16 +68,10 @@ discretize(zerotime, endtime, deltatime, axis=self.axis) | returns the character
         """updates Rectangles and plot them"""
         if self.firsttime:
             self.background = self.ax.figure.canvas.copy_from_bbox(ax.bbox)
-        print("##3")
-        print(self.Set.toJSON())
         Rrm,Radd= self.compare()#gets rectangles to remove and intervals to add
-        print("##6")
-        print(self.Set.toJSON())
-        print("to add : "+str(Radd))
         for rect in Rrm:
             rect.set_visible(False)
             self.Rectangles.remove(rect)
-            print("rm from Rect : "+str(rect.get_xy()))
         self.background=self.ax.figure.canvas.copy_from_bbox(ax.bbox)
         for interv in Radd:
             rect=ax.axvspan(interv.get_x()[0],interv.get_x()[1],-10,10, visible=False, alpha=0.5, facecolor=self.rectanglecolor, picker=self.tolerance)
@@ -93,13 +87,12 @@ discretize(zerotime, endtime, deltatime, axis=self.axis) | returns the character
         """Handles the rectangle selection"""
         interv=Interval(xmin,xmax)
         self.Set.append(interv)
-        print(self.Set.toJSON())
         self._update()
     
     def on_pick(self, event):
         """removes the interval right mouseclicked"""
         if event.mouseevent.button==3:
-            self.Set.remove(Interval(event.mouseevent.xydata[0],event.mouseevent.xydata[1]))
+            self.Set.remove(Interval(event.artist.get_xy()[0][0],event.artist.get_xy()[2][0]))
             self._update()
     
     def compare(self):
