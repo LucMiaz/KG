@@ -14,6 +14,7 @@ from kg.mpl_moving_bar import Bar
 from kg.case import Case
 from kg.intervals import GraphicalIntervalsHandle
 
+
                           
 class DetectControlWidget(QMainWindow):
 
@@ -37,9 +38,13 @@ class DetectControlWidget(QMainWindow):
         centralWidget = QtGui.QWidget()
         centralWidget.setLayout(self.vBox)
         self.setCentralWidget(centralWidget)
-
+        #refresh timer
+        self.timer = QtCore.QTimer()
         # connections
-        self.media.tick.connect(self._update)
+        self.timer.timeout.connect(self.update)
+        self.media.tick.connect(self.update_bar)
+        #start refresh
+        self.timer.start(20)
     
     def _init_phonon(self, wavPath):
         # the media object controls the playback
@@ -65,9 +70,13 @@ class DetectControlWidget(QMainWindow):
             self.actions.addAction(action)
             action.triggered.connect(getattr(self.media, name))
         
-    def _update(self,t):
+    def update_bar(self,t):
         for bar in self.bar:
-            bar.set_x_position(t/1000 + self.tShift )
+            bar.set_bar_position(t/1000 + self.tShift)
+            
+    def update(self):
+        for bar in self.bar:
+            bar._update()
             
     @classmethod
     def from_micSignal(cls, micSn, mesPath):
@@ -91,6 +100,7 @@ class DetectControlWidget(QMainWindow):
         plt.ioff()
         ca, Bars = algorithm.visualize(micSn)
         return(cls(wavPath.as_posix(), {str(micSn):ca} , micSn.t.min(), Bars ))
+        
 
 class CaseCreatorWidget(DetectControlWidget):
     '''
@@ -107,19 +117,21 @@ class CaseCreatorWidget(DetectControlWidget):
         #plots
         canvas={}
         bar = []
-        fig, ax = plt.subplots(1, sharex = True)
-        micSn.plot_signal(ax)
-        micSn.plot_triggers(ax)
-        canvas[0] = FigureCanvas(fig)
-        bar.append(Bar(ax))
-        self.ax = ax
+        # fig, ax = plt.subplots(1, sharex = True)
+        # micSn.plot_signal(ax)
+        # micSn.plot_triggers(ax)
+        # canvas[0] = FigureCanvas(fig)
+        # bar.append(Bar(ax))
+        # self.ax = ax
         #set Handle
         fig, ax = plt.subplots(1, sharex = True)
         micSn.plot_signal(ax)
         micSn.plot_triggers(ax)
         canvas[1] = FigureCanvas(fig)
         self.HandleAxis = ax
-        self.SOIHandle = GraphicalIntervalsHandle(self.HandleAxis, self.Z)
+        self.SOIHandle = SpanSelector2(self.HandleAxis,self.onselect, self.onclick)
+        self.int=[]
+        bar.append(self.SOIHandle)
         #
         t0 = micSn.t.min()
         wavPath = micSn.export_to_Wav(mesPath)
@@ -139,7 +151,15 @@ class CaseCreatorWidget(DetectControlWidget):
         # connections
         self.buttonNext.clicked.connect(self.next_case)
         self.buttonSave.clicked.connect(self.save_case)
-    
+        
+    def onselect(self,x1,x2):
+        self.Z.append(Interval(x1,x2))
+        self.SOIHandle.set_stay_rects_x(self.Z.tolist())
+        
+    def onclick(self,x):
+        
+        pass
+        
     def next_case(self):
         pass
         

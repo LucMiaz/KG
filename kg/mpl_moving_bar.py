@@ -39,7 +39,6 @@ class Bar(AxesWidget):
     def set_x_position(self, event):
         self.linev.set_xdata(event)
         self.linev.set_visible(True)
-        self._update()
 
     def _update(self):
         if self.background is not None:
