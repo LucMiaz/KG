@@ -18,6 +18,7 @@ class Case(object):
         Takes a set of data as dict and an axis to display the data on.
         """
         self.case = {
+        # todo: add not possible
                 "location":location,
                 "measurement": measurement, 
                 "mID":  mID,
@@ -107,15 +108,7 @@ if __name__ == "__main__":
     ax.plot(x,y)
     #new = GraphicalIntervals(ax)
     Newcase = Case('Zug','Vormessung','m_0100','1',0,10,'esr')
-    ca = FigureCanvas(fig)
-    def f1(x1,x2):
-        case.case['Z'].append(Interval(x1,x2))
-        cs.set
-    def f2(x):
-        print(x)
-    cs= CaseSelector(ax,f1,f2, update_on_ext_event=False)
-    ca.show()
-    ##save
+##save
     mesPath = 'Measurements_example\MBBMZugExample'
     casePath = Newcase.save(mesPath)
     Newcase2 = Case.from_JSON(casePath)

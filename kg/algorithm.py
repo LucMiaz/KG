@@ -187,8 +187,7 @@ class ZischenDetetkt1(Algorithm):
         MicSnObj.plot_triggers(ax)
         ca = FigureCanvas(fig)
         #Bar
-        Bars = [Bar(ax) for ax in axes] 
-        return(ca,Bars)
+        return({'animate':True,'bar':True, 'canvas':ca , 'axHandle': [Bar(ax) for ax in axes] })
         
     def __str__(self):
         s = '{}_{}s'.format( self.__class__.__name__, self.param['dt'])
