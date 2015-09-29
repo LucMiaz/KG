@@ -1,13 +1,13 @@
 #Kurvengeräsche package
 **Table of Contents**
-- [Classes](#Classes)
-	- [Interval](#Interval)
-	- [SetOfIntervals](#SetOfIntervals)
-	- [GraphicalInterval](#GraphicalInterval)
-	- [Case](#Case)
-	- [measuredValues](#measuredValues)
+- [Classes](#classes)
+	- [Interval](#interval)
+	- [SetOfIntervals](#setofintervals)
+	- [GraphicalInterval](#graphicalinterval)
+	- [Case](#case)
+	- [measuredValues](#measuredvalues)
 	- [time signals](#time-signals)
-- [Copyrights](#Copyrights)
+- [Copyrights](#copyrights)
 
 ***
 
