@@ -1,12 +1,20 @@
-##Kurvengeräsche package
+#Kurvengeräsche package
+**Table of Contents**
+- [Classes](#)
+	- [time signals:](#)
+	- [dsp  :](#)
+	- [vizualise Widget](#)
+	- [Interval:](#)
+	- [SetOfIntervals:](#)
+	- [GraphicalInterval](#)
+	- [Case :](#)
+	- [measuredValues](#)
+	- [time signals](#)
+	- [DSP](#)
+- [Copyrights](#)
+***
 
 ## Classes
-
-### Interval
-### SetOfIntervals
-### GraphicalIntervals (changed to Handle)
-### measuredValues
-***
 ### time signals:
 
 ### dsp  : 
