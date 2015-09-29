@@ -1,28 +1,29 @@
 #Kurvengeräsche package
 **Table of Contents**
 - [Classes](#)
-	- [time signals:](#)
-	- [dsp  :](#)
+	- [time signals](#)
+	- [dsp](#)
 	- [vizualise Widget](#)
-	- [Interval:](#)
-	- [SetOfIntervals:](#)
+	- [Interval](#)
+	- [SetOfIntervals](#)
 	- [GraphicalInterval](#)
-	- [Case :](#)
+	- [Case](#)
 	- [measuredValues](#)
 	- [time signals](#)
 	- [DSP](#)
 - [Copyrights](#)
+
 ***
 
 ## Classes
 ### time signals:
 
-### dsp  : 
+### dsp 
 **Calculate the squeal and flanging** of a set of microphones given a set of signal during a passby 
 
 ### vizualise Widget
 
-### Interval:
+### Interval
 **Creates an interval**. Needs two floats as bounds.
 
 Attribute | type
@@ -47,7 +48,7 @@ Method     | Description | Return type
 `self >= other` | not `self < other` | boolean
 `toJSON(rounding)`     | JSON format of Interval, wt rounding   | dict
 
-### SetOfIntervals: 
+### SetOfIntervals
 **Creates a list of intervals**. No initialisation variables.
 
 Attribute | type
@@ -90,7 +91,7 @@ Method | Description
 `discretize(zerotime, endtime, deltatime, axis=self.axis)` | returns the characteristic function of range(zerotime,endtime, deltatime) in respect to RangeInter. Optional argument is the axis where one need to represent the points of the characteristic function. If one does not want any graphical representation, give None as axis
 
 
-### Case :
+### Case
 **Define a case of study**.
     
 Attribute | description | type | needed at init
