@@ -130,7 +130,7 @@ methods | description | return
 `plot_signal(ax , label = None,**kwargs)` | plot signal | plot
 `export_to_Wav(wawPath = None)` | Export a .wav file of the signal in mesPath\wav with mesPath: main measurement path | libpath Obj: path of wavfile
 `from_measurement(cls, mesValues, ID, mic)` | classmethod : constructs directly a measuredValues object | None
-#functions
+####functions
 name and arguments | description | return
 -------- | -------- | --------
 `isclipped(xn, K=301, threshold=0.55, axdisplay=None, normalizehist=False)` |
