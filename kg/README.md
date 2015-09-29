@@ -1,17 +1,13 @@
 #Kurvengeräsche package
 **Table of Contents**
-- [Classes](#)
-	- [time signals](#)
-	- [dsp](#)
-	- [vizualise Widget](#)
-	- [Interval](#)
-	- [SetOfIntervals](#)
-	- [GraphicalInterval](#)
-	- [Case](#)
-	- [measuredValues](#)
-	- [time signals](#)
-	- [DSP](#)
-- [Copyrights](#)
+- [Classes](#Classes)
+	- [Interval](#Interval)
+	- [SetOfIntervals](#SetOfIntervals)
+	- [GraphicalInterval](#GraphicalInterval)
+	- [Case](#Case)
+	- [measuredValues](#measuredValues)
+	- [time signals](#time-signals)
+- [Copyrights](#Copyrights)
 
 ***
 
@@ -20,8 +16,6 @@
 
 ### dsp 
 **Calculate the squeal and flanging** of a set of microphones given a set of signal during a passby 
-
-### vizualise Widget
 
 ### Interval
 **Creates an interval**. Needs two floats as bounds.
@@ -154,8 +148,6 @@ function | description | return
 
 ### time signals
 handle the time signals of a given passby ID
-
-### DSP
 
 ***
 
