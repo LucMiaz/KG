@@ -80,6 +80,11 @@ class SetOfIntervals(object):
             self.RangeInter.remove(bounds)
         else:
             self.removeIntersection(bounds)
+            
+    def removebyindex(self, index):
+        """removes the interval at index in RangeInter"""
+        interv=self.RangeInter[index]
+        self.remove(interv)
     
     def unionize(self):
         """Unions intervals if adjacents"""
@@ -137,9 +142,10 @@ class SetOfIntervals(object):
     
     def containspoint(self, flt):
         """checks if the float flt is inside one of the Interval of self.RangeIntervals"""
-        ret=False
+        ret=None
         for inter in self.RangeInter:
-            ret = ret or inter.containspoint(flt)
+            if inter.containspoint(flt):
+                ret=self.RangeInter.index(inter)
         return ret
         
     def haselement(self, element):
