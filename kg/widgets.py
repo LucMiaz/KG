@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
                           
 from kg.detect import MicSignal
-from kg.mpl_moving_bar import Bar
+from kg.mpl_widgets import Bar, CaseSelector
 from kg.case import *
 
                           
@@ -25,28 +25,6 @@ class DetectControlWidget(QMainWindow):
         self.t = self.tShift
         self.refresh = 30
         #phonon 
-        self._init_phonon(wavPath)
-        #Attributes
-        self.canvas = canvas
-        self.bar = bar
-        self.tShift = t0
-       
-        #layout
-        self.vBox = QtGui.QVBoxLayout()
-        self.vBox.addWidget(self.seeker)
-        for k, ca in self.canvas.items():
-            self.vBox.addWidget(ca)
-        
-        #centralwidget
-        centralWidget = QtGui.QWidget()
-        centralWidget.setLayout(self.vBox)
-        self.setCentralWidget(centralWidget)
-
-        # connections
-        self.media.tick.connect(self._update)
-    
-    def _init_phonon(self, wavPath):
-        # the media object controls the playback
         self.media = Phonon.MediaObject(self)
         self.audio_output = Phonon.AudioOutput(Phonon.MusicCategory, self)
         self.seeker = Phonon.SeekSlider(self)

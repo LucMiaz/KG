@@ -1,7 +1,5 @@
 import sys,os,pathlib
 import inspect
-import matplotlib.pyplot as plt
-import numpy as np
 #change dir form up/kg/thisfile.py to /up
 #if __name__=='__main__':
 #    approot=os.path.dirname(os.path.dirname(inspect.stack()[0][1]))
@@ -9,8 +7,11 @@ import numpy as np
 #    print(approot)
 from kg.intervals import *
 from kg.measurement_values import measuredValues
+from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
+import matplotlib.pyplot as plt
 import json
 import time
+import numpy as np
 
 ##Class Case
 class Case(object):
@@ -90,13 +91,37 @@ class Case(object):
         """@classmethod is used to pass the class to the method as implicit argument. Then we open a file in JSON located at casePath and give it to the class with **kwargs (meaning that we pass an arbitrary number of arguments to the class)
         """
         try:
-            return cls(**json.load(open(casePath, 'r')))
+            dict = json.load(open(casePath, 'r'))
         except FileNotFoundError:
-            raise Error("The file in path" + casePath + " has not be found.")
+            raise Error("The file in path" + casePath + " has not been found.")
+        cl = cls(**dict)
+        for nT in ['Z']:#todo : 'KG'
+            dNT = dict[nT]["SetOfIntervals"]
+            setoi = [[i['xmin'],  i['xmax']] for i in dNT]
+            cl.get_SOI(nT).appendlistofduples(setoi)
+        return(cl)
 
 ## Test
 if __name__ == "__main__":
     #import prettyplotlib #makes nicer plots
     #import matplotlib.pyplot as plt
+    plt.ioff()
+    x = np.arange(100)/(79.0)
+    y = np.sin(x)
+    fig, ax = plt.subplots(1)
+    ax.plot(x,y)
     #new = GraphicalIntervals(ax)
-    Newcase=Case('Zug','Vormessung','m_0100','1',0,10,'luc')
+    #new = GraphicalIntervals(ax)
+    Newcase = Case('Zug','Vormessung','m_0100','1',0,10,'esr')
+    ca = FigureCanvas(fig)
+    def f1(x1,x2):
+        case.case['Z'].append(Interval(x1,x2))
+        cs.set
+    def f2(x):
+        print(x)
+    cs= CaseSelector(ax,f1,f2, update_on_ext_event=False)
+    ca.show()
+    ##save
+    mesPath = 'Measurements_example\MBBMZugExample'
+    casePath = Newcase.save(mesPath)
+    Newcase2 = Case.from_JSON(casePath)

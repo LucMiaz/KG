@@ -89,7 +89,7 @@ class SetOfIntervals(object):
     def tolist(self):
         """returns a list of list representing intervals"""
         a=[]
-        for inter in self.RAngeInter:
+        for inter in self.RangeInter:
             a.append(inter.tolist())
         return a
     
