@@ -193,18 +193,13 @@ class CaseCreatorWidget(DetectControlWidget):
         self.buttonSave = QtGui.QPushButton("save",self)
         hBox.addWidget(self.buttonNext)
         hBox.addWidget(self.buttonSave)
-        label = QtGui.QLabel('''Select channel to play, first widget''')
-        self.buttonRm = QtGui.QPushButton("delete last event",self)
-        self.buttonSave = QtGui.QPushButton("Save Case",self)
-        hBox.addWidget(self.buttonLim)
-        hBox.addWidget(self.buttonR)
         hBox.addStretch(1)
         self.vBox.addLayout(hBox)
         #finish setup
         self.setup()
-    
+        
     def _connections(self):
-        #connections
+        # connections
         self.SOIcombo.currentIndexChanged.connect(self.set_noise_type)
         self.cb.stateChanged.connect(self.set_both_visible)
         #self.buttonNext.clicked.connect(self.next_case)

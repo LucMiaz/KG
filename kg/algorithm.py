@@ -10,7 +10,6 @@ import matplotlib.pyplot as plt
 
 from kg.mpl_moving_bar import Bar
 
-
 class Algorithm(object):
     def __init__(self, noiseType, parameter, description =''):
         self.description = description 

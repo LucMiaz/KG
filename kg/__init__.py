@@ -12,6 +12,5 @@ import kg.algorithm
 import kg.intervals
 import kg.case
 import kg.widgets
-import kg.intervals
-import kg.case
+import kg.mpl_widgets
 

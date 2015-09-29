@@ -95,7 +95,7 @@ class Case(object):
         except FileNotFoundError:
             raise Error("The file in path" + casePath + " has not been found.")
         cl = cls(**dict)
-        for nT in ['Z']:#todo : 'KG'
+        for nT in ['Z']:# todo :'KG' 
             dNT = dict[nT]["SetOfIntervals"]
             setoi = [[i['xmin'],  i['xmax']] for i in dNT]
             cl.get_SOI(nT).appendlistofduples(setoi)
@@ -111,7 +111,6 @@ if __name__ == "__main__":
     fig, ax = plt.subplots(1)
     ax.plot(x,y)
     #new = GraphicalIntervals(ax)
-    #new = GraphicalIntervals(ax)
     Newcase = Case('Zug','Vormessung','m_0100','1',0,10,'esr')
     ca = FigureCanvas(fig)
     def f1(x1,x2):
@@ -125,3 +124,4 @@ if __name__ == "__main__":
     mesPath = 'Measurements_example\MBBMZugExample'
     casePath = Newcase.save(mesPath)
     Newcase2 = Case.from_JSON(casePath)
+    
