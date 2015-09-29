@@ -1,7 +1,12 @@
 ##Kurvengeräsche package
 
 ## Classes
-### measuredValues :
+
+### Interval
+### SetOfIntervals
+### GraphicalIntervals (changed to Handle)
+### measuredValues
+***
 ### time signals:
 
 ### dsp  : 
