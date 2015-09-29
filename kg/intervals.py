@@ -38,12 +38,15 @@ class SetOfIntervals(object):
         need an Interval object"""
         self.sort()
         if interv: #check if not None
-            self.remove(interv)
-            self.RangeInter.append(interv)
-            self.length=len(self.RangeInter)
-            self.sort()
-            self.lastinterval=interv
-            return interv
+            if not interv.ispoint()
+                self.remove(interv)
+                self.RangeInter.append(interv)
+                self.length=len(self.RangeInter)
+                self.sort()
+                self.lastinterval=interv
+                return interv
+            else:
+                return None
         else:
             return None
     
@@ -85,6 +88,30 @@ class SetOfIntervals(object):
         """removes the interval at index in RangeInter"""
         interv=self.RangeInter[index]
         self.remove(interv)
+    
+    def tolist(self):
+        """returns a list of list representing intervals"""
+        a=[]
+        for inter in self.RAngeInter:
+            a.append(inter.tolist())
+        return a
+    
+    def getRange(self):
+        """returns RangeInter"""
+        a=[]
+        for inter in self.Range Inter:
+            a.append(inter.copy())
+        return a
+    
+    def tolistsep(self):
+        """returns two lists with xmins and xmaxs"""
+        a=[]
+        b=[]
+        for inter in self.RangeInter:
+            l=inter.get_x()
+            a.append(l[0])
+            b.append(l[1])
+        return a,b
     
     def unionize(self):
         """Unions intervals if adjacents"""
@@ -227,132 +254,6 @@ class SetOfIntervals(object):
                 json.dump(self.toJSON(rounding), filename)
                 print("data written in "+filename)
 
-class GraphicalIntervalsHandle(AxesWidget):
-    """
-    Graphical support for SetOfIntervals. Have a list called `Rectangles` corresponding to intervals of the class `SetOfIntervals`. This list containts duples : an Interval and a patch (displayed rectangle) linked to an axis (stored in self.ax). This allows to update `Rectangle` from the SetOfInterval attribute `RangeInter` and vice versa, i.e. when we want to delete a displayed patch, we look it up in `Rectangle` (by itering over its second argument), and then we can delete the corresponding `Interval` in `RangeInter`.\n
-Method                | Description
---------------------- | ----------
-_update()             | updates Rectangles and plot them
-on_select(eclick, erelease) | adds the interval selectionned while holding left mouse click
-connect(rect)         | connects the rectangle rect to the figure
-removerectangle(rect) | removes rect from the figure, from Rectangles list and removes the corresponding interval from RangesInter
-on_pick(event)        | removes the interval selectionned while holding right mouse click
-toggle_selector(event) | handles key_events
-call_discretize(event) | calls the method `discretize` from an event, such as a button
-changeDiscretizeParameters(listofparams) | changes the parameters of the discretization (usefull if calling with button). Give list or tuple of length 3
-discretize(zerotime, endtime, deltatime, axis=self.axis) | returns the characteristic function of range(zerotime,endtime, deltatime) in respect to RangeInter. Optional argument is the axis where one need to represent the points of the characteristic function. If one does not want any graphical representation, give None as axis
-    """
-    
-    def __init__(self, ax, SetOfInt):#, displaybutton=True, useblit = True):
-        """initialisation of object. Needs an axis to be displayed on. Optional SetOfIntervals."""
-        #super classes init
-        AxesWidget.__init__(self, ax)
-        self.Set = SetOfInt
-        #attibutes
-        self.Rectangles=[]
-        #last discretization points
-        #self.drewdiscpts=None
-        #discretization arguments
-        #self.discargs=(0.,1.,0.1)
-        #self.Background
-        #Todo : add background copy and blits
-        #connecting
-        toggle_selector.RS = SpanSelector(ax, self.on_select, 'horizontal',\
-                                    rectprops=dict(alpha=0.5,facecolor='red'))
-        plt.connect('key_press_event', toggle_selector)
-        plt.connect('pick_event', self.on_pick)
-        # #adding pre-existing intervals
-        # if Range.length>0:
-        #     self.RangeInter=Range.RangeInter
-        #     self.sort()
-        #     print("Imported a Set Of Intervals")
-        #     self._update()
-        # print("Initialised GraphicalIntervals.")
-        # #displaying button for discretization
-        # if displaybutton:
-        #     axdisc = plt.axes([0.01, 0.05, 0.1, 0.075])
-        #     bprev = matplotlib.widgets.Button(axdisc, 'Discretize')
-        #     bprev.on_clicked(self.call_discretize)
-        # ax.grid(True)
-
-    #operations on rectangles: displaying/removing
-    def connect(self,rect):
-        """connects rect to figure"""
-        cidonpick = rect.figure.canvas.mpl_connect(
-            'pick_event', self.on_pick)
-        return cidonpick
-    
-    def sort(self):
-        """sorts SetOfIntervals and update self"""
-        self.Set.sort()
-        self._update()
-    
-    def _update(self):
-        """updates Rectangles and plot them"""
-        for rect in self.Rectangles:
-            rect[1].remove()
-        self.Rectangles=[]
-        for inter in self.Set.RangeInter:
-            coord=inter.get_x()
-            rect=self.ax.add_patch(patches.Rectangle((coord[0],self.ax.get_xlim()[0]), coord[1]-coord[0], self.ax.get_ylim()[1], alpha=0.4, facecolor="#c7eae5", edgecolor="none"))
-            rect.set_picker(0)
-            self.Rectangles.append((inter,rect, self.connect(rect)))
-        self.ax.figure.canvas.draw()
-    
-    def on_select(self, xmin, xmax):
-        """adds the interval selectionned while holding left mouse click"""
-        self.LastInterval = Interval(xmin,xmax)
-        if not self.LastInterval.ispoint():
-            self.Set.append(self.LastInterval)
-            print("Added interval ["+ str(self.LastInterval)+"]")
-        self._update()
-    
-    def on_pick(self, event):
-        """removes the interval mouseclicked"""
-        self.removerectangle(event.artist)
-        self._update()
-    
-    def removerectangle(self, rect):
-        """removes the object rect from Rectangle list and the corresponding Interval in RangeInter"""
-        for ele in self.Rectangles:
-            if ele[1]==rect:
-                self.Set.RangeInter.remove(ele[0])
-                self.Rectangles.remove(ele)
-                rect.remove()
-                self._update()
-                print("Removed interval ["+str(ele[0])+"]")
-                break
-    #discretization        
-    # def call_discretize(self,event):
-    #     """calls the method discretize from an event, such as a button"""
-    #     self.discretize(self.discargs[0],self.discargs[1],self.discargs[2])
-    
-    def toJSON(self):
-        """Calls toJSON method for self.Set"""
-        return self.Set.toJSON()
-           
-    # def discretize(self, zerotime, endtime, deltatime, axis=1):
-    #     """returns the characteristic function of range(zerotime,endtime, deltatime) in respect to RangeInter. Optional argument is the axis where one need to represent the points of the characteristic function. If one does not want any graphical representation, give None as axis"""
-    #     if axis==1:
-    #         axis=self.ax
-    #     if self.length>0:
-    #         #first remove the old discretized points
-    #         try:
-    #             self.drewdiscpts.remove()
-    #         except:
-    #             print("Empty discretized points : no points removed")
-    #         discpts=super(GraphicalIntervals,self).discretize(zerotime,endtime,deltatime)
-    #         if axis:
-    #             #add the new ones
-    #             self.drewdiscpts = axis.scatter(discpts[0],discpts[1], marker='.', s=150, c=discpts[1],linewidths=1, cmap= plt.cm.coolwarm)
-    #             print("Drew discretization points")
-    #         return discpts
-                   
-    #string representation
-    def __str__(self):
-        self.sort()
-        return "Graphical representation of : " + SetOfIntervals.__str__(self)
-
 class Interval(object):
     """
     Creates an closed interval. It is an object of length 2, sorted\n
@@ -485,17 +386,15 @@ class Interval(object):
             return {'xmin':self.xmin, 'xmax':self.xmax}
         else:
             ex=10**rounding
-            return {'xmin':int(self.xmin*ex+0.5)/ex, 'xmax':int(self.xmin*ex+0.5)/ex}
+            return {'xmin':int(self.xmin*ex+0.5)/ex, 'xmax':int(self.xmax*ex+0.5)/ex}
     
-
-def toggle_selector(event):
-    """handles key_events"""
-    if event.key in ['Q', 'q'] and toggle_selector.RS.active:
-        toggle_selector.RS.set_active(False)
-        print("Key "+event.key+" pressed")
-    if event.key in ['A', 'a'] and not toggle_selector.RS.active:
-        toggle_selector.RS.set_active(True)
-        print("Key "+event.key+" pressed")   
+    def tolist(self):
+        """returns a list representing the interval"""
+        return [self.xmin, self.xmax]
+    
+    def copy(self):
+        """returns a copy of the interval"""
+        return Interval(self.xmin,self.xmax)
         
 class ComplexEncoder(json.JSONEncoder):
     def default(self, obj):

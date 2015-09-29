@@ -16,7 +16,7 @@ class Case(object):
     """
     Defines a case of study
     """
-    def __init__(self, ax, location ,measurement, mID, mic, Tb, Te, author, noiseType):
+    def __init__(self, location, measurement, mID, mic, Tb, Te, author, **kwargs):
         """
         Takes a set of data as dict and an axis to display the data on.
         """
@@ -27,17 +27,17 @@ class Case(object):
                 "mic":  mic,
                 "author": author,
                 "date":time.strftime('%d.%m.%Y'),
-                "tb": Tb,
-                "te": Te,
-                "noiseType":noiseType,
-                "Set": SetOfIntervals()
+                "tb":Tb,
+                "te":Te,
+                "KG":SetOfIntervals(),#Kreischen
+                "Z":SetOfIntervals(),#Zischen
                 }
         self.case['caseID'] = str(self)
     
-    def compare(self, otherdisc, zerotime, endtime, deltatime):
+    def compare(self, otherdisc, zerotime, endtime, deltatime, noiseType='Z'):
         """Compares the discretization of this case with the one of an algorithm whose results are given in otherdisc. timeparam variable contains the variables for the discretization. Returns a dictionnary with the number of True positives, True negatives, False positives and False negatives"""
         try:
-            discret = selfcase['Set'].discretize(zerotime, endtime, deltatime)
+            discret = selfcase[noiseType].discretize(zerotime, endtime, deltatime)
         except:
             discret = 0
         disc = self.discretize(timeparam)
@@ -51,7 +51,7 @@ class Case(object):
         
     def save(self, mesPath):
         '''
-        save Case to file
+        save Case to file in mespath\test_cases\author\case_mID_mic_author.json
         '''
         mesPath = pathlib.Path(mesPath)
         casePath = mesPath.joinpath('test_cases').joinpath(self.case['author'])
@@ -59,11 +59,14 @@ class Case(object):
         name = str(self) + '.json'
         casePath = casePath.joinpath(name)
         self.toJSON(casepath)
+        return (casePath.as_posix())
+        
+    def get_SOI(self, noiseType='Z')
+        return(self.case[noiseType])
     
     def __str__(self):
         """prints the name of the case"""
-        return( "case_"+str(self.case['mID'])+"_"+str(self.case['mic'])+\
-        str(self.case['author']))
+        return( "case_"+str(self.case['mID'])+"_"+str(self.case['mic'])+"_"+ str(self.case['author']))
     
     def __repr__(self):
         """gives a representation of the case"""
