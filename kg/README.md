@@ -5,7 +5,7 @@
 	- [SetOfIntervals](#setofintervals)
 	- [GraphicalInterval](#graphicalinterval)
 	- [Case](#case)
-	- [measuredValues](#measuredvalues)
+	- [MicSignal](#micsignal)
 	- [time signals](#time-signals)
 - [Copyrights](#copyrights)
 
@@ -109,7 +109,7 @@ Method | Description | Return type
 `test(algorithm, mesVar, [signal], [sum])` | test algorithm  on Case | list
 `toJSON(filename=None)` | returns the essential informations of self, if Pathname or Path is given, save in file.
 
-### measuredValues
+### MicSignal
 
 import hand handle mbbm measured and evaluated values in tables
 store kg processed values
@@ -137,7 +137,7 @@ methods | description | return
 `plot_BPR(algorithm, ax, label = None,**kwarks)` |  plot detection results for a given algorithm | plot
 `plot_signal(ax , label = None,**kwargs)` | plot signal | plot
 `export_to_Wav(wawPath = None)` | Export a .wav file of the signal in mesPath\wav with mesPath: main measurement path | libpath Obj: path of wavfile
-`from_measurement(cls, mesValues, ID, mic)` | classmethod : constructs directly a measuredValues object | None
+`from_measurement(cls, mesValues, ID, mic)` | classmethod : constructs directly a MicSignal object | None
 
 
 function | description | return
