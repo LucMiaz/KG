@@ -309,7 +309,7 @@ class CaseSelector(_my_SelectorWidget):
         else:
             self.rectprops = rectprops
         if lineprops is None:
-            self.lineprops = dict(color='red',lw = 3)
+            self.lineprops = dict(color='k',lw = 4)
         else:
             self.lineprops = lineprops
         
@@ -361,8 +361,7 @@ class CaseSelector(_my_SelectorWidget):
                 self.stay_rects[set].append(stay_rect)
             self.artists.extend(self.stay_rects[set])
         #bar
-        self.bar = ax.axvline(0,w,h,visible = False, animated = True,
-                                **self.lineprops)
+        self.bar = ax.axvline(0,w,h,visible = False, **self.lineprops)
         self.artists.append(self.bar)
 
         
@@ -459,17 +458,18 @@ class Bar(AxesWidget):
     For the cursor to remain responsive you much keep a reference to
     it.
     """
-    def __init__(self, ax, **lineprops):
+    def __init__(self, ax, lineprops=None, **kwargs):
         """
         Add a bar to *ax*.  *lineprops* is a dictionary of line properties.
         """
         AxesWidget.__init__(self, ax)
-        self.connect_event('draw_event', self.clear)
-        self.visible = True
-        self.linev = ax.axvline(0, 0, 1 , visible=False, animated = True
-         **lineprops)
+        if lineprops is None:
+            lineprops = dict(color='k',lw = 4)
+
+        self.linev = ax.axvline(0, 0, 1 , visible=False, **lineprops)
         self.background = None
         self.needclear = False
+        self.connect_event('draw_event', self.clear)
 
     def clear(self, event):
         """clear the cursor"""

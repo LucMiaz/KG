@@ -8,6 +8,7 @@ from PySide.QtGui import (QApplication, QMainWindow, QAction, QStyle,
                           QFileDialog)
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
                           
 from kg.detect import MicSignal
 from kg.mpl_moving_bar import Bar
@@ -19,6 +20,10 @@ class DetectControlWidget(QMainWindow):
     def __init__(self,  wavPath, t0 = 0, setup = True, parent = None, **kwargs):
         QMainWindow.__init__(self, parent)
         self.setWindowTitle('listen and detect ;-)')
+        #time to syncronize plot and media object
+        self.tShift = t0
+        self.t = self.tShift
+        self.refresh = 30
         #phonon 
         self._init_phonon(wavPath)
         #Attributes
@@ -47,7 +52,7 @@ class DetectControlWidget(QMainWindow):
         self.seeker = Phonon.SeekSlider(self)
         self.seeker.setFixedHeight(20)
         self.seeker.setMediaObject(self.media)
-        self.media.setTickInterval(20)
+        self.media.setTickInterval(15)
         self.media.setCurrentSource(Phonon.MediaSource(wavPath))
         # audio data from the media object goes to the audio output object
         Phonon.createPath(self.media, self.audio_output)
@@ -63,9 +68,6 @@ class DetectControlWidget(QMainWindow):
             action.setObjectName(name)
             self.actions.addAction(action)
             action.triggered.connect(getattr(self.media, name))
-#time to syncronize plot and media object
-        self.tShift = t0
-        self.t = self.tShift
         #layout
         self.vBox = QtGui.QVBoxLayout()
         self.vBox.addWidget(self.seeker)
@@ -75,48 +77,49 @@ class DetectControlWidget(QMainWindow):
         if setup:
             self.setup(**kwargs)
     
-    def setup(self):
+    def setup(self,**kwargs):
         #centralwidget
         centralWidget = QtGui.QWidget()
         centralWidget.setLayout(self.vBox)
         self.setCentralWidget(centralWidget)
-        #add connections and star timer
-        self.connections()
-        
-    def set_mpl(self, canvas= {} ,mpl_animated=[],**kwargs):
-        self.canvas = canvas
-        if mpl_animated == None:
-            slef.mpl_animated=[]
-        elif isinstance(mpl_animated,list):
-            self.mpl_animated = mpl_animated
-        else:
-            self.mpl_animated = [mpl_animated]
-        for k, ca in self.canvas.items():
-            self.vBox.addWidget(ca)
-            
-    def connections(self):
         #refresh timer
         self.timer = QtCore.QTimer()
+        self.timer.setInterval(self.refresh)
+        #add connections
+        self.connections()
+        
+    def set_mpl(self, canvas = {}, **kwargs):
+        self.canvas = canvas
+        self.ca_update_handle = []
+        self.ca_set_bar_handle = []
+        for k, ca in self.canvas.items():
+            ca['canvas'].setParent(self)
+            self.vBox.addWidget(ca['canvas'])
+            
+            if ca['animate']:
+                self.ca_update_handle.append(ca['handle'])
+            if ca['bar']:
+                self.ca_set_bar_handle.append(ca['handle'])
+            
+    def connections(self):
         # connections
-        self.timer.timeout.connect(self.update)
+        self.timer.timeout.connect(self.update_canvas)
         self.media.tick.connect(self.update_time)
         self._connections()
         #start refresh
-        self.timer.start(25)
+        self.timer.start()
         
     def _connections(self):
         pass
         
     def update_time(self,t):
-        def _update(self,t):
-            self.t = t/1000 + self.tShift
-            for bar in self.bar:
-    
-                bar.set_x_position(t/1000 + self.tShift )
-        def update(self):
-            for mpl_obj in self.mpl_animated:
-                mpl_obj.set_bar_position(self.t)
-                mpl_obj.update()
+        self.t = t/1000 + self.tShift
+
+    def update_canvas(self):
+        for handle in self.ca_set_bar_handle:
+            handle.set_bar_position(self.t)
+        for handle in self.ca_update_handle:
+            handle.update()
             
     @classmethod
     def from_micSignal(cls, micSn, mesPath):
@@ -152,32 +155,41 @@ class CaseCreatorWidget(DetectControlWidget):
         #init super
         super(CaseCreatorWidget, self).__init__(str(micSn.export_to_Wav(mesPath)), t0=micSn.t.min(), setup=False)
         self.setWindowTitle('Create Case')
-        ###
-        plt.ioff()
+        self.grabKeyboard()
+        self.minspan = 0.1
+        self.remove = False
+        self.both_visibles = True
         #plots
+        plt.ioff()
         canvas={}
-        # fig, ax = plt.subplots(1, sharex = True)
-        # micSn.plot_signal(ax)
-        # micSn.plot_triggers(ax)
-        # canvas[0] = FigureCanvas(fig)
-        # bar.append(Bar(ax))
-        # self.ax = ax
-        #set Handle
-        fig, ax = plt.subplots(1, sharex = True)
+        fig = Figure()
+        fig.set_dpi(150)
+        ax = fig.add_subplot(111)
+        ca = FigureCanvas(fig)
+        stftN = list(micSn.STFT.keys())[0]
+        micSn.plot_spectrogram(stftN, ax)
+        micSn.plot_triggers(ax)
+        bar = Bar(ax) 
+        canvas['spectrogram'] = {'animate':True,'bar':True, 'canvas':ca , 'handle': bar}
+        self.ax = ax
+        fig = Figure()
+        fig.set_dpi(150)
+        ax = fig.add_subplot(111)
+        ca = FigureCanvas(fig)
         micSn.plot_signal(ax)
         micSn.plot_triggers(ax)
-        canvas[1] = FigureCanvas(fig)
-        self.HandleAxis = ax
+        ax.set_xlim(self.ax.get_xlim())
+        self.SelectAxis = ax
         #case Selector
-        self.CS = CaseSelector(self.HandleAxis, self.onselect, self.onclick, 
-                                nrect = [20,20], update_on_ext_event = True , 
-                                minspan = 0.2 )
-        self.set_mpl(canvas, self.CS)
-        #
-        self.remove = False
-        self.both_visibles=True
+        self.CS = CaseSelector(self.SelectAxis, self.onselect, self.onclick, 
+                                nrect = [100,100], update_on_ext_event = True , 
+                                minspan = self.minspan )
+        canvas['selector'] = {'animate':True,'bar':True, 'canvas':ca , 'handle': self.CS}
+                                
+        self.set_mpl(canvas)
+        
         #case
-        self.case =  case
+        self.case = case
         self.NoiseTypes = ['Z','KG']
         self.current_noise = 'Z'
         self.set_noise_type('Z')
@@ -190,7 +202,7 @@ class CaseCreatorWidget(DetectControlWidget):
         self.SOIcombo.addItem('Kreischen', 'KG')
         self.cb = QtGui.QCheckBox('both visible', self)
         self.cb.toggle()
-        self.cb.setChecked(True)
+        self.cb.setChecked(self.both_visibles)
         hBox.addWidget(label )
         hBox.addWidget(self.SOIcombo)
         hBox.addWidget(self.cb)
@@ -219,6 +231,15 @@ class CaseCreatorWidget(DetectControlWidget):
         self.cb.stateChanged.connect(self.set_both_visible)
         #self.buttonNext.clicked.connect(self.next_case)
         self.buttonSave.clicked.connect(self.save_case)
+    
+    def set_noise_type(self, index):
+        if isinstance(index,int):
+            self.current_noise = self.NoiseTypes[index]
+        else:
+            self.current_noise = index
+        self.SOI = self.case.case[self.current_noise]
+        self.update_stay_rect()
+        
     def set_both_visible(self, state):
         if state == QtCore.Qt.Checked:
             self.both_visibles= True
@@ -229,26 +250,56 @@ class CaseCreatorWidget(DetectControlWidget):
     def add_int(self, xmin,xmax):
         Int = Interval(xmin,xmax)
         self.SOI.append(Int)
-        print('Add '+ repr(Int))
+        #print('Add '+ repr(Int))
         self.update_stay_rect()
         
-    def set_noise_type(self, index):
-        if isinstance(index,int):
-            self.current_noise = self.NoiseTypes[index]
-        else:
-            self.current_noise = index
-        self.SOI = self.case.case[self.current_noise]
-        self.update_stay_rect()
-        
-    def remove_int(self,xmin, xmax = None):
+    def remove_int(self, xmin, xmax = None):
         if xmax == None:
             index = self.SOI.containspoint(xmin)
             if index is not None:
                 #print('Remove '+ repr(self.SOI.RangeInter[index]))
                 self.SOI.removebyindex(index)
         else:
-            self.SOI.remove(xmin,xmax)
+            self.SOI.remove(Interval(xmin,xmax))
         self.update_stay_rect()
+        
+    def set_int(self,press):
+        if press:
+            self._t_int_min = self.t
+            return
+        else:
+            tmax = self.t
+            if abs(tmax-self._t_int_min) > self.minspan:
+                self.add_int(self._t_int_min,tmax)
+        
+    def onselect(self,xmin,xmax):
+        #add interval1
+        if self.remove:
+            self.remove_int(xmin,xmax)
+        else:
+            self.add_int(xmin,xmax)
+        
+    def onclick(self,x):
+        #remove Interval
+        self.remove_int(x)
+        
+    def keyPressEvent(self, event):
+        if event.isAutoRepeat():
+            return
+        if event.key() == QtCore.Qt.Key_D:
+            self.remove = True
+        elif event.key() == QtCore.Qt.Key_S:
+            self.set_int(True)
+        event.accept()
+        
+    def keyReleaseEvent(self, event):
+        if event.isAutoRepeat():
+            return
+        if event.key() == QtCore.Qt.Key_D:
+            self.remove = False
+        elif event.key() == QtCore.Qt.Key_S:
+            self.set_int(False)
+        event.accept()
         
     def update_stay_rect(self):
         for index,nT in enumerate(self.NoiseTypes):
@@ -258,40 +309,14 @@ class CaseCreatorWidget(DetectControlWidget):
                 self.CS.set_stay_rects_x_bounds(self.case.case[nT].tolist(), index)
             else:
                 self.CS.set_stay_rect_visible(False, index)
-        
-    def onselect(self,xmin,xmax):
-        #add interval1
-        if self.remove:
-            self.remove_int(xmin,xmax)
-            self.remove = False
-        else:
-            self.add_int(xmin,xmax)
-        
-    def onclick(self,x):
-        #remove Interval
-        self.remove_int(x)
-        
-    def save_case(self):
-        self.case.save()
-        
-    # def next_case(self):
-    #     pass
     
-    # def keyPressEvent(self, event):
-    #     if event.isAutoRepeat():
-    #         return
-    #     pressed = event.key()
-    #     if (pressed in self.keys):
-    #         index = self.keys.index(pressed)
-    #         self.dots[index] = self.height()+self.upper
-    #         self.repaint()
-    #     event.accept()
-    # def set_tmin(self):
-    #     if True:
-    #         self.t_int_min = 0
+    def save_case(self):
+        mesPath='D:'
+        self.case.save(mesPath)
         
+
     @classmethod
-    def from_measurement(cls, mesVal,mID,mic):
+    def from_measurement(cls, mesVal, mID, mic):
         case = Case()
         wavPath = micSn.export_to_Wav()
         #Canvas
