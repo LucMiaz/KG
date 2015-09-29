@@ -8,7 +8,7 @@ from PySide.QtGui import (QApplication, QMainWindow, QAction, QStyle,
                           QFileDialog)
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.pyplot as plt
-from matplotlib,figure import Figure
+from matplotlib.figure import Figure
                           
 from kg.detect import MicSignal
 from kg.mpl_widgets import Bar, CaseSelector
@@ -31,7 +31,7 @@ class DetectControlWidget(QMainWindow):
         self.seeker = Phonon.SeekSlider(self)
         self.seeker.setFixedHeight(20)
         self.seeker.setMediaObject(self.media)
-        self.media.setTickInterval(self.refresh)
+        self.media.setTickInterval(15)
         self.media.setCurrentSource(Phonon.MediaSource(wavPath))
         # audio data from the media object goes to the audio output object
         Phonon.createPath(self.media, self.audio_output)
@@ -72,7 +72,9 @@ class DetectControlWidget(QMainWindow):
         self.ca_update_handle = []
         self.ca_set_bar_handle = []
         for k, ca in self.canvas.items():
+            ca['canvas'].setParent(self)
             self.vBox.addWidget(ca['canvas'])
+            
             if ca['animate']:
                 self.ca_update_handle.append(ca['handle'])
             if ca['bar']:
@@ -91,11 +93,10 @@ class DetectControlWidget(QMainWindow):
         
     def update_time(self,t):
         self.t = t/1000 + self.tShift
-        for handle in self.ca_set_bar_handle:
-            handle.set_bar_position(self.t)
-        
 
     def update_canvas(self):
+        for handle in self.ca_set_bar_handle:
+            handle.set_bar_position(self.t)
         for handle in self.ca_update_handle:
             handle.update()
             
@@ -140,32 +141,37 @@ class CaseCreatorWidget(DetectControlWidget):
         self.minspan = 0.1
         self.remove = False
         self.both_visibles = True
-        
-        plt.ioff()
         #plots
+        plt.ioff()
         canvas={}
-        # fig, ax = plt.subplots(1, sharex = True)
-        # micSn.plot_signal(ax)
-        # micSn.plot_triggers(ax)
-        # canvas[0] ={'animated':True,'canvas': FigureCanvas(fig)}
-        # self.ax = ax
         fig = Figure()
-        ax = plt.subplots(1, sharex = True)
-        ca = FigureCanvas()
+        fig.set_dpi(150)
+        ax = fig.add_subplot(111)
+        ca = FigureCanvas(fig)
+        stftN = list(micSn.STFT.keys())[0]
+        micSn.plot_spectrogram(stftN, ax)
+        micSn.plot_triggers(ax)
+        bar = Bar(ax) 
+        canvas['spectrogram'] = {'animate':True,'bar':True, 'canvas':ca , 'handle': bar}
+        self.ax = ax
+        fig = Figure()
+        fig.set_dpi(150)
+        ax = fig.add_subplot(111)
+        ca = FigureCanvas(fig)
         micSn.plot_signal(ax)
         micSn.plot_triggers(ax)
+        ax.set_xlim(self.ax.get_xlim())
         self.SelectAxis = ax
         #case Selector
         self.CS = CaseSelector(self.SelectAxis, self.onselect, self.onclick, 
-                                nrect = [20,20], update_on_ext_event = True , 
+                                nrect = [100,100], update_on_ext_event = True , 
                                 minspan = self.minspan )
-                                
         canvas['selector'] = {'animate':True,'bar':True, 'canvas':ca , 'handle': self.CS}
                                 
         self.set_mpl(canvas)
         
         #case
-        self.case =  case
+        self.case = case
         self.NoiseTypes = ['Z','KG']
         self.current_noise = 'Z'
         self.set_noise_type('Z')
@@ -286,7 +292,7 @@ class CaseCreatorWidget(DetectControlWidget):
         
 
     @classmethod
-    def from_measurement(cls, mesVal,mID,mic):
+    def from_measurement(cls, mesVal, mID, mic):
         case = Case()
         wavPath = micSn.export_to_Wav()
         #Canvas
