@@ -4,7 +4,7 @@ import copy,sys,pathlib
 import collections
 import xlrd,json
 import datetime
-
+import os,inspect
 
 def read_MBBM_tables(mesPath, save = False):
     '''
@@ -89,7 +89,7 @@ def read_MBBM_tables(mesPath, save = False):
     MBBM_data['mic'] = Mic
     MBBM_data['mID'] = mID
     if save:
-        dataPath = mesPath.joinpath('measurement_values/MBBM_mes_values.json')
+        dataPath = mesPath.joinpath('measurement_values\MBBM_mes_values.json')
         with dataPath.open('w+') as data:
             json.dump(MBBM_data, data)
         print('Data saved to ' + mesPath.as_posix())
@@ -216,8 +216,9 @@ class measuredValues():
         
     @classmethod
     def from_json(cls, mesPath):
-        dataPath = pathlib.Path(mesPath)
-        dataPath = dataPath.joinpath('measurement_values/MBBM_mes_values.json')
+        approot=os.path.dirname(os.path.dirname(inspect.stack()[0][1]))
+        dataPath = pathlib.Path(approot+'/'+mesPath)
+        dataPath = dataPath.joinpath(pathlib.Path('measurement_values\MBBM_mes_values.json'))
         with dataPath.open('r+') as data:
             MBBM_data = json.load(data)
         return(cls(mesPath,**MBBM_data))

@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
                           
 from kg.detect import MicSignal
 from kg.mpl_moving_bar import Bar
+from kg.case import *
 
                           
 class DetectControlWidget(QMainWindow):

@@ -1,4 +1,4 @@
-import os, pathlib
+import os, pathlib, inspect
 import scipy as sp
 from scipy.io import loadmat, wavfile
 import wave
@@ -102,7 +102,8 @@ class measuredSignal():
     
     @classmethod
     def setup(cls, mesPath):
-        mesPath = pathlib.Path(mesPath)
+        approot=os.path.dirname(os.path.dirname(inspect.stack()[0][1]))
+        mesPath = pathlib.Path(approot+'/'+mesPath)
         with mesPath.joinpath('raw_signals_config.json').open('r+') as config:
             cls._SIGNALS = json.load(config)
         cls.PATH = mesPath
