@@ -59,16 +59,31 @@ class MicSignal(object):
             self.mesPath = pathlib.Path(mesPath)
         self.STFT = {}
         self.KG = {'Z':{},'K':{}}
+        self.clippedtest()
         
     def __str__(self):
         return(self.ID +'_mic_' + str(self.mic))
     
-    def is_clipped(self):
-        '''test if clipping is occurring
-        return: True if valid'''
-        self.y
-        #todo :
-        pass
+    def clippedtest(self,K=301, threshold=0.55, ax=None, normalize=False, overwrite=False, fulllength=False):
+        '''
+        calls function isclipped on mask tb-te (only if fulllength=False).
+        saves the result in self.micValues.
+        only process if there isn't already a item 'isclipped' in micValues. To overrule this, pass overwrite=True in method call.
+        if an ax is given, the plot of the histogram will be display. if normalize is True, the histogram will be normalizes
+        returns boolean
+        '''
+        if not fulllength:
+            xn=self.y[self.get_mask()]
+        else:
+            xn=self.y
+        if not overwrite or (overwrite and 'isclipped' not in self.micValues.keys()):
+            ans=isclipped(xn,K,threshold,ax,normalize)
+            self.micValues['isclipped']=ans
+            return ans
+        else:
+            return None
+            
+        
         
     def calc_stft(self, M , N = None, overlap = 2, window = 'hann',**kwargs):
         X, freq, frame_i, param = stft( self.y, M = M,\
@@ -149,11 +164,13 @@ class MicSignal(object):
         ret['results'] = copy.deepcopy(self.KG[noiseType][str(algorithm)])
         return(ret)
         
-    def get_mask(self, t , tlim = None):
+    def get_mask(self, t = None , tlim = None):
         '''
         calculate mask for time vector according tlim,
         default with MBBM evaluation
         '''
+        if t == None:
+            t = self.t
         if tlim == None:
             tb = self.micValues['Tb']
             te = self.micValues['Te']
@@ -350,4 +367,77 @@ class MicSignal(object):
         micValues = mesValues.get_variables_values(ID, mic, var)
         micValues.update(ch_info)
         return(cls(ID,mic,y,t,sR, micValues, str(mesValues.path)))
+        
+##functions
+def isclipped(xn, K=301, threshold=0.55, axdisplay=None, normalizehist=False):
+    """
+    Tells if the signal xn is clipped or not based on the test by Sergei Aleinik, Yuri Matveev.
+    Returns a boolean. 
+    Reference: Aleinik S. and Matveev Y. 2014 : Detection of Clipped Fragments in Speech Signals, in International Journal of Electrical, Computer, Energetic, Electronic and Communication Engineering. World Academy of Science, Engineering and Technology, 8, 2, 286--292.
+"""
+    N=len(xn)
+    H=histogram(xn,K,display=axdisplay, normalize=normalizehist)
+    #Find the very left non-zero k_l histogram bin index
+    kl=0
+    while H[kl]==0 and kl<=K/2:
+        k+=1
+    #Find the very right non-zero k_r histogram bin index
+    kr=K-1
+    while H[kr]==0 and kr>=K/2:
+        kr-=1
+    #Calculate Denom=k_r-k_l
+    Denom=kr-kl
+    #sets parameters
+    yl0=H[kl]
+    yr0=H[kr]
+    dl=0
+    dr=0
+    Dmax=0
+    #iteration
+    while kr>kl :
+        kl+=1
+        kr-=1
+        if H[kl]<=yl0:
+            dl+=1
+        else:
+            yl0=H[kl]
+            dl=0
+        if H[kr]<=yr0:
+            dr+=1
+        else:
+            yr0=H[kr]
+            dr=0
+        Dmax=max(Dmax,dl,dr)
+    Rcl=2*Dmax/Denom
+    return Rcl>threshold
+    
+def histogram(xn, K, display=None, normalize=False):
+    """returns the function histogram of discrete time signal xn with K bins in histogram"""
+    N=len(xn)
+    xmin=xn[0]
+    xmax=xn[0]
+    #find min and max values of signal xn
+    for n in range(0,N):
+        if xn[n]<xmin:
+            xmin=xn[n]
+        if xn[n]>xmax:
+            xmax=xn[n]
+    #setting histogram to 0
+    H=[0 for i in range(0,K)]
+    for n in range(0,N):
+        #calculate y(n)=(x(n)-x_min)/(x_max-x_min)
+        yn=((xn[n]-xmin)/(xmax-xmin))#normalize
+        #calculate bin index
+        k=int(K*yn)
+        #add one to the right bin index
+        if k<K:
+            H[k]+=1
+        else:
+            H[k-1]+=1
+    if normalize:
+        maximum=max(H)
+        H=[i/maximum for i in H]
+    if display:
+        display.bar(range(0,K),H,color='#d8b365')
+    return H
 

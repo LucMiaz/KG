@@ -1,15 +1,23 @@
-##Kurvengeräsche package
+#Kurvengeräsche package
+**Table of Contents**
+- [Classes](#classes)
+	- [Interval](#interval)
+	- [SetOfIntervals](#setofintervals)
+	- [GraphicalInterval](#graphicalinterval)
+	- [Case](#case)
+	- [MicSignal](#micsignal)
+	- [time signals](#time-signals)
+- [Copyrights](#copyrights)
+
+***
 
 ## Classes
-### measuredValues :
 ### time signals:
 
-### dsp  : 
+### dsp 
 **Calculate the squeal and flanging** of a set of microphones given a set of signal during a passby 
 
-### vizualise Widget
-
-### Interval:
+### Interval
 **Creates an interval**. Needs two floats as bounds.
 
 Attribute | type
@@ -34,7 +42,7 @@ Method     | Description | Return type
 `self >= other` | not `self < other` | boolean
 `toJSON(rounding)`     | JSON format of Interval, wt rounding   | dict
 
-### SetOfIntervals: 
+### SetOfIntervals
 **Creates a list of intervals**. No initialisation variables.
 
 Attribute | type
@@ -59,9 +67,10 @@ Method | Description | Return type
 `save(self, filename)` | saves self to filename in json
 
 ### GraphicalInterval
-**Set of intervals with graphical support**. Requires an Axis. Optional SetOfRanges can be given. Optional argument for Discretization button display. Default value is `True`.
 
-Adds a list called `Rectangles` to the class `SetOfIntervals`. This list containts duples : an Interval and a patch (displayed rectangle) linked to an axis (stored in self.ax). This allows to update `Rectangle` from the SetOfInterval attribute `RangeInter` and vice versa, i.e. when we want to delete a displayed patch, we look it up in `Rectangle` (by itering over its second argument), and then we can delete the corresponding `Interval` in `RangeInter`. 
+ **Graphical support for SetOfIntervals.** 
+ 
+ Have a list called `Rectangles` corresponding to intervals of the class `SetOfIntervals`. This list containts duples : an Interval and a patch (displayed rectangle) linked to an axis (stored in self.ax). This allows to update `Rectangle` from the SetOfInterval attribute `RangeInter` and vice versa, i.e. when we want to delete a displayed patch, we look it up in `Rectangle` (by itering over its second argument), and then we can delete the corresponding `Interval` in `RangeInter`.\n
 
 Method | Description
 ------- | ----------
@@ -76,7 +85,7 @@ Method | Description
 `discretize(zerotime, endtime, deltatime, axis=self.axis)` | returns the characteristic function of range(zerotime,endtime, deltatime) in respect to RangeInter. Optional argument is the axis where one need to represent the points of the characteristic function. If one does not want any graphical representation, give None as axis
 
 
-### Case :
+### Case
 **Define a case of study**.
     
 Attribute | description | type | needed at init
@@ -100,16 +109,45 @@ Method | Description | Return type
 `test(algorithm, mesVar, [signal], [sum])` | test algorithm  on Case | list
 `toJSON(filename=None)` | returns the essential informations of self, if Pathname or Path is given, save in file.
 
-### measuredValues
+### MicSignal
 
 import hand handle mbbm measured and evaluated values in tables
 store kg processed values
 export data frames for further calculations
 
+Audio file and the relation for amplitude pressure DV
+    
+data attributes:
+- WavData: dict of np arrays containing the time signal
+- Calc: dict of calulated quantity
+- KG: results quantity about Kurvengeräusche  
+
+methods | description | return
+-------- | --------- | -------
+`clippedtest(K=301, threshold=0.55, ax=None, normalize=False, overwrite=False, fulllength=False)` | Calls function `isclipped` on mask tb-te (only if fulllength=False). Saves the result in `self.micValues`. Only process if there isn't already a item `isclipped` in micValues. To overrule this, pass overwrite=True in method call. If an ax is given, the plot of the histogram will be display. if normalize is True, the histogram will be normalizes | boolean   
+`calc_stft(self, M , N = None, overlap = 2, window = 'hann',**kwargs)` | calculates the stft |
+`calc_PSD_i(stftName, **kwargs)` | calculates PSD for all frames f_i | None
+`calc_kg(algorithm)` | runs algorithm on MicSignal object. parameter : algorithm instance | None
+`get_stft_name(algorithm)` | gets name of stft | string
+`get_KG_results(algorithm)` | gets values in self.KG for algorithm | {'ID':mID, 'mic': mic, 'results':{...}}
+`get_mask(t = None , tlim = None)` | calculate mask for time vector according tlim. default with MBBM evaluation | list of booleans
+`plot_spectrogram(name, ax, freqscale = 'lin', dBMax = 110)` | plot spectrogram | plot
+`plot_triggers(self, ax, type ='eval', **kwargs)` | type: eval for MBBM evaluations bounds. type passby passby times | plot  
+`plot_KG(algorithm, ax, **kwargs)` | plot detection results for a given algorithm | plot       
+`plot_BPR(algorithm, ax, label = None,**kwarks)` |  plot detection results for a given algorithm | plot
+`plot_signal(ax , label = None,**kwargs)` | plot signal | plot
+`export_to_Wav(wawPath = None)` | Export a .wav file of the signal in mesPath\wav with mesPath: main measurement path | libpath Obj: path of wavfile
+`from_measurement(cls, mesValues, ID, mic)` | classmethod : constructs directly a MicSignal object | None
+
+
+function | description | return
+-------- | -------- | --------
+`isclipped(xn, K=301, threshold=0.55, axdisplay=None, normalizehist=False)` |
+    Tells if the signal xn is clipped or not based on the test by Sergei Aleinik, Yuri Matveev (see ref in detect.py) | boolean
+`histogram(xn, K, display=None, normalize=False)` | returns the function histogram of discrete time signal xn with K bins in histogram | list (opt. plot)
+
 ### time signals
 handle the time signals of a given passby ID
-
-### DSP
 
 ***
 
