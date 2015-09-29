@@ -1,6 +1,3 @@
-from matplotlib.widgets import *
-import matplotlib.patches as patches 
-import matplotlib.pyplot as plt
 import json
 class SetOfIntervals(object):
     """
@@ -38,7 +35,7 @@ class SetOfIntervals(object):
         need an Interval object"""
         self.sort()
         if interv: #check if not None
-            if not interv.ispoint()
+            if not interv.ispoint():
                 self.remove(interv)
                 self.RangeInter.append(interv)
                 self.length=len(self.RangeInter)
@@ -99,7 +96,7 @@ class SetOfIntervals(object):
     def getRange(self):
         """returns RangeInter"""
         a=[]
-        for inter in self.Range Inter:
+        for inter in self.RangeInter:
             a.append(inter.copy())
         return a
     
@@ -408,10 +405,7 @@ class ComplexEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 ### test
 if __name__ == "__main__":
-    x = np.arange(100)/(79.0)
-    y = np.sin(x)
-    f,ax = plt.subplots()
-    plt.subplots_adjust(bottom=0.2)
-    ax.plot(x,y)
-    
-    Hello = GraphicalIntervalsHandle(ax,SetOfIntervals())
+    a=SetOfIntervals()
+    a.append(Interval(0.,1.))
+    a.append(Interval(10.,11.))
+    print(a)

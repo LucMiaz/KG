@@ -1,5 +1,7 @@
-import sys,os
+import sys,os,pathlib
 import inspect
+import matplotlib.pyplot as plt
+import numpy as np
 #change dir form up/kg/thisfile.py to /up
 #if __name__=='__main__':
 #    approot=os.path.dirname(os.path.dirname(inspect.stack()[0][1]))
@@ -9,7 +11,6 @@ from kg.intervals import *
 from kg.measurement_values import measuredValues
 import json
 import time
-import pathlib #for saving
 
 ##Class Case
 class Case(object):
@@ -61,12 +62,12 @@ class Case(object):
         self.toJSON(casepath)
         return (casePath.as_posix())
         
-    def get_SOI(self, noiseType='Z')
+    def get_SOI(self, noiseType='Z'):
         return(self.case[noiseType])
     
     def __str__(self):
         """prints the name of the case"""
-        return( "case_"+str(self.case['mID'])+"_"+str(self.case['mic'])+"_"+ str(self.case['author']))
+        return( "case_"+str(self.case['mID'])+"_"+str(self.case['mic'])+"_"+str(self.case['author']))
     
     def __repr__(self):
         """gives a representation of the case"""
@@ -97,10 +98,5 @@ class Case(object):
 if __name__ == "__main__":
     #import prettyplotlib #makes nicer plots
     #import matplotlib.pyplot as plt
-    x = np.arange(100)/(79.0)
-    y = np.sin(x)
-    f, ax = plt.subplots(1)
-    ax.plot(x,y)
     #new = GraphicalIntervals(ax)
-    Newcase=Case(ax,'Zug','Vormessung','m_0100','1',0,10,'luc','Z')
-    GraphicalIntervalsHandle(ax,Newcase.case['Set'])
+    Newcase=Case('Zug','Vormessung','m_0100','1',0,10,'luc')
