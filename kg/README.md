@@ -107,6 +107,36 @@ import hand handle mbbm measured and evaluated values in tables
 store kg processed values
 export data frames for further calculations
 
+Audio file and the relation for amplitude pressure DV
+    
+data attributes:
+- WavData: dict of np arrays containing the time signal
+- Calc: dict of calulated quantity
+- KG: results quantity about Kurvengeräusche  
+
+methods | description | return
+-------- | --------- | -------
+`clippedtest(K=301, threshold=0.55, ax=None, normalize=False, overwrite=False, fulllength=False)` | Calls function `isclipped` on mask tb-te (only if fulllength=False). Saves the result in `self.micValues`. Only process if there isn't already a item `isclipped` in micValues. To overrule this, pass overwrite=True in method call. If an ax is given, the plot of the histogram will be display. if normalize is True, the histogram will be normalizes | boolean   
+`calc_stft(self, M , N = None, overlap = 2, window = 'hann',**kwargs)` | calculates the stft |
+`calc_PSD_i(stftName, **kwargs)` | calculates PSD for all frames f_i | None
+`calc_kg(algorithm)` | runs algorithm on MicSignal object. parameter : algorithm instance | None
+`get_stft_name(algorithm)` | gets name of stft | string
+`get_KG_results(algorithm)` | gets values in self.KG for algorithm | {'ID':mID, 'mic': mic, 'results':{...}}
+`get_mask(t = None , tlim = None)` | calculate mask for time vector according tlim. default with MBBM evaluation | list of booleans
+`plot_spectrogram(name, ax, freqscale = 'lin', dBMax = 110)` | plot spectrogram | plot
+`plot_triggers(self, ax, type ='eval', **kwargs)` | type: eval for MBBM evaluations bounds. type passby passby times | plot  
+`plot_KG(algorithm, ax, **kwargs)` | plot detection results for a given algorithm | plot       
+`plot_BPR(algorithm, ax, label = None,**kwarks)` |  plot detection results for a given algorithm | plot
+`plot_signal(ax , label = None,**kwargs)` | plot signal | plot
+`export_to_Wav(wawPath = None)` | Export a .wav file of the signal in mesPath\wav with mesPath: main measurement path | libpath Obj: path of wavfile
+`from_measurement(cls, mesValues, ID, mic)` | classmethod : constructs directly a measuredValues object | None
+##functions
+name and arguments | description | return
+-------- | -------- | --------
+`isclipped(xn, K=301, threshold=0.55, axdisplay=None, normalizehist=False)` |
+    Tells if the signal xn is clipped or not based on the test by Sergei Aleinik, Yuri Matveev (see ref in detect.py) | boolean
+`histogram(xn, K, display=None, normalize=False)` | returns the function histogram of discrete time signal xn with K bins in histogram | list (opt. plot)
+
 ### time signals
 handle the time signals of a given passby ID
 
