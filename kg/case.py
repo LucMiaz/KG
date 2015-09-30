@@ -18,7 +18,6 @@ class Case(object):
         Takes a set of data as dict and an axis to display the data on.
         """
         self.case = {
-        # todo: add not possible
                 "location":location,
                 "measurement": measurement, 
                 "mID":  mID,
@@ -28,7 +27,8 @@ class Case(object):
                 "Tb": Tb,
                 "Te": Te,
                 "KG": SetOfIntervals(), #Kreischen
-                "Z": SetOfIntervals() #Zischen
+                "Z": SetOfIntervals(),#Zischen
+                "quality": None #quality of the detection
                 }
         self.case['caseID'] = str(self)
     
@@ -45,11 +45,25 @@ class Case(object):
         retTF['FP'] = np.logical_and(otherdisc, np.logical_not(disc))
         retTF['FN'] = np.logical_and(np.logical_not(otherdisc),  disc)
         return(retTF)
+    
+    def set_quality(self, quality):
+        """
+        set quality of generated case:
+        good: noise events are good to recognize
+        medium: it is possible to detect noise events
+        bad: noise events almost impossible to detects
+        """
+        if quality in ['good','medium','bad']:
+            self.case['quality'] = quality
+        else:
+            print('Quality has to be in ' + str(['good','medium','bad']))
         
     def save(self, mesPath):
         '''
         save Case to file in mespath\test_cases\author\case_mID_mic_author.json
         '''
+        if self.case['quality']  == None:
+            print('Warning: case quality has to be set')
         mesPath = pathlib.Path(mesPath)
         casePath = mesPath.joinpath('test_cases').joinpath(self.case['author'])
         os.makedirs(casePath.as_posix(), exist_ok = True)
@@ -60,7 +74,21 @@ class Case(object):
         
     def get_SOI(self, noiseType='Z'):
         return(self.case[noiseType])
+        
+    def plot_triggers(self, ax, **kwargs):
+        """
+        Plot evaluation bounds Times as MBBM evaluations
+        """
+        bounds = ['Tb', 'Te']
+        [ax.axvline(self.case[b], **kwargs) for b in bounds]
     
+    def plot(self, noiseType,ax,**kwargs):
+        """plot the case on axis ax"""
+        SOI = self.get_SOI(noiseType)
+        ymin, ymax = ax.get_ylim()
+        for xmin,xmax in SOI.tolist():
+            ax.axvspan(xmin,xmax,ymin,ymax, colour = 'g', alpha = 0.4, **kwargs)
+        
     def __str__(self):
         """prints the name of the case"""
         return( "case_"+str(self.case['mID'])+"_"+str(self.case['mic'])+'_'+\
@@ -92,7 +120,7 @@ class Case(object):
             raise Error("The file in path" + casePath + " has not be found.")
         cl = cls(**dict)
         for nT in ['Z']:# todo :'KG' 
-            dNT = dict[nT]["SetOfIntervals"]
+            dNT = dict[nT]
             set = [[int['xmin'] , int['xmax']] for int in dNT] 
             cl.get_SOI(nT).appendlistofduples(set)
         return(cl)

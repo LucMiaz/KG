@@ -19,12 +19,17 @@ class measuredSignal():
     _PATH = ''
     _SIGNALS = {}
 
-    def __init__(self, ID, mic = None):
+    def __init__(self, ID, mics = None, prms=True):
         self.ID = ID
         self.path = measuredSignal.PATH
         self.signals = {}
-        if not mic == None:
-            self.read_signal(mic)
+        if not mics == None:
+            if not isinstance(mics,list):
+                mics=[mics]
+            for mic in mics:
+                self.read_signal(mic)
+                if prms:
+                    self.read_signal('prms'+ str(mic))
         
     def list_signals(self):
         data = []
@@ -106,16 +111,15 @@ class measuredSignal():
         with mesPath.joinpath('raw_signals_config.json').open('r+') as config:
             cls._SIGNALS = json.load(config)
         cls.PATH = mesPath
-        #return(cls)
     
 ##tests 
 if __name__ == "__main__":
     #perché 'm1020'noné compreso (tilo), 'm_0119' chefrastuono
     import matplotlib.pyplot as plt
     measuredSignal.setup('Measurements_example\MBBMZugExample')
-
     #
-    ts = measuredSignal('m_0100')
-    mic=[1,2,4,5,6,7]
-    for i,m in enumerate(mic):
-        ts.read_signal(m)
+    mics = [1,2,4,5,6,7]
+    ts = measuredSignal('m_0100', mics)
+    for mic in mics:
+        y,t,_ = ts.get_signal('prms'+str(mic))
+        plt.plot(t,np.abs(20*np.log10(y/(2e-5))))
