@@ -169,18 +169,17 @@ class CaseCreatorWidget(DetectControlWidget):
         
     def add_widgets(self):
         canvas={}
+        # fig = Figure()
+        # fig.set_dpi(150)
+        # ax = fig.add_subplot(111)
+        # ca = FigureCanvas(fig)
+        # bar = Bar(ax) 
+        # canvas['spectrogram'] = {'animate':True,'bar':True, 'canvas':ca , 'axHandle': bar}
+        # self.ax = ax
         fig = Figure()
         fig.set_dpi(150)
         ax = fig.add_subplot(111)
         ca = FigureCanvas(fig)
-        bar = Bar(ax) 
-        canvas['spectrogram'] = {'animate':True,'bar':True, 'canvas':ca , 'axHandle': bar}
-        self.ax = ax
-        fig = Figure()
-        fig.set_dpi(150)
-        ax = fig.add_subplot(111)
-        ca = FigureCanvas(fig)
-        ax.set_xlim(self.ax.get_xlim())
         self.SelectAxis = ax
         #case Selector
         self.CS = CaseSelector(self.SelectAxis, self.onselect, self.onclick, 
@@ -232,15 +231,15 @@ class CaseCreatorWidget(DetectControlWidget):
         #plot
         # todo: rm ax add prms and band
         #ax
-        self.ax.cla()
-        stftN = list(micSn.STFT.keys())[0]
-        micSn.plot_spectrogram(stftN,self.ax)
-        micSn.plot_triggers(self.ax)
+        # self.ax.cla()
+        # stftN = list(micSn.STFT.keys())[0]
+        # micSn.plot_spectrogram(stftN,self.ax)
+        # micSn.plot_triggers(self.ax)
         #SelectAxis
         self.SelectAxis.cla()
         micSn.plot_signal(self.SelectAxis)
         micSn.plot_triggers(self.SelectAxis)
-        self.SelectAxis.set_xlim(self.ax.get_xlim())
+        self.SelectAxis.set_xlim(self.tShift,micSn.t.max())
         for ca in self.canvas:
             ca.draw()
         #update canvas
