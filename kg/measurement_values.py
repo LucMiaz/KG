@@ -9,6 +9,8 @@ import datetime
 def read_MBBM_tables(mesPath, save = False):
     '''
     load values of selected variables and mic form MBBM files
+    tables have to be located at \measurement_values relative to mesPath
+    need configuration file 'measurement_config.json' located at mesPath
     '''
     mesPath = pathlib.Path(mesPath)
     with mesPath.joinpath('measurement_config.json').open('r+') as config:
