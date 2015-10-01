@@ -4,11 +4,13 @@ import copy,sys,pathlib
 import collections
 import xlrd,json
 import datetime
-import os,inspect
+
 
 def read_MBBM_tables(mesPath, save = False):
     '''
     load values of selected variables and mic form MBBM files
+    tables have to be located at \measurement_values relative to mesPath
+    need configuration file 'measurement_config.json' located at mesPath
     '''
     mesPath = pathlib.Path(mesPath)
     with mesPath.joinpath('measurement_config.json').open('r+') as config:
@@ -17,7 +19,7 @@ def read_MBBM_tables(mesPath, save = False):
     MICVALUES = CONFIG['micValues']
     IDVALUES = CONFIG['idValues']
     Mic = CONFIG['microphones']
-    mID=[]
+    mID= set()
     tablesPath = mesPath.joinpath('measurement_values')
     print('----------\n')
     print('Read MBBM exel tables \n----------\n\nMIC VALUES \n-----------')
@@ -33,12 +35,14 @@ def read_MBBM_tables(mesPath, save = False):
                 sN = v['sheet'].replace('_Miki','_Mik'+ str(mic))
                 ws = wb.sheet_by_name(sN)
                 for row in range(table['skip']+1,ws.nrows):
+                    id = ws.cell_value(row,0)
                     S_mic = [ws.cell_value(row,i) for i in range(1,25)]
                     try:
-                        dictID = data[ws.cell_value(row,0)]
+                        dictID = data[id]
                     except KeyError:
-                        data[ws.cell_value(row,0)] = {}
-                        dictID = data[ws.cell_value(row,0)]
+                        data[id] = {}
+                        dictID = data[id]
+                    mID.add(id)    
                     dictID[str(mic)] = S_mic
             v['values'] = data
         #if mic single valued value
@@ -55,6 +59,7 @@ def read_MBBM_tables(mesPath, save = False):
             data = {}
             for row in range(wsRow0+1,ws.nrows):
                 id = ws.cell_value(row,0)
+                mID.add(id)
                 mic_val = {}
                 for i,mic in zip(selectCol,Mic):
                     mic_val[str(mic)] = ws.cell_value(row,i) 
@@ -74,9 +79,7 @@ def read_MBBM_tables(mesPath, save = False):
         for row in range(table['skip']+1, ws.nrows):
             id = ws.cell_value(row,0)
             data[id] = ws.cell_value(row,selectCol)
-            if not id in mID:
-                mID.append(id)
-            
+            mID.add(id)
         v['values'] = data
     print('\n\nFinish read values\n----------\n')
     # return dict
@@ -87,9 +90,9 @@ def read_MBBM_tables(mesPath, save = False):
     MBBM_data['micValues'] = MICVALUES
     MBBM_data['idValues'] = IDVALUES
     MBBM_data['mic'] = Mic
-    MBBM_data['mID'] = mID
+    MBBM_data['mID'] = list(mID)
     if save:
-        dataPath = mesPath.joinpath('measurement_values\MBBM_mes_values.json')
+        dataPath = mesPath.joinpath('measurement_values/MBBM_mes_values.json')
         with dataPath.open('w+') as data:
             json.dump(MBBM_data, data)
         print('Data saved to ' + mesPath.as_posix())
@@ -125,12 +128,16 @@ class measuredValues():
             var['description'].append(v['description'])
         var = pd.DataFrame(var)
         return(var)
-
+        
+    def MBBM_valid_id(self,ID):
+        """
+        If ID is Valid then all the mic are too
+        all the ID with calculated LAF
+        """
+        return(ID in list(self.micValues['LAmax']['values'].keys()))
+        
     def get_IDs(self, evaluated = False):
-        if not evaluated:
-            return(self.mID)
-        else:
-            return(self.micValues['LAEQ']['values'].keys())
+        return(list(self.micValues['LAmax']['values'].keys()))
         
     def get_variables_values(self,ID, mic, variables):
         """
@@ -216,9 +223,8 @@ class measuredValues():
         
     @classmethod
     def from_json(cls, mesPath):
-        approot=os.path.dirname(os.path.dirname(inspect.stack()[0][1]))
-        dataPath = pathlib.Path(approot+'/'+mesPath)
-        dataPath = dataPath.joinpath(pathlib.Path('measurement_values\MBBM_mes_values.json'))
+        #dataPath = pathlib.Path(mesPath)
+        dataPath = mesPath.joinpath('measurement_values/MBBM_mes_values.json')
         with dataPath.open('r+') as data:
             MBBM_data = json.load(data)
         return(cls(mesPath,**MBBM_data))
@@ -247,7 +253,7 @@ def serialize(data):
 
 if __name__ == "__main__":
     #Read and save MBBM values
-    mesPath = 'Measurements_example\MBBMZugExample'
+    mesPath = pathlib.Path('Measurements_example\MBBMZugExample')
     #read_MBBM_tables(mesPath,True)
     #getexample
     mesVal = measuredValues.from_json(mesPath)

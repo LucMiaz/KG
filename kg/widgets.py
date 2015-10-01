@@ -2,6 +2,7 @@
 # sys.path.append('D:\GitHub\myKG')
 import os, pathlib
 import numpy as np
+import collections
 from PySide import QtGui, QtCore
 from PySide.phonon import Phonon
 from PySide.QtGui import (QApplication, QMainWindow, QAction, QStyle,
@@ -12,26 +13,35 @@ from matplotlib.figure import Figure
                           
 from kg.detect import MicSignal
 from kg.mpl_widgets import Bar, CaseSelector
-from kg.case import *
-
+from kg.case import Case
+from kg.case import Interval
+import seaborn as sns
+sns.set(style='ticks', palette='Set2')
                           
 class DetectControlWidget(QMainWindow):
 
-    def __init__(self,  wavPath, t0 = 0, setup = True, parent = None, **kwargs):
-        QMainWindow.__init__(self, parent)
+    def __init__(self, setup = False, **kwargs):
+        QMainWindow.__init__(self)
         self.setWindowTitle('listen and detect ;-)')
         #time to syncronize plot and media object
-        self.tShift = t0
-        self.t = self.tShift
-        self.refresh = 30
+        self.tShift = None
+        self.t = None
+        self.canvas = {}
+        self.ca_update_handle = []
+        self.ca_set_bar_handle = []
+        #refresh timer
+        self.refresh = 35
+        self.timer = QtCore.QTimer()
+        self.timer.setInterval(self.refresh)
+        
         #phonon 
+        #the media object controls the playback
         self.media = Phonon.MediaObject(self)
         self.audio_output = Phonon.AudioOutput(Phonon.MusicCategory, self)
         self.seeker = Phonon.SeekSlider(self)
         self.seeker.setFixedHeight(20)
         self.seeker.setMediaObject(self.media)
-        self.media.setTickInterval(15)
-        self.media.setCurrentSource(Phonon.MediaSource(wavPath))
+        self.media.setTickInterval(10)
         # audio data from the media object goes to the audio output object
         Phonon.createPath(self.media, self.audio_output)
         # set up actions to control the playback
@@ -46,43 +56,63 @@ class DetectControlWidget(QMainWindow):
             action.setObjectName(name)
             self.actions.addAction(action)
             action.triggered.connect(getattr(self.media, name))
+        self.actions.addSeparator()
+        self.actions.addSeparator()
+        info = QtGui.QAction( "Info", self)
+        self.actions.addAction(info)
+        info.triggered.connect(self.show_info)
         #layout
         self.vBox = QtGui.QVBoxLayout()
         self.vBox.addWidget(self.seeker)
-        #add mpl objects
-        self.set_mpl(**kwargs)
+        
         #finish setup
         if setup:
-            self.setup(**kwargs)
-    
-    def setup(self,**kwargs):
+            #Set mediafile
+            self.set_media_source(**kwargs)
+            #add mpl objects
+            self.set_mpl(**kwargs)
+            #set and centralWidget
+            self.set_centralWidget()
+            #add connections
+            self.connections()
+
+    def set_media_source(self, wavPath, t0 = 0, **kwargs):
+        self.tShift = t0
+        self.t = self.tShift
+        self.media.setCurrentSource(Phonon.MediaSource(wavPath))
+        self.media.pause()
+        
+    def media_finish(self):
+        self.media.stop()
+        self.media.pause()
+        
+    def set_mpl(self, canvas = {}, **kwargs):
+        self.canvas = []
+        self.ca_update_handle = []
+        self.ca_set_bar_handle = []
+        for k, ca in canvas.items():
+            ca['canvas'].setParent(self)
+            self.canvas.append(ca['canvas'])
+            self.vBox.addWidget(ca['canvas'])
+            handle = ca['axHandle']
+            if not isinstance(handle,list):
+                handle = [handle]
+            if ca['animate']:
+                self.ca_update_handle.extend(handle)
+            if ca['bar']:
+                self.ca_set_bar_handle.extend(handle)
+                
+    def set_centralWidget(self):
         #centralwidget
         centralWidget = QtGui.QWidget()
         centralWidget.setLayout(self.vBox)
         self.setCentralWidget(centralWidget)
-        #refresh timer
-        self.timer = QtCore.QTimer()
-        self.timer.setInterval(self.refresh)
-        #add connections
-        self.connections()
-        
-    def set_mpl(self, canvas = {}, **kwargs):
-        self.canvas = canvas
-        self.ca_update_handle = []
-        self.ca_set_bar_handle = []
-        for k, ca in self.canvas.items():
-            ca['canvas'].setParent(self)
-            self.vBox.addWidget(ca['canvas'])
-            
-            if ca['animate']:
-                self.ca_update_handle.append(ca['handle'])
-            if ca['bar']:
-                self.ca_set_bar_handle.append(ca['handle'])
             
     def connections(self):
         # connections
         self.timer.timeout.connect(self.update_canvas)
         self.media.tick.connect(self.update_time)
+        self.media.finished.connect(self.media_finish)
         self._connections()
         #start refresh
         self.timer.start()
@@ -99,28 +129,17 @@ class DetectControlWidget(QMainWindow):
         for handle in self.ca_update_handle:
             handle.update()
             
-    @classmethod
-    def from_micSignal(cls, micSn, mesPath):
-        wavPath = micSn.export_to_Wav(mesPath)
-        #Canvas
-        plt.ioff()
-        stftName = micSn.calc_stft(M=1024*4)
-        fig, axes = plt.subplots(1,sharex=True)
-        ax = axes
-        micSn.plot_spectrogram(stftName,ax) 
-        micSn.plot_triggers(ax)
-        ca = FigureCanvas(fig)
-        #Bar
-        Bars = [Bar(ax) for ax in axes] if isinstance(ax,list) else [Bar(ax)]
-        return(cls(wavPath.as_posix(), {1:ca} , micSn.t.min(), Bars))
+    def show_info(self):
+        pass
         
     @classmethod
     def alg_results(cls, micSn, algorithm):
         wavPath = micSn.export_to_Wav()
         #Canvas
         plt.ioff()
-        ca, Bars = algorithm.visualize(micSn)
-        return(cls(wavPath.as_posix(), {str(micSn):ca} , micSn.t.min(), Bars ))
+        canvas = {'Results':algorithm.visualize(micSn)}
+        return(cls(setup= True, wavPath = wavPath.as_posix(), canvas = canvas , t0 = micSn.t.min() ))
+        
 
 class CaseCreatorWidget(DetectControlWidget):
     '''
@@ -128,81 +147,157 @@ class CaseCreatorWidget(DetectControlWidget):
     this widget should allow to create cases in GUI style
     kg_ event duration is selected with mouse cursor
     case is saved using a button
+    case_dicts contains the following attributes:
+    mainPath: str
+    ccaseDict: dict
+    caseDict is a dict with following attr:
+    case: Case() instance
+    plot: {pName:[t,y],...}
+    tmin: flt
+    tmax: flt
+    wavPath: str
     '''
-    def __init__(self, case,micSn, author, mesPath):
+    def __init__(self, mesPath, casesToAnalyze, author = None):
         #init super
-        super(CaseCreatorWidget, self).__init__(str(micSn.export_to_Wav(mesPath)), t0=micSn.t.min(), setup=False)
+        super(CaseCreatorWidget, self).__init__()
         self.setWindowTitle('Create Case')
-        self.grabKeyboard()
-        self.minspan = 0.1
+        # set the author
+        if author == None:
+            author, ok = QtGui.QInputDialog.getText(self, "Set author", "Please your name : ")
+            if ok:
+                author = author.replace(' ','_')
+            else:
+                author =  'anonymus'
+        self.author = author
+            
+        self.mesPath = mesPath
+        self.minspan = 0.05
         self.remove = False
-        self.both_visibles = True
-        #plots
-        plt.ioff()
+        self.add_widgets()
+        self.set_centralWidget()
+        #set cases
+        self.NoiseTypes = ['Z','KG']
+        self.casesToAnalyze = casesToAnalyze        
+        self.casesKeys = sorted(list(self.casesToAnalyze.keys()))
+        self.CaseCombo.addItems(self.casesKeys)
+        #set case
+        self.set_current_case(self.casesKeys[0])
+        #add connections
+        self.connections()
+        
+    def add_widgets(self):
+        #Figure Canvas
         canvas={}
-        fig = Figure()
-        fig.set_dpi(150)
+        plt.ioff()
+        fig = Figure((15,10))
+        fig.set_dpi(110)
         ax = fig.add_subplot(111)
         ca = FigureCanvas(fig)
-        stftN = list(micSn.STFT.keys())[0]
-        micSn.plot_spectrogram(stftN, ax)
-        micSn.plot_triggers(ax)
-        bar = Bar(ax) 
-        canvas['spectrogram'] = {'animate':True,'bar':True, 'canvas':ca , 'handle': bar}
-        self.ax = ax
-        fig = Figure()
-        fig.set_dpi(150)
-        ax = fig.add_subplot(111)
-        ca = FigureCanvas(fig)
-        micSn.plot_signal(ax)
-        micSn.plot_triggers(ax)
-        ax.set_xlim(self.ax.get_xlim())
         self.SelectAxis = ax
         #case Selector
         self.CS = CaseSelector(self.SelectAxis, self.onselect, self.onclick, 
-                                nrect = [100,100], update_on_ext_event = True , 
+                                nrect = [50,50], update_on_ext_event = True , 
                                 minspan = self.minspan )
-        canvas['selector'] = {'animate':True,'bar':True, 'canvas':ca , 'handle': self.CS}
-                                
+        canvas['selector'] = {'animate':True,'bar':True, 'canvas':ca , 'axHandle': self.CS}
+        #set canvas
         self.set_mpl(canvas)
         
-        #case
-        self.case = case
-        self.NoiseTypes = ['Z','KG']
-        self.current_noise = 'Z'
-        self.set_noise_type('Z')
-       
-        #add combo box
+        # add first row of buttons
         hBox = QtGui.QHBoxLayout()
-        label = QtGui.QLabel('Noise Type to select ')
+        # select case combo 
+        groupBox = QtGui.QGroupBox('Select case to analyze ')
+        self.CaseCombo = QtGui.QComboBox()
+        hbox1 = QtGui.QHBoxLayout()
+        hbox1.addWidget(self.CaseCombo)
+        groupBox.setLayout(hbox1)
+        hBox.addWidget(groupBox)
+        # selct noise Type
+        groupBox = QtGui.QGroupBox('Noise Type to select')
+        hBox1 = QtGui.QHBoxLayout()
+        # noise Type combo
         self.SOIcombo = QtGui.QComboBox()
         self.SOIcombo.addItem('Zischen', 'Z')
         self.SOIcombo.addItem('Kreischen', 'KG')
+        hBox1.addWidget(self.SOIcombo)
+        # visualize both cb
         self.cb = QtGui.QCheckBox('both visible', self)
-        self.cb.toggle()
-        self.cb.setChecked(self.both_visibles)
-        hBox.addWidget(label )
-        hBox.addWidget(self.SOIcombo)
-        hBox.addWidget(self.cb)
+        hBox1.addWidget(self.cb)
+        groupBox.setLayout(hBox1)
+        hBox.addWidget(groupBox)
         hBox.addStretch(1)
         self.vBox.addLayout(hBox)
-##
-        #add buttons
+        # add second row of buttons
         hBox = QtGui.QHBoxLayout()
-        self.buttonNext = QtGui.QPushButton("next",self)
+        # quality radios
+        hBox = QtGui.QHBoxLayout()
+        groupBox = QtGui.QGroupBox("Select quality: are noise events detectable?")
+        self.Qradios = [QtGui.QRadioButton(q) for q in ['good','medium','bad']]
+        hbox1 = QtGui.QHBoxLayout()
+        self.rbG = QtGui.QButtonGroup()
+        for rb in self.Qradios:
+            self.rbG.addButton(rb)
+            hbox1.addWidget(rb) 
+        groupBox.setLayout(hbox1)
+        hBox.addWidget(groupBox)
+        # save button
         self.buttonSave = QtGui.QPushButton("save",self)
-        hBox.addWidget(self.buttonNext)
         hBox.addWidget(self.buttonSave)
-        hBox.addStretch(1)
+        hBox.addStretch()
         self.vBox.addLayout(hBox)
-        #finish setup
-        self.setup()
         
+    def set_current_case(self,key):
+        self.releaseKeyboard()
+        self.timer.stop()
+        self.media.stop()
+        self.currentCase = self.casesToAnalyze[key]
+        #attributes
+        self.case = self.currentCase['case']
+        #update buttons
+        self.both_visibles = True
+        self.cb.setChecked(self.both_visibles)
+        self.current_noise = 'Z'
+        self.SOIcombo.setCurrentIndex(self.NoiseTypes.index(self.current_noise))
+        if self.currentCase.get('saved',False):
+            self.buttonSave.setStyleSheet("background-color: green")
+        else:
+            self.buttonSave.setStyleSheet("background-color: red")
+        self.check_rb(self.case.case['quality'])
+                        
+        #set SOI and update Canvas
+        self.set_noise_type('Z')
+        #plot
+        self.plot()
+        #Set mediafile
+        wavPath = self.mesPath.joinpath(self.currentCase['wavPath'])
+        self.set_media_source(str(wavPath), self.currentCase['tmin'])
+        #start timer
+        self.timer.start()
+        self.grabKeyboard()
+        
+    def plot(self):
+        self.SelectAxis.cla()
+        self.case.plot_triggers(self.SelectAxis)
+        for key, pData in self.currentCase['plotData'].items():
+            t,y = pData
+            self.SelectAxis.plot(t, y , label = key)
+        tmin = self.currentCase['tmin']
+        tmax = self.currentCase['tmax']
+        self.SelectAxis.set_xlim(tmin,tmax)
+        self.SelectAxis.set_ylabel('LA dB')
+        self.SelectAxis.set_xlabel('t (s)')
+        self.SelectAxis.legend()
+        for ca in self.canvas:
+            ca.draw()
+        #update canvas
+        self.update_stay_rect()
+
     def _connections(self):
         # connections
         self.SOIcombo.currentIndexChanged.connect(self.set_noise_type)
         self.cb.stateChanged.connect(self.set_both_visible)
-        #self.buttonNext.clicked.connect(self.next_case)
+        self.CaseCombo.currentIndexChanged.connect(self.change_current_case)
+        for rb in self.Qradios:
+            rb.clicked.connect(self.set_quality)
         self.buttonSave.clicked.connect(self.save_case)
     
     def set_noise_type(self, index):
@@ -219,6 +314,25 @@ class CaseCreatorWidget(DetectControlWidget):
         else:
             self.both_visibles= False
         self.update_stay_rect()
+        
+    def change_current_case(self, index):
+        key = self.casesKeys[index]
+        if True:#self.currentCase.get('saved',False):
+            self.set_current_case(key)
+        # else:
+        #     QtGui.QMessageBox.warning(self, self.trUtf8("save error"), 
+        #      self.trUtf8("Before switching case save it!"))
+        
+    def set_quality(self):
+        for q,rb in zip( ['good','medium','bad'],self.Qradios):
+            if rb.isChecked():
+                self.case.set_quality(q)
+                
+    def check_rb(self, q):
+        self.rbG.setExclusive(False)
+        for rb, qb in  zip(self.Qradios, ['good', 'medium', 'bad']):
+            rb.setChecked(q==qb)
+        self.rbG.setExclusive(False)
         
     def add_int(self, xmin,xmax):
         Int = Interval(xmin,xmax)
@@ -284,30 +398,79 @@ class CaseCreatorWidget(DetectControlWidget):
                 self.CS.set_stay_rect_visible(False, index)
     
     def save_case(self):
-        mesPath='D:'
-        self.case.save(mesPath)
-        
+        if self.case.case['quality'] == None:
+            QtGui.QMessageBox.warning(self, self.trUtf8("save error"), 
+             self.trUtf8("Quality of selection has to be set!"))
+        else:
+            # set the author
+            self.case.case['author'] = self.author
+            self.case.save(self.mesPath)
+            self.currentCase['saved'] = True
+            self.buttonSave.setStyleSheet("background-color: green")
+            currentIndex= self.casesKeys.index(str(self.CaseCombo.currentText()))
+            self.CaseCombo.setItemData(currentIndex,QtGui.QColor('green'),QtCore.Qt.BackgroundRole)
 
-    @classmethod
-    def from_measurement(cls, mesVal, mID, mic):
-        case = Case()
-        wavPath = micSn.export_to_Wav()
-        #Canvas
-        plt.ioff()
-        ca, Bars = algorithm.visualize(micSn)
-        return(cls(wavPath.as_posix(), {str(micSn):ca} , micSn.t.min(), Bars ))
-        QMessageBox.information(w, "Message", "An information messagebox @ pythonspot.com ")
+
+    def show_info(self):
+        information=\
+"""With this small Widget is possible to analyze audio signals and create tests cases of curve noise:
+----------------------------------------------------------------------
+Hear the recorded signal using the media buttons in the toolbar
+    - Warning: notebook speakers have poor quality. 
+    - Use hearphones or a better audio system to analyze the signal 
+
+We diffentiate between two noise types:
+    - Kreischen: Squeal noise
+    - Zischen: Flanging Noise
+
+Selection of intervals where noise is present is done by:
+    - left mouse button for select span
+    - rigth mouse click on a selected span to remove it
+    - hold key d and left mouse button to remove span
+    - hold key s to select noise while playing
+
+Before saving is important to select quality:
+    - good: noise events are good to recognize
+    - medium: it is possible to detect noise events
+    - bad: noise events almost impossible to detects
+
+Be sure to have analyzed(saved) all the cases before quitting the application. A saved case has a green state.
+    
+    """
+        QtGui.QMessageBox.information(self,"Info", information)
         
-   
+    @classmethod
+    def from_measurement(cls, mesVal, mID, mics, author = None):
+        mesPath = mesVal.path
+        ts = measuredSignal(mID,mics)
+        case_dict = {}
+        for mic in mics:
+            micSn = MicSignal.from_measurement(mesVal,mID, mic)
+            wavPath = micSn.export_to_Wav(mesPath)
+            caseParam = {'measurement':mesVal.measurement,\
+                        'location': mesVal.location,
+                        'mID':mID,'mic':mic,
+                        'author': None}
+            caseParam.update(mesVal.get_variables_values(mID, mic, ['Tb','Te']))
+            #create case_dict
+            y,t,sR = ts.get_signal('prms'+str(mic))
+            case_dict[str(micSn)] = {'wavPath': wavPath,
+                            'case': Case(**caseParam),
+                            'plotData':{'LAf':[t, 20*np.log10(y/(2e-5))]},
+                            'tmin':micSn.t.min(),
+                            'tmax':micSn.t.max()}
+        return(cls( mesPath, case_dict, author))
+
 ##
 if __name__ == "__main__":
     from kg.measurement_values import measuredValues
     from kg.measurement_signal import measuredSignal
     from kg.algorithm import ZischenDetetkt1
     #setup measurement
-    mesPath = 'Measurements_example\MBBMZugExample'
+    mesPath = pathlib.Path('Measurements_example\MBBMZugExample')
     mesVal = measuredValues.from_json(mesPath)
     measuredSignal.setup(mesPath)
+    ##
     #algorithm
     algorithm = ZischenDetetkt1(2000,0,0.1)
     mID = 'm_0100'
@@ -316,12 +479,9 @@ if __name__ == "__main__":
     micSn.calc_kg(algorithm)
     #Run Widget
     #W = DetectControlWidget.alg_results(micSn,algorithm)
-    caseParam = {'measurement':mesVal.measurement,\
-                'location': mesVal.location,
-                'mID':mID,'mic':mic,
-                'author':'esr'}
-    caseParam.update(mesVal.get_variables_values(mID,mic,['Tb','Te']))
-    newcase = Case(**caseParam)
-    W = CaseCreatorWidget(newcase,micSn,'esr',mesVal.path.as_posix())
+
+    ##
+    mic= [1,2,4,5,6]
+    W = CaseCreatorWidget.from_measurement(mesVal,mID,mic)
     W.show()
     

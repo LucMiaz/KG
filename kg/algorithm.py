@@ -9,6 +9,10 @@ from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.pyplot as plt
 
 from kg.mpl_widgets import Bar
+from kg.detect import MicSignal
+from kg.case import Case
+from kg.measurement_values import measuredValues
+ 
 
 class Algorithm(object):
     def __init__(self, noiseType, parameter, description =''):
@@ -32,7 +36,7 @@ class Algorithm(object):
         '''
         test algorithm  on Case
         '''
-        assert(not (case.case['location'] == mesValues.location and\
+        assert((case.case['location'] == mesValues.location and\
                     case.case['measurement'] == mesValues.measurement))
                     
         mID = case.case['mID']
@@ -41,8 +45,8 @@ class Algorithm(object):
         micSn = MicSignal.from_measurement(mesValues, mID, mic)
         output = self.func(micSn)
         
-        comparation = case.compare(output['results'],[min(output['t']),\
-                                max(output['t']),output['dt']], sum = True)
+        comparation = case.compare(output['result'],min(output['t']),\
+                                max(output['t']),output['dt'])
         #fill test cases
         dict = {'mic':mic,'mID':mID,'author':author}
         self.case_tests[str(case)]= dict.update(comparation)
@@ -187,8 +191,7 @@ class ZischenDetetkt1(Algorithm):
         MicSnObj.plot_triggers(ax)
         ca = FigureCanvas(fig)
         #Bar
-        Bars = [Bar(ax) for ax in axes] 
-        return(ca,Bars)
+        return({'animate':True,'bar':True, 'canvas':ca , 'axHandle': [Bar(ax) for ax in axes] })
         
     def __str__(self):
         s = '{}_{}s'.format( self.__class__.__name__, self.param['dt'])

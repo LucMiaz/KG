@@ -76,9 +76,9 @@
 	"idValues" : {
 		"wind" : {
 			"table" : "Wetterstation",
-			"colName" : "Windgeschw. [m/s]",
+			"colName" : "Windgeschwindigkeit",
 			"sheet" : "Infos",
-			"description" : "Windgeschwindigkeit"
+			"description" : "Windgeschwindigkeit in [m/s]"
 		},
 		"v2" : {
 			"table" : "Achszeiten",
@@ -94,15 +94,15 @@
 		},
 		"humidity" : {
 			"table" : "Wetterstation",
-			"colName" : "rel. Feuchte [%]",
+			"colName" : "rel. Feuchte",
 			"sheet" : "Infos",
-			"description" : ""
+			"description" : "Relative Feuchte in %"
 		},
 		"mDate" : {
 			"table" : "Wetterstation",
 			"colName" : "Datum",
 			"sheet" : "Infos",
-			"description" : null
+			"description" : "Datum der Vorbeifahrt"
 		},
 		"Gleis" : {
 			"table" : "Achszeiten",
@@ -114,7 +114,7 @@
 			"table" : "Achszeiten",
 			"colName" : "Fahrtrichtung",
 			"sheet" : "Achszeiten",
-			"description" : "Fahrrichtung, 1 sud,0 nord"
+			"description" : "Fahrtrichtung, 1 sud,0 nord"
 		},
 		"v1" : {
 			"table" : "Achszeiten",
@@ -126,31 +126,31 @@
 			"table" : "Achszeiten",
 			"colName" : "Zugart",
 			"sheet" : "Achszeiten",
-			"description" : null
+			"description" : "Zugsart erkennt aus achsmunster. Achsmunster wird durch Schienentriggern detektiert "
 		},
 		"axleProLenght" : {
 			"table" : "Achszeiten",
-			"colName" : "Achsen pro L\u00e4nge",
+			"colName" : "APL gesamt",
 			"sheet" : "Achszeiten",
 			"description" : null
 		},
 		"Temp" : {
 			"table" : "Wetterstation",
-			"colName" : "Temperatur [K]",
+			"colName" : "Temperatur",
 			"sheet" : "Infos",
-			"description" : null
+			"description" : "Temperatur in [K]"
 		},
 		"trainLenght" : {
 			"table" : "Achszeiten",
-			"colName" : "L\u00e4nge [m]",
+			"colName" : "L\u00e4nge",
 			"sheet" : "Achszeiten",
-			"description" : "Zugslänghe"
+			"description" : "Zugslänghe in meter"
 		},
 		"rain" : {
 			"table" : "Wetterstation",
-			"colName" : "Regen [V]",
+			"colName" : "Regen",
 			"sheet" : "Infos",
-			"description" : null
+			"description" : "Regen in elektrische spannung?"
 		}
 	},
 	"microphones" : [1, 2, 4, 5, 6, 7]

@@ -42,7 +42,7 @@ class MicSignal(object):
     - filename, string
     
     """    
-    def __init__(self, ID, mic, y, t, sR, micValues, mesPath = None):
+    def __init__(self, ID, mic, y, t, sR, micValues):
 
         self.ID = ID
         self.mic = mic
@@ -55,8 +55,7 @@ class MicSignal(object):
                 self.micValues[k] = micValues[k]
             except KeyError as e:
                 raise(Exception('__init__ '+ID+str(mic)+' incomplete'))
-        if not mesPath == None:
-            self.mesPath = pathlib.Path(mesPath)
+                
         self.STFT = {}
         self.KG = {'Z':{},'K':{}}
         self.clippedtest()
@@ -324,39 +323,8 @@ class MicSignal(object):
         if not filename in [p.name for p in wavPath.glob('*.wav')]:
             scaled = np.int16(self.y/ np.abs(self.y).max() * 32767)
             wavfile.write(filePath.as_posix(), self.sR , scaled)
-        self.wavPath = wavPath.joinpath(filename)
-        return(self.wavPath)
-        
-    @ classmethod
-    def from_measurement(cls, mesValues, ID, mic):
-        mS = measuredSignal(ID,mic)
-        y,t,sR = mS.get_signal(mic)
-        var = ['Tb','Te','Tp_b','Tp_e','LAEQ', 'besch']
-        micValues = mesValues.get_variables_values(ID, mic, var)
-        print(micValues)
-        return(cls(ID,mic,y,t,sR, micValues))
-        
-    def export_to_Wav(self,wawPath = None):
-        """
-        Export a .wav file of the signal in mesPath\wav
-        
-        param
-        ------
-        mesPath: main measurement path
-        
-        return
-        ------
-        libpath Obj: path of wavfile
-        """
-        wavPath = self.mesPath.joinpath('wav')
-        os.makedirs(wavPath.as_posix(), exist_ok = True)
-        filename = str(self) + '.wav'
-        filePath = wavPath.joinpath(filename)
-        if not filename in [p.name for p in wavPath.glob('*.wav')]:
-            scaled = np.int16(self.y/ np.abs(self.y).max() * 32767)
-            wavfile.write(filePath.as_posix(), self.sR , scaled)
-        self.wavPath = wavPath.joinpath(filename)
-        return(self.wavPath)
+        path = filePath.absolute()
+        return(path.relative_to(mesPath))
         
     @ classmethod
     def from_measurement(cls, mesValues, ID, mic):
@@ -366,7 +334,7 @@ class MicSignal(object):
         var = ['Tb','Te','Tp_b','Tp_e','LAEQ']
         micValues = mesValues.get_variables_values(ID, mic, var)
         micValues.update(ch_info)
-        return(cls(ID,mic,y,t,sR, micValues, str(mesValues.path)))
+        return(cls(ID,mic,y,t,sR, micValues ))
         
 ##functions
 def isclipped(xn, K=301, threshold=0.55, axdisplay=None, normalizehist=False):

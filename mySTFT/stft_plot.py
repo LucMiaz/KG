@@ -9,8 +9,10 @@ import matplotlib
 from mpl_toolkits.axes_grid.inset_locator import inset_axes
 import brewer2mpl
 import seaborn as sns
+sns.set(style='ticks', palette='Set2')
 sys.path.append('D:\GitHub\myKG')
 import mySTFT
+from mySTFT.stft import *
 
 
 def plot_spectrogram(X, param, ax, colorbar = True, title = 'Spectrogram', dB= True, freqscale = 'log', dBMax = None, scaling = 'density', **kwargs):

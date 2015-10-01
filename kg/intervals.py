@@ -36,13 +36,17 @@ class SetOfIntervals(object):
         self.sort()
         if interv: #check if not None
             if not interv.ispoint():
+                #print("is not a point"+ str(interv))
                 self.remove(interv)
                 self.RangeInter.append(interv)
+                #print("##0")
+                #print(self.toJSON())
                 self.length=len(self.RangeInter)
                 self.sort()
                 self.lastinterval=interv
                 return interv
             else:
+                print("Interval is a point")
                 return None
         else:
             return None
@@ -101,7 +105,7 @@ class SetOfIntervals(object):
         return a
     
     def tolistsep(self):
-        """returns two lists with xmins and xmaxs"""
+        """ returns two lists with xmins and xmaxs """
         a=[]
         b=[]
         for inter in self.RangeInter:
@@ -113,6 +117,7 @@ class SetOfIntervals(object):
     def unionize(self):
         """Unions intervals if adjacents"""
         if not self.sorted:
+            
             self.RangeInter.sort()
         if self.length>1:
             for inter in self.RangeInter:
@@ -250,6 +255,8 @@ class SetOfIntervals(object):
                 print(filename + "openned")
                 json.dump(self.toJSON(rounding), filename)
                 print("data written in "+filename)
+
+
 
 class Interval(object):
     """
@@ -390,8 +397,7 @@ class Interval(object):
         return [self.xmin, self.xmax]
     
     def copy(self):
-        """returns a copy of the interval"""
-        return Interval(self.xmin,self.xmax)
+        return Interval(self.xmin, self.xmax)
         
 class ComplexEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -403,9 +409,3 @@ class ComplexEncoder(json.JSONEncoder):
             return obj.toJSON()
         # Let the base class default method raise the TypeError
         return json.JSONEncoder.default(self, obj)
-### test
-if __name__ == "__main__":
-    a=SetOfIntervals()
-    a.append(Interval(0.,1.))
-    a.append(Interval(10.,11.))
-    print(a)

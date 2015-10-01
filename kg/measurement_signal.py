@@ -1,4 +1,4 @@
-import os, pathlib, inspect
+import os, pathlib
 import scipy as sp
 from scipy.io import loadmat, wavfile
 import wave
@@ -19,12 +19,17 @@ class measuredSignal():
     _PATH = ''
     _SIGNALS = {}
 
-    def __init__(self, ID, mic = None):
+    def __init__(self, ID, mics = None, prms=True):
         self.ID = ID
         self.path = measuredSignal.PATH
         self.signals = {}
-        if not mic == None:
-            self.read_signal(mic)
+        if not mics == None:
+            if not isinstance(mics,list):
+                mics=[mics]
+            for mic in mics:
+                self.read_signal(mic)
+                if prms:
+                    self.read_signal('prms'+ str(mic))
         
     def list_signals(self):
         data = []
@@ -102,23 +107,20 @@ class measuredSignal():
     
     @classmethod
     def setup(cls, mesPath):
-        approot=os.path.dirname(os.path.dirname(inspect.stack()[0][1]))
-        mesPath = pathlib.Path(approot+'/'+mesPath)
+        #mesPath = pathlib.Path(mesPath)
         with mesPath.joinpath('raw_signals_config.json').open('r+') as config:
             cls._SIGNALS = json.load(config)
         cls.PATH = mesPath
-        #return(cls)
     
 ##tests 
 if __name__ == "__main__":
     #perché 'm1020'noné compreso (tilo), 'm_0119' chefrastuono
     import matplotlib.pyplot as plt
-    measuredSignal.setup('Measurements_example\MBBMZugExample')
-
+    mesPath = pathlib.Path('Measurements_example\MBBMZugExample')
+    measuredSignal.setup(mesPath)
     #
-    ts = measuredSignal('m_0104')
-    mic=[1]
-    k=[]
-    for i,m in enumerate(mic):
-        k.append(ts.read_signal(m))
-    
+    mics = [1,2,4,5,6,7]
+    ts = measuredSignal('m_0100', mics)
+    for mic in mics:
+        y,t,_ = ts.get_signal('prms'+str(mic))
+        plt.plot(t,np.abs(20*np.log10(y/(2e-5))))
