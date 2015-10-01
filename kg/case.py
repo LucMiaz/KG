@@ -29,8 +29,8 @@ class Case(object):
                 "mic":  mic,
                 "author": author,
                 "date":time.strftime('%d.%m.%Y'),
-                "tb":Tb,
-                "te":Te,
+                "Tb":Tb,
+                "Te":Te,
                 "KG":SetOfIntervals(),#Kreischen
                 "Z":SetOfIntervals(),#Zischen
                 }
@@ -60,7 +60,7 @@ class Case(object):
         os.makedirs(casePath.as_posix(), exist_ok = True)
         name = str(self) + '.json'
         casePath = casePath.joinpath(name)
-        self.toJSON(casepath)
+        self.toJSON(casePath)
         return (casePath.as_posix())
         
     def get_SOI(self, noiseType='Z'):
@@ -96,7 +96,7 @@ class Case(object):
             raise Error("The file in path" + casePath + " has not been found.")
         cl = cls(**dict)
         for nT in ['Z']:# todo :'KG' 
-            dNT = dict[nT]["SetOfIntervals"]
+            dNT = dict[nT]
             setoi = [[i['xmin'],  i['xmax']] for i in dNT]
             cl.get_SOI(nT).appendlistofduples(setoi)
         return(cl)
@@ -106,10 +106,7 @@ if __name__ == "__main__":
     #import prettyplotlib #makes nicer plots
     #import matplotlib.pyplot as plt
     plt.ioff()
-    x = np.arange(100)/(79.0)
-    y = np.sin(x)
     fig, ax = plt.subplots(1)
-    ax.plot(x,y)
     #new = GraphicalIntervals(ax)
     Newcase = Case('Zug','Vormessung','m_0100','1',0,10,'esr')
     ca = FigureCanvas(fig)
@@ -118,7 +115,7 @@ if __name__ == "__main__":
         cs.set
     def f2(x):
         print(x)
-    cs= CaseSelector(ax,f1,f2, update_on_ext_event=False)
+    #cs= CaseSelector(ax,f1,f2, update_on_ext_event=False)
     ca.show()
     ##save
     mesPath = 'Measurements_example\MBBMZugExample'

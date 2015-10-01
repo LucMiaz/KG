@@ -116,7 +116,9 @@ if __name__ == "__main__":
     measuredSignal.setup('Measurements_example\MBBMZugExample')
 
     #
-    ts = measuredSignal('m_0100')
-    mic=[1,2,4,5,6,7]
+    ts = measuredSignal('m_0104')
+    mic=[1]
+    k=[]
     for i,m in enumerate(mic):
-        ts.read_signal(m)
+        k.append(ts.read_signal(m))
+    
