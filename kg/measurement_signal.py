@@ -107,7 +107,7 @@ class measuredSignal():
     
     @classmethod
     def setup(cls, mesPath):
-        mesPath = pathlib.Path(mesPath)
+        #mesPath = pathlib.Path(mesPath)
         with mesPath.joinpath('raw_signals_config.json').open('r+') as config:
             cls._SIGNALS = json.load(config)
         cls.PATH = mesPath
@@ -116,7 +116,8 @@ class measuredSignal():
 if __name__ == "__main__":
     #perché 'm1020'noné compreso (tilo), 'm_0119' chefrastuono
     import matplotlib.pyplot as plt
-    measuredSignal.setup('Measurements_example\MBBMZugExample')
+    mesPath = pathlib.Path('Measurements_example\MBBMZugExample')
+    measuredSignal.setup(mesPath)
     #
     mics = [1,2,4,5,6,7]
     ts = measuredSignal('m_0100', mics)

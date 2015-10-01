@@ -64,13 +64,12 @@ class Case(object):
         '''
         if self.case['quality']  == None:
             print('Warning: case quality has to be set')
-        mesPath = pathlib.Path(mesPath)
         casePath = mesPath.joinpath('test_cases').joinpath(self.case['author'])
         os.makedirs(casePath.as_posix(), exist_ok = True)
         name = str(self) + '.json'
         casePath = casePath.joinpath(name)
         self.toJSON(casePath)
-        return(casePath.as_posix())
+        return(casePath)
         
     def get_SOI(self, noiseType='Z'):
         return(self.case[noiseType])

@@ -223,8 +223,8 @@ class measuredValues():
         
     @classmethod
     def from_json(cls, mesPath):
-        dataPath = pathlib.Path(mesPath)
-        dataPath = dataPath.joinpath('measurement_values/MBBM_mes_values.json')
+        #dataPath = pathlib.Path(mesPath)
+        dataPath = mesPath.joinpath('measurement_values/MBBM_mes_values.json')
         with dataPath.open('r+') as data:
             MBBM_data = json.load(data)
         return(cls(mesPath,**MBBM_data))
@@ -253,7 +253,7 @@ def serialize(data):
 
 if __name__ == "__main__":
     #Read and save MBBM values
-    mesPath = 'Measurements_example\MBBMZugExample'
+    mesPath = pathlib.Path('Measurements_example\MBBMZugExample')
     #read_MBBM_tables(mesPath,True)
     #getexample
     mesVal = measuredValues.from_json(mesPath)

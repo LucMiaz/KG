@@ -76,7 +76,7 @@ class DetectControlWidget(QMainWindow):
             #add connections
             self.connections()
 
-    def set_media_source(self,wavPath, t0 = 0, **kwargs):
+    def set_media_source(self, wavPath, t0 = 0, **kwargs):
         self.tShift = t0
         self.t = self.tShift
         self.media.setCurrentSource(Phonon.MediaSource(wavPath))
@@ -157,11 +157,20 @@ class CaseCreatorWidget(DetectControlWidget):
     tmax: flt
     wavPath: str
     '''
-    def __init__(self, mainPath, casesToAnalyze):
+    def __init__(self, mesPath, casesToAnalyze, author = None):
         #init super
         super(CaseCreatorWidget, self).__init__()
         self.setWindowTitle('Create Case')
-        self.mainPath = mainPath
+        # set the author
+        if author == None:
+            author, ok = QtGui.QInputDialog.getText(self, "Set author", "Please your name : ")
+            if ok:
+                author = author.replace(' ','_')
+            else:
+                author =  'anonymus'
+        self.author = author
+            
+        self.mesPath = mesPath
         self.minspan = 0.05
         self.remove = False
         self.add_widgets()
@@ -259,8 +268,8 @@ class CaseCreatorWidget(DetectControlWidget):
         #plot
         self.plot()
         #Set mediafile
-        wavPath = self.currentCase['wavPath']
-        self.set_media_source(wavPath, self.currentCase['tmin'])
+        wavPath = self.mesPath.joinpath(self.currentCase['wavPath'])
+        self.set_media_source(str(wavPath), self.currentCase['tmin'])
         #start timer
         self.timer.start()
         self.grabKeyboard()
@@ -393,7 +402,9 @@ class CaseCreatorWidget(DetectControlWidget):
             QtGui.QMessageBox.warning(self, self.trUtf8("save error"), 
              self.trUtf8("Quality of selection has to be set!"))
         else:
-            self.case.save(self.mainPath)
+            # set the author
+            self.case.case['author'] = self.author
+            self.case.save(self.mesPath)
             self.currentCase['saved'] = True
             self.buttonSave.setStyleSheet("background-color: green")
             currentIndex= self.casesKeys.index(str(self.CaseCombo.currentText()))
@@ -429,8 +440,8 @@ Be sure to have analyzed(saved) all the cases before quitting the application. A
         QtGui.QMessageBox.information(self,"Info", information)
         
     @classmethod
-    def from_measurement(cls, mesVal, mID, mics, author):
-        mesPath = str(mesVal.path)
+    def from_measurement(cls, mesVal, mID, mics, author = None):
+        mesPath = mesVal.path
         ts = measuredSignal(mID,mics)
         case_dict = {}
         for mic in mics:
@@ -439,16 +450,16 @@ Be sure to have analyzed(saved) all the cases before quitting the application. A
             caseParam = {'measurement':mesVal.measurement,\
                         'location': mesVal.location,
                         'mID':mID,'mic':mic,
-                        'author':author}
+                        'author': None}
             caseParam.update(mesVal.get_variables_values(mID, mic, ['Tb','Te']))
             #create case_dict
             y,t,sR = ts.get_signal('prms'+str(mic))
-            case_dict[str(micSn)] = {'wavPath': str(wavPath),
+            case_dict[str(micSn)] = {'wavPath': wavPath,
                             'case': Case(**caseParam),
                             'plotData':{'LAf':[t, 20*np.log10(y/(2e-5))]},
                             'tmin':micSn.t.min(),
                             'tmax':micSn.t.max()}
-        return(cls( mesPath, case_dict))
+        return(cls( mesPath, case_dict, author))
 
 ##
 if __name__ == "__main__":
@@ -456,7 +467,7 @@ if __name__ == "__main__":
     from kg.measurement_signal import measuredSignal
     from kg.algorithm import ZischenDetetkt1
     #setup measurement
-    mesPath = 'Measurements_example\MBBMZugExample'
+    mesPath = pathlib.Path('Measurements_example\MBBMZugExample')
     mesVal = measuredValues.from_json(mesPath)
     measuredSignal.setup(mesPath)
     ##
@@ -471,6 +482,6 @@ if __name__ == "__main__":
 
     ##
     mic= [1,2,4,5,6]
-    W = CaseCreatorWidget.from_measurement(mesVal,mID, mic,'esr')
+    W = CaseCreatorWidget.from_measurement(mesVal,mID,mic)
     W.show()
     
