@@ -8,7 +8,8 @@ from kg.measurement_signal import measuredSignal
 
 if __name__ == "__main__":
     #Read and save MBBM values
-    mesPath = 'D:\GitHub\myKG\Measurements_example\MBBMZugExample'
+    #mesPath = 'D:\GitHub\myKG\Measurements_example\MBBMZugExample'
+    mesPath = pathlib.Path('')
     read_MBBM_tables(mesPath,True)
     mesVal = measuredValues.from_json(mesPath)
     ## some tests
