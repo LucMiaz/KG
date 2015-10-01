@@ -36,9 +36,9 @@ class Case(object):
         """Compares the discretization of this case with the one of an algorithm whose results are given in otherdisc. timeparam variable contains the variables for the discretization. Returns a dictionnary with the number of True positives, True negatives, False positives and False negatives"""
         try:
             disc = self.case[noiseType].discretize(tmin, tmax, dt)
+            assert( len(otherdisc) == len(disc) )
         except:
             disc = 0
-        assert( len(otherdisc) == len(disc) )
         retTF={'FP':[], 'TP':[], 'FN':[],'TN':[]}
         retTF['TP'] = np.logical_and(otherdisc,disc)
         retTF['TN'] = np.logical_and(np.logical_not(otherdisc), np.logical_not(disc))
@@ -114,12 +114,10 @@ class Case(object):
     def from_JSON(cls, casePath):
         """@classmethod is used to pass the class to the method as implicit argument. Then we open a file in JSON located at casePath and give it to the class with **kwargs (meaning that we pass an arbitrary number of arguments to the class)
         """
-        try:
-            dict = json.load(open(casePath, 'r'))
-        except FileNotFoundError:
-            raise Error("The file in path" + casePath + " has not be found.")
+        with open(casePath,'r') as file:
+            dict = json.load(file)
         cl = cls(**dict)
-        for nT in ['Z']:# todo :'KG' 
+        for nT in ['Z','KG']:
             dNT = dict[nT]
             set = [[int['xmin'] , int['xmax']] for int in dNT] 
             cl.get_SOI(nT).appendlistofduples(set)
@@ -135,9 +133,10 @@ if __name__ == "__main__":
     fig, ax = plt.subplots(1)
     ax.plot(x,y)
     #new = GraphicalIntervals(ax)
-    Newcase = Case('Zug','Vormessung','m_0100','1',0,10,'esr')
+    Newcase = Case('Zug','Vormessung','m_0101','1',0,10,'esr')
 ##save
-    mesPath = 'Measurements_example\MBBMZugExample'
-    casePath = Newcase.save(mesPath)
-    Newcase2 = Case.from_JSON(casePath)
+    mesPath = pathlib.Path('Measurements_example\MBBMZugExample')
+    casePath = Newcase.save(str(mesPath))
+    Newcase2 = Case.from_JSON(str(casePath))
+    case = Case.from_JSON(str(mesPath.joinpath('\test_cases\esr\case_m_0100_1_esr.json')))
     

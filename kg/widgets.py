@@ -15,6 +15,8 @@ from kg.detect import MicSignal
 from kg.mpl_widgets import Bar, CaseSelector
 from kg.case import Case
 from kg.case import Interval
+import seaborn as sns
+sns.set(style='ticks', palette='Set2')
                           
 class DetectControlWidget(QMainWindow):
 
@@ -155,31 +157,31 @@ class CaseCreatorWidget(DetectControlWidget):
     tmax: flt
     wavPath: str
     '''
-    def __init__(self, cases_dict):
+    def __init__(self, mainPath, casesToAnalyze):
         #init super
         super(CaseCreatorWidget, self).__init__()
         self.setWindowTitle('Create Case')
-        self.minspan = 0.1
+        self.mainPath = mainPath
+        self.minspan = 0.05
         self.remove = False
         self.add_widgets()
         self.set_centralWidget()
         #set cases
         self.NoiseTypes = ['Z','KG']
-        self.cases_dict = cases_dict
-        self.mainPath = self.cases_dict['mainPath']
-        self.cases_keys = list(cases_dict.keys())
-        self.cases_keys.remove('mainPath')
-        self.CaseCombo.addItems(self.cases_keys)
+        self.casesToAnalyze = casesToAnalyze        
+        self.casesKeys = sorted(list(self.casesToAnalyze.keys()))
+        self.CaseCombo.addItems(self.casesKeys)
         #set case
-        self.set_case(self.cases_keys[0])
+        self.set_current_case(self.casesKeys[0])
         #add connections
         self.connections()
         
     def add_widgets(self):
         #Figure Canvas
         canvas={}
-        fig = Figure()
-        fig.set_dpi(150)
+        plt.ioff()
+        fig = Figure((15,10))
+        fig.set_dpi(110)
         ax = fig.add_subplot(111)
         ca = FigureCanvas(fig)
         self.SelectAxis = ax
@@ -234,15 +236,15 @@ class CaseCreatorWidget(DetectControlWidget):
         hBox.addStretch()
         self.vBox.addLayout(hBox)
         
-    def set_case(self,key):
+    def set_current_case(self,key):
         self.releaseKeyboard()
         self.timer.stop()
         self.media.stop()
-        self.currentCase = self.cases_dict[key]
+        self.currentCase = self.casesToAnalyze[key]
         #attributes
         self.case = self.currentCase['case']
         #update buttons
-        self.both_visibles=True
+        self.both_visibles = True
         self.cb.setChecked(self.both_visibles)
         self.current_noise = 'Z'
         self.SOIcombo.setCurrentIndex(self.NoiseTypes.index(self.current_noise))
@@ -255,7 +257,7 @@ class CaseCreatorWidget(DetectControlWidget):
         #set SOI and update Canvas
         self.set_noise_type('Z')
         #plot
-        self.plot(self.currentCase)
+        self.plot()
         #Set mediafile
         wavPath = self.currentCase['wavPath']
         self.set_media_source(wavPath, self.currentCase['tmin'])
@@ -263,14 +265,14 @@ class CaseCreatorWidget(DetectControlWidget):
         self.timer.start()
         self.grabKeyboard()
         
-    def plot(self, current_caseDict):
+    def plot(self):
         self.SelectAxis.cla()
         self.case.plot_triggers(self.SelectAxis)
-        for key, pData in current_caseDict['plotData'].items():
+        for key, pData in self.currentCase['plotData'].items():
             t,y = pData
             self.SelectAxis.plot(t, y , label = key)
-        tmin = current_caseDict['tmin']
-        tmax = current_caseDict['tmax']
+        tmin = self.currentCase['tmin']
+        tmax = self.currentCase['tmax']
         self.SelectAxis.set_xlim(tmin,tmax)
         self.SelectAxis.set_ylabel('LA dB')
         self.SelectAxis.set_xlabel('t (s)')
@@ -284,7 +286,7 @@ class CaseCreatorWidget(DetectControlWidget):
         # connections
         self.SOIcombo.currentIndexChanged.connect(self.set_noise_type)
         self.cb.stateChanged.connect(self.set_both_visible)
-        self.CaseCombo.currentIndexChanged.connect(self.change_case)
+        self.CaseCombo.currentIndexChanged.connect(self.change_current_case)
         for rb in self.Qradios:
             rb.clicked.connect(self.set_quality)
         self.buttonSave.clicked.connect(self.save_case)
@@ -304,10 +306,10 @@ class CaseCreatorWidget(DetectControlWidget):
             self.both_visibles= False
         self.update_stay_rect()
         
-    def change_case(self, index):
-        key = self.cases_keys[index]
+    def change_current_case(self, index):
+        key = self.casesKeys[index]
         if True:#self.currentCase.get('saved',False):
-            self.set_case(key)
+            self.set_current_case(key)
         # else:
         #     QtGui.QMessageBox.warning(self, self.trUtf8("save error"), 
         #      self.trUtf8("Before switching case save it!"))
@@ -394,7 +396,10 @@ class CaseCreatorWidget(DetectControlWidget):
             self.case.save(self.mainPath)
             self.currentCase['saved'] = True
             self.buttonSave.setStyleSheet("background-color: green")
-            self.CaseCombo.setItemData(0, QtGui.QColor.red )
+            currentIndex= self.casesKeys.index(str(self.CaseCombo.currentText()))
+            self.CaseCombo.setItemData(currentIndex,QtGui.QColor('green'),QtCore.Qt.BackgroundRole)
+
+
     def show_info(self):
         information=\
 """With this small Widget is possible to analyze audio signals and create tests cases of curve noise:
@@ -427,8 +432,7 @@ Be sure to have analyzed(saved) all the cases before quitting the application. A
     def from_measurement(cls, mesVal, mID, mics, author):
         mesPath = str(mesVal.path)
         ts = measuredSignal(mID,mics)
-        case_dict = collections.OrderedDict()
-        case_dict = {'mainPath' : mesPath}
+        case_dict = {}
         for mic in mics:
             micSn = MicSignal.from_measurement(mesVal,mID, mic)
             wavPath = micSn.export_to_Wav(mesPath)
@@ -438,13 +442,13 @@ Be sure to have analyzed(saved) all the cases before quitting the application. A
                         'author':author}
             caseParam.update(mesVal.get_variables_values(mID, mic, ['Tb','Te']))
             #create case_dict
-            y,t,sR= ts.get_signal('prms'+str(mic))
+            y,t,sR = ts.get_signal('prms'+str(mic))
             case_dict[str(micSn)] = {'wavPath': str(wavPath),
                             'case': Case(**caseParam),
                             'plotData':{'LAf':[t, 20*np.log10(y/(2e-5))]},
                             'tmin':micSn.t.min(),
                             'tmax':micSn.t.max()}
-        return(cls(case_dict))
+        return(cls( mesPath, case_dict))
 
 ##
 if __name__ == "__main__":
