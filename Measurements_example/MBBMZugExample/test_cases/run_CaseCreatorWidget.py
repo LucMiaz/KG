@@ -1,5 +1,4 @@
 import sys
-sys.path.append('D:\GitHub\myKG')
 import os, pathlib
 import numpy as np
 import json
@@ -9,6 +8,7 @@ from kg.case import Case
 from kg.widgets import CaseCreatorWidget
 import itertools
 import matplotlib
+from matplotlib.font_manager import FontProperties
 
 
 if __name__ == "__main__":
@@ -55,12 +55,13 @@ if __name__ == "__main__":
         matplotlib.rcParams['xtick.minor.width']='0.3'
         matplotlib.rcParams['text.color']=textcolor
         matplotlib.rcParams['axes.labelcolor']=textcolor
+        matplotlib.rcParams['font.family']='HelveticaNeue'
         font={'family':'sans-serif','weight':'regular','size':11}
         matplotlib.rc('font',**font)
     W = CaseCreatorWidget(mesPath, caseToAnalyze)
     if changecolors:
         W.setPalette(palette)
-        W.setFont(QtGui.QFont('SansSerif',11))
+        W.setFont(QtGui.QFont('HelveticaNeue',11))
     W.show()
     sys.exit(app.exec_())
     

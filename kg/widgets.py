@@ -34,7 +34,7 @@ class DetectControlWidget(QMainWindow):
         self.refresh = 35
         self.timer = QtCore.QTimer()
         self.timer.setInterval(self.refresh)
-        
+        self.savefolder=None
         #phonon 
         #the media object controls the playback
         self.media = Phonon.MediaObject(self)
@@ -251,6 +251,27 @@ class CaseCreatorWidget(DetectControlWidget):
         hBox.addWidget(self.buttonSave)
         hBox.addStretch()
         self.vBox.addLayout(hBox)
+        # saved data directory group (button to change folder and current folder)
+        groupBox2=QtGui.QGroupBox("Saved data directory")
+        fm=QtGui.QFontMetrics('HelveticaNeue')
+        #todo crop if directory path too long
+        self.hlab=QtGui.QLabel(fm.elidedText(("Selected directory :"+str(self.savefolder)),QtCore.Qt.ElideLeft, self.buttonSave.width()+1))
+        
+        self.buttonChgSave = QtGui.QPushButton("Change folder",self)
+        hBox2=QtGui.QHBoxLayout()
+        hBox2.addWidget(self.hlab)
+        hBox2.addWidget(self.buttonChgSave)
+        groupBox2.setLayout(hBox2)
+        hBox.addWidget(groupBox2)
+        hBox.addStretch()
+        self.vBox.addLayout(hBox)
+        #select color of chg saving folder.
+        if not self.savefolder:
+            self.buttonChgSave.setStyleSheet("background-color: #c2a5cf")
+            self.hlab.setText("Selected directory : "+str(self.savefolder))
+        else:
+            self.buttonChgSave.setStyleSheet("background-color: #a6dba0")
+            self.hlab.setText("Selected directory : "+str(self.savefolder))
         
     def set_current_case(self,key):
         self.releaseKeyboard()
@@ -269,7 +290,6 @@ class CaseCreatorWidget(DetectControlWidget):
         else:
             self.buttonSave.setStyleSheet("background-color: #c2a5cf")
         self.check_rb(self.case.case['quality'])
-                        
         #set SOI and update Canvas
         self.set_noise_type('Z')
         #plot
@@ -299,13 +319,25 @@ class CaseCreatorWidget(DetectControlWidget):
         self.update_stay_rect()
 
     def _connections(self):
-        # connections
+        """connects the buttons/combobox to the methods to be applied"""
         self.SOIcombo.currentIndexChanged.connect(self.set_noise_type)
         self.cb.stateChanged.connect(self.set_both_visible)
         self.CaseCombo.currentIndexChanged.connect(self.change_current_case)
         for rb in self.Qradios:
             rb.clicked.connect(self.set_quality)
         self.buttonSave.clicked.connect(self.save_case)
+        self.buttonChgSave.clicked.connect(self.chg_folder)
+        
+    def chg_folder(self):
+        """change the directory where to save the data"""
+        self.savefolder=pathlib.Path(str(QFileDialog.getExistingDirectory(self,"Please select a directory where I can save your data.")))
+        #select color of chg saving folder.
+        if not self.savefolder:
+            self.buttonChgSave.setStyleSheet("background-color: #c2a5cf")
+            self.hlab.setText("Selected directory : "+str(self.savefolder))
+        else:
+            self.buttonChgSave.setStyleSheet("background-color: #a6dba0")
+            self.hlab.setText("Selected directory : "+str(self.savefolder))
     
     def set_noise_type(self, index):
         if isinstance(index,int):
@@ -410,8 +442,11 @@ class CaseCreatorWidget(DetectControlWidget):
              self.trUtf8("Quality of selection has to be set!"))
         else:
             # set the author
+            if not self.savefolder:
+                #asks for the folder where to save the datas
+                self.savefolder=pathlib.Path(str(QFileDialog.getExistingDirectory(self,"Please select a directory where I can save your data.")))
             self.case.case['author'] = self.author
-            self.case.save(self.mesPath)
+            self.case.save(self.savefolder)
             self.currentCase['saved'] = True
             self.buttonSave.setStyleSheet("background-color: #a6dba0")
             currentIndex= self.casesKeys.index(str(self.CaseCombo.currentText()))
