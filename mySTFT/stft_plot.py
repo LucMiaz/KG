@@ -7,7 +7,7 @@ plots:
 import sys
 import matplotlib
 from mpl_toolkits.axes_grid.inset_locator import inset_axes
-import brewer2mpl
+#import brewer2mpl
 import seaborn as sns
 sns.set(style='ticks', palette='Set2')
 sys.path.append('D:\GitHub\myKG')
@@ -37,7 +37,9 @@ def plot_spectrogram(X, param, ax, colorbar = True, title = 'Spectrogram', dB= T
     
     # plotting
     ax.set_title(title, fontsize = 10)
-    cmap = brewer2mpl.get_map('RdPu', 'Sequential', 9).mpl_colormap
+    #cmap = brewer2mpl.get_map('RdPu', 'Sequential', 9).mpl_colormap
+    cmap=['#fff7f3','#fde0dd','#fcc5c0', '#fa9fb5', '#f768a1', '#dd3497', '#ae017e','#7a0177', '#49006a']
+    cmap=LinearSegmentedColormap('RdPu',cmap)
     if dBMax==None:
         norm = matplotlib.colors.Normalize(vmin = 0)
     else:

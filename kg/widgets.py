@@ -7,6 +7,7 @@ from PySide import QtGui, QtCore
 from PySide.phonon import Phonon
 from PySide.QtGui import (QApplication, QMainWindow, QAction, QStyle,
                           QFileDialog)
+import matplotlib
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
@@ -52,7 +53,7 @@ class DetectControlWidget(QMainWindow):
         self.actions = self.addToolBar('Actions')
         for name, label, icon_name in ACTIONS:
             icon = self.style().standardIcon(icon_name)
-            action = QtGui.QAction(icon, label, self)
+            action = QtGui.QAction(icon, label, self, )
             action.setObjectName(name)
             self.actions.addAction(action)
             action.triggered.connect(getattr(self.media, name))
@@ -194,6 +195,8 @@ class CaseCreatorWidget(DetectControlWidget):
         ax = fig.add_subplot(111)
         ca = FigureCanvas(fig)
         self.SelectAxis = ax
+        axbgcolor='#272822'
+        fig.set_facecolor(axbgcolor)
         #case Selector
         self.CS = CaseSelector(self.SelectAxis, self.onselect, self.onclick, 
                                 nrect = [50,50], update_on_ext_event = True , 
@@ -211,13 +214,17 @@ class CaseCreatorWidget(DetectControlWidget):
         hbox1.addWidget(self.CaseCombo)
         groupBox.setLayout(hbox1)
         hBox.addWidget(groupBox)
-        # selct noise Type
+        # select noise Type
         groupBox = QtGui.QGroupBox('Noise Type to select')
         hBox1 = QtGui.QHBoxLayout()
         # noise Type combo
         self.SOIcombo = QtGui.QComboBox()
         self.SOIcombo.addItem('Zischen', 'Z')
+        self.SOIcombo.setItemData(0,QtGui.QColor('#d8b365'),QtCore.Qt.BackgroundRole)#add backgroundcolor to combo Z
+        self.SOIcombo.setItemData(0,QtGui.QColor('#f5f5f5'),QtCore.Qt.TextColorRole)#change text color
         self.SOIcombo.addItem('Kreischen', 'KG')
+        self.SOIcombo.setItemData(1,QtGui.QColor('#5ab4ac'),QtCore.Qt.BackgroundRole)#add backgroundcolor to combo K
+        self.SOIcombo.setItemData(1,QtGui.QColor('#f5f5f5'),QtCore.Qt.TextColorRole)#change text color
         hBox1.addWidget(self.SOIcombo)
         # visualize both cb
         self.cb = QtGui.QCheckBox('both visible', self)
@@ -258,9 +265,9 @@ class CaseCreatorWidget(DetectControlWidget):
         self.current_noise = 'Z'
         self.SOIcombo.setCurrentIndex(self.NoiseTypes.index(self.current_noise))
         if self.currentCase.get('saved',False):
-            self.buttonSave.setStyleSheet("background-color: green")
+            self.buttonSave.setStyleSheet("background-color: #a6dba0")
         else:
-            self.buttonSave.setStyleSheet("background-color: red")
+            self.buttonSave.setStyleSheet("background-color: #c2a5cf")
         self.check_rb(self.case.case['quality'])
                         
         #set SOI and update Canvas
@@ -279,7 +286,7 @@ class CaseCreatorWidget(DetectControlWidget):
         self.case.plot_triggers(self.SelectAxis)
         for key, pData in self.currentCase['plotData'].items():
             t,y = pData
-            self.SelectAxis.plot(t, y , label = key)
+            self.SelectAxis.plot(t, y , label = key, color='#f5f5f5', linewidth=1.)#plot display
         tmin = self.currentCase['tmin']
         tmax = self.currentCase['tmax']
         self.SelectAxis.set_xlim(tmin,tmax)
@@ -329,7 +336,7 @@ class CaseCreatorWidget(DetectControlWidget):
                 self.case.set_quality(q)
                 
     def check_rb(self, q):
-        self.rbG.setExclusive(False)
+        self.rbG.setExclusive(False)#allows to choose multiple qualities
         for rb, qb in  zip(self.Qradios, ['good', 'medium', 'bad']):
             rb.setChecked(q==qb)
         self.rbG.setExclusive(False)
@@ -406,9 +413,9 @@ class CaseCreatorWidget(DetectControlWidget):
             self.case.case['author'] = self.author
             self.case.save(self.mesPath)
             self.currentCase['saved'] = True
-            self.buttonSave.setStyleSheet("background-color: green")
+            self.buttonSave.setStyleSheet("background-color: #a6dba0")
             currentIndex= self.casesKeys.index(str(self.CaseCombo.currentText()))
-            self.CaseCombo.setItemData(currentIndex,QtGui.QColor('green'),QtCore.Qt.BackgroundRole)
+            self.CaseCombo.setItemData(currentIndex,QtGui.QColor('#a6dba0'),QtCore.Qt.BackgroundRole)
 
 
     def show_info(self):

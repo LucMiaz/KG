@@ -15,5 +15,5 @@ build_exe_options = {
 setup(name = "KG Detection",
       version = "0.9",
       description = "Graphical Interface of noise range selection : Please select the intervals where you here either Kreischen or Zischen.",
-      executables = [Executable("Clipping/detect-clipping.py")],
+      executables = [Executable("Measurements_example/MBBMZugExample/test_cases/run_CaseCreatorWidget.py")],
       options = {"build_exe": build_exe_options},)
