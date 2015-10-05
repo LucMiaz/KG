@@ -32,15 +32,20 @@ class Case(object):
                 }
         self.case['caseID'] = str(self)
     
-    def compare(self, otherdisc, t , noiseType = 'Z',sum = True):
+    def compare(self, result, t , noiseType = 'Z', sum = True):
         """Compares the discretization of this case with the one of an algorithm whose results are given in otherdisc. timeparam variable contains the variables for the discretization. Returns a dictionnary with the number of True positives, True negatives, False positives and False negatives"""
+        #restrict comparation between Tb and Te
+        mask = np.logical_and(t >= self.case['Tb'], t <= self.case['Te'])
+        otherdisc = result[mask]
+        t = t[mask]
         try:
             disc = self.case[noiseType].discretize(t)
             assert( len(otherdisc) == len(disc) )
             #assert(not any([i==None for i in disc]))
         except AssertionError:
             print('something wrong in function of ', self)
-        retTF={'FP':[], 'TP':[], 'FN':[],'TN':[]}
+        
+        retTF={}
         retTF['TP'] = np.logical_and(otherdisc,disc)
         retTF['TN'] = np.logical_and(np.logical_not(otherdisc), np.logical_not(disc))
         retTF['FP'] = np.logical_and(otherdisc, np.logical_not(disc))
@@ -48,6 +53,8 @@ class Case(object):
         if sum:
             for k, v in retTF.items():
                 retTF[k]= int(v.sum())
+        else:
+            retTF['t'] = t
         return(retTF)
     
     def set_quality(self, quality):
@@ -92,6 +99,21 @@ class Case(object):
         ymin, ymax = ax.get_ylim()
         for xmin,xmax in SOI.tolist():
             ax.axvspan(xmin, xmax, ymin, ymax, alpha = 0.2, **kwargs)
+            
+    def plot_compare(self, ax, result , t , noiseType = 'Z',** kwargs):
+        
+        resTF = self.compare(result , t , noiseType, False)
+        
+        def inter(t,TF):
+            x=TF.astype(float)
+            dt = t[1]-t[0]
+            tint=np.arange(t.min()-dt/2,t.max()+dt,dt/2)
+            xint = np.interp(tint,t,x)>=0.5
+            return(tint,xint)
+        ymin,ymax = ax.get_ylim()
+        for k, c in zip(['TP','TN','FP','FN'],['b','g','r','y']):
+            t,x = inter(resTF['t'], resTF[k])
+            ax.fill_between(t,ymin,ymax, where = x,alpha= 0.3, color = c)
         
     def __str__(self):
         """prints the name of the case"""
@@ -122,6 +144,8 @@ class Case(object):
         with casePath.open('r+') as file:
             dict = json.load(file)
         cl = cls(**dict)
+        cl.case['quality'] = dict['quality']
+        
         for nT in ['Z','KG']:
             dNT = dict[nT]
             set = [[int['xmin'] , int['xmax']] for int in dNT] 
@@ -170,21 +194,21 @@ class Case(object):
 # # 
 # # 
 
-
 ## Test
 if __name__ == "__main__":
-    #import prettyplotlib #makes nicer plots
-    #import matplotlib.pyplot as plt
-    plt.ioff()
-    x = np.arange(100)/(79.0)
-    y = np.sin(x)
-    fig, ax = plt.subplots(1)
-    ax.plot(x,y)
-    #new = GraphicalIntervals(ax)
-    Newcase = Case('Zug','Vormessung','m_0101','1',0,10,'esr')
-##save
+    from kg.detect import MicSignal
+    from kg.algorithm import *
+    from kg.algorithm import Case
+    from kg.widgets import *
+    from kg.measurement_values import measuredValues
+    from kg.measurement_signal import measuredSignal
     mesPath = pathlib.Path('Measurements_example\MBBMZugExample')
-    casePath = Newcase.save(mesPath)
-    Newcase2 = Case.from_JSON(casePath)
-    #case = Case.from_JSON(str(mesPath.joinpath('\test_cases\esr\case_m_0100_1_esr.json')))
+    mesVal = measuredValues.from_json(mesPath)
+    measuredSignal.setup(mesPath)
+    W = CaseCreatorWidget.from_measurement(mesVal,'m_0100',[6])
+    W.show()
+##save
+    casePath = mesPath.joinpath('test_cases/esr/case_m_0100_6_esr.json').absolute()
+    case = Case.from_JSON(casePath)
+
     

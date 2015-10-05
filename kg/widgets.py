@@ -18,6 +18,8 @@ from kg.detect import MicSignal
 from kg.mpl_widgets import Bar, CaseSelector
 from kg.case import Case
 from kg.case import Interval
+from kg.measurement_values import measuredValues
+from kg.measurement_signal import measuredSignal
 #import seaborn as sns
 #sns.set(style='ticks',palette='Set2')
                           
@@ -455,7 +457,7 @@ Be sure to have analyzed(saved) all the cases before quitting the application. A
         
     @classmethod
     def from_measurement(cls, mesVal, mID, mics, author = None):
-        mesPath = mesVal.path
+        mesPath = mesVal.path.absolute()
         ts = measuredSignal(mID,mics)
         case_dict = {}
         for mic in mics:

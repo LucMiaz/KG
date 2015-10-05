@@ -33,7 +33,7 @@ class Algorithm(object):
         '''function which implement algorithm'''
         pass
     
-    def test_on_case(self, case, mesValues,micSn=None):
+    def test_on_case(self, case, mesValues, micSn = None):
         '''
         test algorithm  on Case
         '''
@@ -45,6 +45,7 @@ class Algorithm(object):
         mID = case.case['mID']
         mic = case.case['mic']
         author = case.case['author']
+        quality = case.case['quality']
         if micSn == None:
             micSn = MicSignal.from_measurement(mesValues, mID, mic)
         else:
@@ -58,7 +59,8 @@ class Algorithm(object):
 
         #fill test cases
         self.case_tests[str(case)] = {'mic':mic,'mID':mID,'location':loc,\
-                                    'measurement':mes,'author':author}
+                                    'measurement':mes,'author':author, \
+                                    'quality':quality}
         self.case_tests[str(case)].update(comparation)
         # add rates
         self.case_tests[str(case)].update(rates(**comparation))
@@ -176,25 +178,34 @@ class ZischenDetetkt1(Algorithm):
         return(output)
         
     def visualize(self,fig, MicSnObj, case = None):
-        'return Canvas and  bars for visualizations of algorithm results'
+        # todo: improve visualization
+        # todo: case.plot() is not shown with spectrogram
         stftName = MicSnObj.get_stft_name(self)
         fig.clf()
-        ax1= fig.add_subplot(2,1,1)
-        ax2= fig.add_subplot(2,1,2,sharex = ax1)
+        if case is not None:
+            ax1= fig.add_subplot(3,1,1)
+            ax2= fig.add_subplot(3,1,2,sharex = ax1)
+            ax3= fig.add_subplot(3,1,3,sharex = ax1)
+        else:
+            ax1= fig.add_subplot(2,1,1)
+            ax2= fig.add_subplot(2,1,2,sharex = ax1)
         #ax1
         MicSnObj.plot_spectrogram(stftName, ax1) 
         MicSnObj.plot_triggers(ax1)
-        if case is not None:
-            case.plot(ax2,color='magenta')
         MicSnObj.plot_KG(self,ax1,color = 'cyan')
         #ax2
         MicSnObj.plot_triggers(ax2)
         MicSnObj.plot_BPR(self,ax2)
         if case is not None:
-            case.plot(ax2,color='magenta')
-        MicSnObj.plot_KG(self,ax2,color = 'cyan')
-        
-        return(ax1,ax2)
+            case.plot(ax2,color= 'b')
+            
+        if case is not None:
+            MicSnObj.plot_BPR(self,ax3)
+            alg_res = MicSnObj.get_KG_results(self)['result']
+            case.plot_compare(ax3, noiseType = self.noiseType , **alg_res)
+            return(ax1,ax2,ax3)
+        else:
+            return(ax1,ax2)
 
         
     def __str__(self):
@@ -280,26 +291,32 @@ class ZischenDetetkt2(Algorithm):
     def visualize(self,fig, MicSnObj, case = None):
         # todo: improve visualization
         # todo: case.plot() is not shown with spectrogram
-        'return Canvas and  bars for visualizations of algorithm results'
         stftName = MicSnObj.get_stft_name(self)
         fig.clf()
-        ax1= fig.add_subplot(2,1,1)
-        ax2= fig.add_subplot(2,1,2,sharex = ax1)
+        if case is not None:
+            ax1= fig.add_subplot(3,1,1)
+            ax2= fig.add_subplot(3,1,2,sharex = ax1)
+            ax3= fig.add_subplot(3,1,3,sharex = ax1)
+        else:
+            ax1= fig.add_subplot(2,1,1)
+            ax2= fig.add_subplot(2,1,2,sharex = ax1)
         #ax1
         MicSnObj.plot_spectrogram(stftName, ax1) 
         MicSnObj.plot_triggers(ax1)
-        if case is not None:
-            case.plot(ax2,color= 'magenta')
         MicSnObj.plot_KG(self,ax1,color = 'cyan')
         #ax2
         MicSnObj.plot_triggers(ax2)
         MicSnObj.plot_BPR(self,ax2)
         if case is not None:
-            case.plot(ax2,color= 'magenta')
-        MicSnObj.plot_KG(self,ax2,color = 'cyan')
-        
-        return(ax1,ax2)
-
+            case.plot(ax2,color= 'b')
+            
+        if case is not None:
+            MicSnObj.plot_BPR(self,ax3)
+            alg_res = MicSnObj.get_KG_results(self)['result']
+            case.plot_compare(ax3, noiseType = self.noiseType , **alg_res)
+            return(ax1,ax2,ax3)
+        else:
+            return(ax1,ax2)
         
     def __str__(self):
         s = '{}_{}s'.format( self.__class__.__name__, self.param['dt'])

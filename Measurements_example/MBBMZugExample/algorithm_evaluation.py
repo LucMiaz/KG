@@ -24,9 +24,9 @@ if __name__ == "__main__":
     
     # setup algorithms
     # todo: parametrize alg parameter in the best possible way 
-    FC = np.arange(2000,6000,2000).round(0)
-    Treshold = np.arange(2,4,1).round(0)
-    DT = np.array([0.01,0.08])
+    FC = [3000]
+    Treshold = [4]
+    DT = [0.02]
     algorithms = []
     for fc, threshold, dt in itertools.product(FC,Treshold,DT):
         algorithms.append(ZischenDetetkt2(fc,threshold, dt))
@@ -64,8 +64,5 @@ if __name__ == "__main__":
     print('save to json')
     for n,alg in enumerate(algorithms):
         alg.export_test_results(mesPath)
-    
-##
-    W = CompareCaseAlgWidget(mesVal,cases[3],algorithms)
-    W.show()
+
 

@@ -190,7 +190,7 @@ class SetOfIntervals(object):
         """returns the characteristic function of the set RangeInter for the deltatimes from zerotime to endtime (return type is a duple of lists)"""
         ret = np.zeros(len(t)).astype(bool)
         for n, t_i in enumerate(t):
-            ret[n] = bool(self.containspoint(t_i))
+            ret[n] = not self.containspoint(t_i) == None
         return ret
         
     # def changeDiscretizeParameters(self, listofparams):
