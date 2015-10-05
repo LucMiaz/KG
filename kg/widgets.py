@@ -250,12 +250,11 @@ class CaseCreatorWidget(DetectControlWidget):
         self.buttonSave = QtGui.QPushButton("save",self)
         hBox.addWidget(self.buttonSave)
         hBox.addStretch()
-        self.vBox.addLayout(hBox)
         # saved data directory group (button to change folder and current folder)
         groupBox2=QtGui.QGroupBox("Saved data directory")
         fm=QtGui.QFontMetrics('HelveticaNeue')
-        #todo crop if directory path too long
-        self.hlab=QtGui.QLabel(fm.elidedText(("Selected directory :"+str(self.savefolder)),QtCore.Qt.ElideLeft, self.buttonSave.width()+1))
+        self.hlab=QtGui.QLabel("Selected directory : "+fm.elidedText(str(self.savefolder),QtCore.Qt.ElideLeft, 250))#crop the displayed path if too long (ElideLeft -> add ... left of the path
+        
         
         self.buttonChgSave = QtGui.QPushButton("Change folder",self)
         hBox2=QtGui.QHBoxLayout()
@@ -263,7 +262,6 @@ class CaseCreatorWidget(DetectControlWidget):
         hBox2.addWidget(self.buttonChgSave)
         groupBox2.setLayout(hBox2)
         hBox.addWidget(groupBox2)
-        hBox.addStretch()
         self.vBox.addLayout(hBox)
         #select color of chg saving folder.
         if not self.savefolder:
@@ -295,7 +293,11 @@ class CaseCreatorWidget(DetectControlWidget):
         #plot
         self.plot()
         #Set mediafile
+        print('self.mesPath : '+str(self.mesPath))
+        wavPath= self.mesPath.joinpath(pathlib.Path("build"))
         wavPath = self.mesPath.joinpath(self.currentCase['wavPath'])
+        print("currentCasewavPath : "+str(self.currentCase['wavPath']))
+        print("mediafile path : "+str(wavPath))
         self.set_media_source(str(wavPath), self.currentCase['tmin'])
         #start timer
         self.timer.start()
@@ -334,10 +336,10 @@ class CaseCreatorWidget(DetectControlWidget):
         #select color of chg saving folder.
         if not self.savefolder:
             self.buttonChgSave.setStyleSheet("background-color: #c2a5cf")
-            self.hlab.setText("Selected directory : "+str(self.savefolder))
         else:
             self.buttonChgSave.setStyleSheet("background-color: #a6dba0")
-            self.hlab.setText("Selected directory : "+str(self.savefolder))
+        fm=QtGui.QFontMetrics(self.hlab.font())
+        self.hlab.setText("Selected directory : "+fm.elidedText(str(self.savefolder),QtCore.Qt.ElideLeft, self.vBox.sizeHint().width()*0.45))
     
     def set_noise_type(self, index):
         if isinstance(index,int):

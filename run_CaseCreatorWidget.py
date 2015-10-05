@@ -1,4 +1,4 @@
-import sys
+import sys, inspect
 import os, pathlib
 import numpy as np
 import json
@@ -14,7 +14,11 @@ from matplotlib.font_manager import FontProperties
 if __name__ == "__main__":
     #import
     mainPath = pathlib.Path('').absolute()
-    mesPath = mainPath.parent
+    #mesPath = mainPath.parent
+    #change dir form up/kg/thisfile.py to /up
+    #if __name__=='__main__':
+    mesPath=os.path.dirname(os.path.dirname(inspect.stack()[0][1]))
+    print("mesPath init " +str(mesPath))
     with mainPath.joinpath('caseToAnalyze.json').open('r+') as input:
         caseToAnalyze = json.load(input)
     for k,v in caseToAnalyze.items():

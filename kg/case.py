@@ -1,5 +1,4 @@
 import sys,os,pathlib
-import inspect
 from kg.intervals import *
 from kg.measurement_values import measuredValues
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
