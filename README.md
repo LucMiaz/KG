@@ -98,6 +98,17 @@ given that the true probability of allergic persons is $P(z=1)= pz = 0.01$ and $
 
 `given a test and many outcomes, estimate $pz$`
 
+###Building the exe file
+We use cx_freeze package to build the executable file. Setup.py is the file to be called with cx_freeze using the following command (on Windows): 
+`pathtopython\python setup.py build`
+
+This will create a folder called *build* aside the directory KG. You need to do the following in order to fix some cx_freeze issues (for points 1 and 2, the files are also available in the folder *missingFilesforExe*):
+ 1. Copy the file `_ufuncs.pyd` into build folder (you will find it under `pathtopython/lib/site-packages/scipy/special`
+ 2. Copy the files `libifcoremd.dll` and `libmmd.dll` into build folder (you will find them under `pathtopython/lib/site-packages/numpy/core`
+ 3. Move the folder `dateutils` from the zipped `build/library` into `build` (i.e. remove it from the archive and place it into build folder)
+ 4. Add the file `caseToAnalyse.json` in `build`
+ 5. Finaly add the corresponding wav files inside `build/wav`
+
 
 
 

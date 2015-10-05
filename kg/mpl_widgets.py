@@ -305,18 +305,18 @@ class CaseSelector(_my_SelectorWidget):
         _my_SelectorWidget.__init__(self, ax, onselect, update_on_ext_event, button=button)
 
         if rectprops is None:
-            self.rectprops = dict(facecolor='red', alpha=0.5)
+            self.rectprops = dict(facecolor='#f5f5f5', alpha=0.3)
         else:
             self.rectprops = rectprops
         if lineprops is None:
-            self.lineprops = dict(color='k',lw = 4)
+            self.lineprops = dict(color='#e66101',lw = 2)#bar color
         else:
             self.lineprops = lineprops
         
         if not isinstance(nrect,list):
             nrect=[nrect]
         if stay_rectprops is None:
-            cc= ['g','c','b','m']
+            cc= ['#d8b365','#5ab4ac','#a6dba0','#e66101']#green yellow blue red
             color =[cc[i%len(cc)] for i in range(0,len(nrect))]
             self.stay_rectprops = [dict(facecolor= c, alpha=0.5) for c in color]
         else:
@@ -464,7 +464,7 @@ class Bar(AxesWidget):
         """
         AxesWidget.__init__(self, ax)
         if lineprops is None:
-            lineprops = dict(color='k',lw = 4)
+            lineprops = dict(color='#e66101',lw = 2)
 
         self.linev = ax.axvline(0, 0, 1 , visible=False, **lineprops)
         self.background = None
