@@ -12,11 +12,13 @@ from matplotlib.font_manager import FontProperties
 
 
 if __name__ == "__main__":
+    print("Welcome !")
+    print("I'm initialising the graphical interface")
     #import
     mainPath = pathlib.Path('').absolute()
     #mesPath = mainPath.parent
     mesPath = pathlib.Path('').absolute()
-    print("mesPath init " +str(mesPath))
+    print("The Path is " +str(mesPath))
     with mainPath.joinpath('caseToAnalyze.json').open('r+') as input:
         caseToAnalyze = json.load(input)
     for k,v in caseToAnalyze.items():

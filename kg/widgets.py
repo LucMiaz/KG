@@ -336,6 +336,7 @@ class CaseCreatorWidget(DetectControlWidget):
             self.buttonChgSave.setStyleSheet("background-color: #a6dba0")
         fm=QtGui.QFontMetrics(self.hlab.font())
         self.hlab.setText("Selected directory : "+fm.elidedText(str(self.savefolder),QtCore.Qt.ElideLeft, self.vBox.sizeHint().width()*0.45))
+        print("Saving Path changed to "+str(self.savefolder))
     
     def set_noise_type(self, index):
         if isinstance(index,int):
