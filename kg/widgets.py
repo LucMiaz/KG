@@ -1,5 +1,5 @@
-# import sys
-# sys.path.append('D:\GitHub\myKG')
+import sys
+sys.path.append('D:\GitHub\myKG')
 import os, pathlib
 import numpy as np
 import collections
@@ -8,6 +8,9 @@ from PySide.phonon import Phonon
 from PySide.QtGui import (QApplication, QMainWindow, QAction, QStyle,
                           QFileDialog)
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
+import pandas as pd
+import markdown as md
+from pandas.sandbox.qtpandas import DataFrameModel, DataFrameWidget
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
                           
@@ -15,8 +18,8 @@ from kg.detect import MicSignal
 from kg.mpl_widgets import Bar, CaseSelector
 from kg.case import Case
 from kg.case import Interval
-import seaborn as sns
-sns.set(style='ticks', palette='Set2')
+#import seaborn as sns
+#sns.set(style='ticks',palette='Set2')
                           
 class DetectControlWidget(QMainWindow):
 
@@ -26,7 +29,7 @@ class DetectControlWidget(QMainWindow):
         #time to syncronize plot and media object
         self.tShift = None
         self.t = None
-        self.canvas = {}
+        self.mpl = {}
         self.ca_update_handle = []
         self.ca_set_bar_handle = []
         #refresh timer
@@ -86,11 +89,11 @@ class DetectControlWidget(QMainWindow):
         self.media.stop()
         self.media.pause()
         
-    def set_mpl(self, canvas = {}, **kwargs):
+    def set_mpl(self, mpl = {}, **kwargs):
         self.canvas = []
         self.ca_update_handle = []
         self.ca_set_bar_handle = []
-        for k, ca in canvas.items():
+        for k, ca in mpl.items():
             ca['canvas'].setParent(self)
             self.canvas.append(ca['canvas'])
             self.vBox.addWidget(ca['canvas'])
@@ -134,12 +137,19 @@ class DetectControlWidget(QMainWindow):
         
     @classmethod
     def alg_results(cls, micSn, algorithm):
-        wavPath = micSn.export_to_Wav()
+        wavPath = micSn.export_to_Wav(MESPATH)
+        wavPath = MESPATH.joinpath(wavPath)
         #Canvas
         plt.ioff()
-        canvas = {'Results':algorithm.visualize(micSn)}
-        return(cls(setup= True, wavPath = wavPath.as_posix(), canvas = canvas , t0 = micSn.t.min() ))
-        
+        fig = Figure((15,10))
+        fig.set_dpi(110)
+        ca = FigureCanvas(fig)
+        algorithm.visualize(micSn,fig)
+        dict = {'animate':True, 'bar':True, 'canvas':ca , \
+                'axHandle': [Bar(ax) for ax in fig.get_axes()] }
+        return(cls(setup= True, wavPath = wavPath.as_posix(), \
+        mpl = {str(algorithm): dict} , t0 = micSn.t.min()))
+   
 
 class CaseCreatorWidget(DetectControlWidget):
     '''
@@ -412,7 +422,11 @@ class CaseCreatorWidget(DetectControlWidget):
 
 
     def show_info(self):
-        information=\
+        # todo nicer format using html/md/..
+        # self.edit = QtGui.QTextBrowser()
+        # self.vBox.addWidget(self.edit)
+        # self.edit.setHtml(md.markdown('###This is title'))
+        information = \
 """With this small Widget is possible to analyze audio signals and create tests cases of curve noise:
 ----------------------------------------------------------------------
 Hear the recorded signal using the media buttons in the toolbar
@@ -461,13 +475,94 @@ Be sure to have analyzed(saved) all the cases before quitting the application. A
                             'tmax':micSn.t.max()}
         return(cls( mesPath, case_dict, author))
 
+class CompareCaseAlgWidget(DetectControlWidget):
+    #todo: improve graphical quality
+    
+    def __init__(self, mesVal, case, algorithms):
+        #init super
+        super(CompareCaseAlgWidget, self).__init__()
+        self.setWindowTitle('Compare Case and Algorithm ')
+        #set algorithms
+        self.algorithms = algorithms if isinstance(algorithms,list) else [algorithms]
+        self.case=case      
+        self.currentAlg = self.algorithms[0]
+        #calculate algorithms on case
+        for n,alg in enumerate(self.algorithms):
+            if n==0:
+                self.micSn = alg.test_on_case(self.case, mesVal)
+            else:
+                alg.test_on_case(self.case, mesVal,self.micSn)
+            alg.calc_rates()
+        #self.df = pd.DataFrame({'name':[1,2,3,4,5]})
+    
+        #add canvas
+        plt.ioff()
+        self.fig = Figure((15,10))
+        self.fig.set_dpi(110)
+        ca = FigureCanvas(self.fig)
+        # plot
+        self.canvas = [ca]
+        self.plot()
+        # set canvas
+        self.set_mpl({1:{'animate':True,'bar':True, 'canvas': ca , 
+        'axHandle': [Bar(ax) for ax in self.axes]}})
+        # add first row of buttons
+        hBox = QtGui.QHBoxLayout()
+        # select alg combo 
+        groupBox = QtGui.QGroupBox('Select Algorithm ')
+        self.algCombo = QtGui.QComboBox()
+        for alg in self.algorithms:
+            self.algCombo.addItem(str(alg))
+        hbox1 = QtGui.QHBoxLayout()
+        hbox1.addWidget(self.algCombo)
+        groupBox.setLayout(hbox1)
+        hBox.addWidget(groupBox)
+        hBox.addStretch(1)
+        self.vBox.addLayout(hBox)
+        # Browser
+        #todo: add case Info, add alg Info, add test_on_case results
+        self.edit = QtGui.QTextBrowser()
+        self.vBox.addWidget(self.edit)
+        self.edit.setHtml(md.markdown('###This is title'))
+        #SET CENTRAL WIDGET
+        self.set_centralWidget()
+        
+        # connect wav
+        mesPath = mesVal.path
+        wavPath = self.micSn.export_to_Wav(mesPath)
+        wavPath = mesPath.joinpath(wavPath)
+        self.set_media_source(str(wavPath), self.micSn.t.min())
+        
+        self.connections() 
+    
+    
+    def set_current_alg(self,index):
+        self.timer.stop()
+        self.media.stop()
+        self.currentAlg = self.algorithms[index]
+        self.plot()
+        #start timer
+        self.timer.start()
+        
+    def plot(self):
+        self.axes = self.currentAlg.visualize(self.fig,self.micSn,self.case)
+        self.canvas[0].draw()
+
+    def _connections(self):
+        self.algCombo.currentIndexChanged.connect(self.set_current_alg)
+  
+    def show_info(self):
+        QtGui.QMessageBox.information(self,"Info", '')
+
 ##
 if __name__ == "__main__":
     from kg.measurement_values import measuredValues
     from kg.measurement_signal import measuredSignal
     from kg.algorithm import ZischenDetetkt1
     #setup measurement
-    mesPath = pathlib.Path('Measurements_example\MBBMZugExample')
+    
+    mesPath = pathlib.Path('').absolute().joinpath('Measurements_example\MBBMZugExample')
+    MESPATH = mesPath
     mesVal = measuredValues.from_json(mesPath)
     measuredSignal.setup(mesPath)
     ##
@@ -479,7 +574,6 @@ if __name__ == "__main__":
     micSn.calc_kg(algorithm)
     #Run Widget
     #W = DetectControlWidget.alg_results(micSn,algorithm)
-
     ##
     mic= [1,2,4,5,6]
     W = CaseCreatorWidget.from_measurement(mesVal,mID,mic)

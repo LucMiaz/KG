@@ -160,7 +160,7 @@ class MicSignal(object):
         ret = collections.OrderedDict()  
         ret['ID'] = self.ID
         ret['mic'] = self.mic
-        ret['results'] = copy.deepcopy(self.KG[noiseType][str(algorithm)])
+        ret['result'] = copy.deepcopy(self.KG[noiseType][str(algorithm)])
         return(ret)
         
     def get_mask(self, t = None , tlim = None):
@@ -168,9 +168,9 @@ class MicSignal(object):
         calculate mask for time vector according tlim,
         default with MBBM evaluation
         '''
-        if t == None:
+        if t is None:
             t = self.t
-        if tlim == None:
+        if tlim is None:
             tb = self.micValues['Tb']
             te = self.micValues['Te']
         else:
@@ -194,7 +194,7 @@ class MicSignal(object):
         'tmax': self.t.max()
         }
         plot_spectrogram(stft['X'], stft['param'], ax,\
-                                            dBMax=dBMax, **kwargs )
+                                            dBMax=dBMax, zorder = 1,**kwargs )
         
                 
     def plot_triggers(self, ax, type ='eval', **kwargs):
@@ -221,7 +221,7 @@ class MicSignal(object):
         else:
             ymin, ymax = ax.get_ylim()
             ax.fill_between(detection['t'], where = detection['result'] ,\
-            y1 = ymin, y2 = ymax, alpha = 0.3, **kwargs)
+            y1 = ymin, y2 = ymax, alpha = 0.4, **kwargs)
             #ax.set_ybound(ymin, ymax)
             
     def plot_BPR(self, algorithm, ax, label = None,**kwarks):
@@ -238,10 +238,10 @@ class MicSignal(object):
             print('No calculation for', algorithm)
             raise(e)
         else:
-            l, = ax.plot(detection['t'], 10*np.log10(detection['BPR']),\
+            l, = ax.plot(detection['t'], 10*np.log10(1+detection['BPR']),\
                         label=label,**kwarks)
             ax.axhline(algorithm.param['threshold'],lw=2,\
-                        color =plt.getp(l,'color'))
+                        color = plt.getp(l,'color'))
             
     def plot_signal(self, ax , label = None,**kwargs):
         """

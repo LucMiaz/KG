@@ -32,10 +32,14 @@ class Case(object):
                 }
         self.case['caseID'] = str(self)
     
-    def compare(self, otherdisc, tmin, tmax, dt, noiseType = 'Z',sum=True):
+    def compare(self, otherdisc, t , noiseType = 'Z',sum = True):
         """Compares the discretization of this case with the one of an algorithm whose results are given in otherdisc. timeparam variable contains the variables for the discretization. Returns a dictionnary with the number of True positives, True negatives, False positives and False negatives"""
-        disc = self.case[noiseType].discretize(tmin, tmax, dt)
-        assert( len(otherdisc) == len(disc) )
+        try:
+            disc = self.case[noiseType].discretize(t)
+            assert( len(otherdisc) == len(disc) )
+            #assert(not any([i==None for i in disc]))
+        except AssertionError:
+            print('something wrong in function of ', self)
         retTF={'FP':[], 'TP':[], 'FN':[],'TN':[]}
         retTF['TP'] = np.logical_and(otherdisc,disc)
         retTF['TN'] = np.logical_and(np.logical_not(otherdisc), np.logical_not(disc))
@@ -43,7 +47,7 @@ class Case(object):
         retTF['FN'] = np.logical_and(np.logical_not(otherdisc),  disc)
         if sum:
             for k, v in retTF.items():
-                retTF[k]= v.sum()
+                retTF[k]= int(v.sum())
         return(retTF)
     
     def set_quality(self, quality):
