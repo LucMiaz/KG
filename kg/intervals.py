@@ -1,4 +1,5 @@
 import json
+import numpy as np
 class SetOfIntervals(object):
     """
     Defines a class of set of intervals, i.e. a closed of R
@@ -185,14 +186,12 @@ class SetOfIntervals(object):
         """tells if self is empty"""
         return self.length==0
 
-    def discretize(self, zerotime, endtime, deltatime):
+    def discretize(self, zerotime, endtime, dt):
         """returns the characteristic function of the set RangeInter for the deltatimes from zerotime to endtime (return type is a duple of lists)"""
-        k=zerotime
-        ret=([],[])
-        while k<=endtime:
-            ret[1].append(self.containspoint(k))
-            ret[0].append(k)
-            k += deltatime
+        t = np.arange(zerotime,endtime+dt,dt)
+        ret = np.zeros(len(t)).astype(bool)
+        for n, t_i in enumerate(t):
+            ret[n] = bool(self.containspoint(t_i))
         return ret
         
     # def changeDiscretizeParameters(self, listofparams):
