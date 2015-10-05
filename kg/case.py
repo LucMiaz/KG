@@ -32,18 +32,18 @@ class Case(object):
                 }
         self.case['caseID'] = str(self)
     
-    def compare(self, otherdisc, tmin, tmax, dt, noiseType = 'Z'):
+    def compare(self, otherdisc, tmin, tmax, dt, noiseType = 'Z',sum=True):
         """Compares the discretization of this case with the one of an algorithm whose results are given in otherdisc. timeparam variable contains the variables for the discretization. Returns a dictionnary with the number of True positives, True negatives, False positives and False negatives"""
-        try:
-            disc = self.case[noiseType].discretize(tmin, tmax, dt)
-            assert( len(otherdisc) == len(disc) )
-        except:
-            disc = 0
+        disc = self.case[noiseType].discretize(tmin, tmax, dt)
+        assert( len(otherdisc) == len(disc) )
         retTF={'FP':[], 'TP':[], 'FN':[],'TN':[]}
         retTF['TP'] = np.logical_and(otherdisc,disc)
         retTF['TN'] = np.logical_and(np.logical_not(otherdisc), np.logical_not(disc))
         retTF['FP'] = np.logical_and(otherdisc, np.logical_not(disc))
         retTF['FN'] = np.logical_and(np.logical_not(otherdisc),  disc)
+        if sum:
+            for k, v in retTF.items():
+                retTF[k]= v.sum()
         return(retTF)
     
     def set_quality(self, quality):
@@ -68,9 +68,9 @@ class Case(object):
         os.makedirs(casePath.as_posix(), exist_ok = True)
         name = str(self) + '.json'
         casePath = casePath.joinpath(name)
-        self.toJSON(casePath)
+        self.to_JSON(casePath)
         return(casePath)
-        
+    
     def get_SOI(self, noiseType='Z'):
         return(self.case[noiseType])
         
@@ -81,12 +81,13 @@ class Case(object):
         bounds = ['Tb', 'Te']
         [ax.axvline(self.case[b], **kwargs) for b in bounds]
     
-    def plot(self, noiseType,ax,**kwargs):
+    def plot(self, ax, noiseType='Z',**kwargs):
+        #todo: hidden by spectrogram, why?
         """plot the case on axis ax"""
         SOI = self.get_SOI(noiseType)
         ymin, ymax = ax.get_ylim()
         for xmin,xmax in SOI.tolist():
-            ax.axvspan(xmin,xmax,ymin,ymax, colour = 'g', alpha = 0.4, **kwargs)
+            ax.axvspan(xmin, xmax, ymin, ymax, alpha = 0.2, **kwargs)
         
     def __str__(self):
         """prints the name of the case"""
@@ -95,9 +96,9 @@ class Case(object):
     
     def __repr__(self):
         """gives a representation of the case"""
-        return self.toJSON()
+        return self.to_JSON()
 
-    def toJSON(self,filename = None):
+    def to_JSON(self, filename = None):
         """returns the essential informations of self, if Pathname or Path is given, save in file."""
         if filename:
             if not isinstance(filename, pathlib.Path):
@@ -110,10 +111,11 @@ class Case(object):
             return json.dumps(self.case, cls= ComplexEncoder)
             
     @classmethod
-    def from_JSON(cls, casePath):
+    #@relative_to_mesPath("test_cases")
+    def from_JSON(cls, casePath,**kwargs):
         """@classmethod is used to pass the class to the method as implicit argument. Then we open a file in JSON located at casePath and give it to the class with **kwargs (meaning that we pass an arbitrary number of arguments to the class)
         """
-        with open(casePath,'r') as file:
+        with casePath.open('r+') as file:
             dict = json.load(file)
         cl = cls(**dict)
         for nT in ['Z','KG']:
@@ -121,6 +123,49 @@ class Case(object):
             set = [[int['xmin'] , int['xmax']] for int in dNT] 
             cl.get_SOI(nT).appendlistofduples(set)
         return(cl)
+
+
+## decorator to set directory
+
+
+# def relative_to_mesPath(relPath):
+#     mesPath = pathlib.Path('Measurements_example\MBBMZugExample')
+#     path = mesPath.joinpath(relPath)
+#     def path_decorator(func):
+#         def func_wrapper(*args,**kwargs):
+#             print(kwargs)
+#             author = kwargs['author']
+#             mID = kwargs['mID']
+#             mic = kwargs['mic']
+#             name = "case_"+ mID +"_"+str(mic)+'_'+author +'.json'
+#             path2 = path.joinpath(author).joinpath(name)
+#             print(path2)
+#             return(func( casePath=path, *args,**kwargs))
+#         return(func_wrapper)
+#     return(path_decorator)
+# # 
+# def decorator(func):
+#     def f(*args,**kwargs):
+#         return(Case.from_JSON(func(*args,**kwargs)))
+#     return(f)
+# 
+# @decorator
+# def init1(mesPath, author, mID, mic ):
+#     name = "case_"+mID +"_"+str(mic)+'_'+author +'.json'
+#     casePath = mesPath.joinpath('test_cases').joinpath(author).joinpath(name)
+#     print(casePath.absolute())
+#     return(casePath)
+# #     
+# # @decorator
+# # def init2( mesPath, author ):
+# #     authP = mesPath.joinpath('test_cases').joinpath(author)
+# #     #collect cases
+# #     casePaths = [ cp  for cp in authP.iterdir() if cp.match('case_**.json') ]
+# #     print(casePaths)
+# #     return(casePaths[0])
+# # 
+# # 
+
 
 ## Test
 if __name__ == "__main__":
@@ -135,7 +180,7 @@ if __name__ == "__main__":
     Newcase = Case('Zug','Vormessung','m_0101','1',0,10,'esr')
 ##save
     mesPath = pathlib.Path('Measurements_example\MBBMZugExample')
-    casePath = Newcase.save(str(mesPath))
-    Newcase2 = Case.from_JSON(str(casePath))
-    case = Case.from_JSON(str(mesPath.joinpath('\test_cases\esr\case_m_0100_1_esr.json')))
+    casePath = Newcase.save(mesPath)
+    Newcase2 = Case.from_JSON(casePath)
+    #case = Case.from_JSON(str(mesPath.joinpath('\test_cases\esr\case_m_0100_1_esr.json')))
     
