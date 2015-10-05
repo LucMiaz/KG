@@ -293,11 +293,7 @@ class CaseCreatorWidget(DetectControlWidget):
         #plot
         self.plot()
         #Set mediafile
-        print('self.mesPath : '+str(self.mesPath))
-        wavPath= self.mesPath.joinpath(pathlib.Path("build"))
         wavPath = self.mesPath.joinpath(self.currentCase['wavPath'])
-        print("currentCasewavPath : "+str(self.currentCase['wavPath']))
-        print("mediafile path : "+str(wavPath))
         self.set_media_source(str(wavPath), self.currentCase['tmin'])
         #start timer
         self.timer.start()

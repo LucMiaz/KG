@@ -15,9 +15,7 @@ if __name__ == "__main__":
     #import
     mainPath = pathlib.Path('').absolute()
     #mesPath = mainPath.parent
-    #change dir form up/kg/thisfile.py to /up
-    #if __name__=='__main__':
-    mesPath=os.path.dirname(os.path.dirname(inspect.stack()[0][1]))
+    mesPath = pathlib.Path('').absolute()
     print("mesPath init " +str(mesPath))
     with mainPath.joinpath('caseToAnalyze.json').open('r+') as input:
         caseToAnalyze = json.load(input)
