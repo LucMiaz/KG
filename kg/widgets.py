@@ -7,6 +7,7 @@ from PySide import QtGui, QtCore
 from PySide.phonon import Phonon
 from PySide.QtGui import (QApplication, QMainWindow, QAction, QStyle,
                           QFileDialog)
+import matplotlib
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 import pandas as pd
 import markdown as md
@@ -38,7 +39,7 @@ class DetectControlWidget(QMainWindow):
         self.refresh = 35
         self.timer = QtCore.QTimer()
         self.timer.setInterval(self.refresh)
-        
+        self.savefolder=None
         #phonon 
         #the media object controls the playback
         self.media = Phonon.MediaObject(self)
@@ -57,7 +58,7 @@ class DetectControlWidget(QMainWindow):
         self.actions = self.addToolBar('Actions')
         for name, label, icon_name in ACTIONS:
             icon = self.style().standardIcon(icon_name)
-            action = QtGui.QAction(icon, label, self)
+            action = QtGui.QAction(icon, label, self, )
             action.setObjectName(name)
             self.actions.addAction(action)
             action.triggered.connect(getattr(self.media, name))
@@ -206,6 +207,8 @@ class CaseCreatorWidget(DetectControlWidget):
         ax = fig.add_subplot(111)
         ca = FigureCanvas(fig)
         self.SelectAxis = ax
+        axbgcolor='#272822'
+        fig.set_facecolor(axbgcolor)
         #case Selector
         self.CS = CaseSelector(self.SelectAxis, self.onselect, self.onclick, 
                                 nrect = [50,50], update_on_ext_event = True , 
@@ -223,13 +226,17 @@ class CaseCreatorWidget(DetectControlWidget):
         hbox1.addWidget(self.CaseCombo)
         groupBox.setLayout(hbox1)
         hBox.addWidget(groupBox)
-        # selct noise Type
+        # select noise Type
         groupBox = QtGui.QGroupBox('Noise Type to select')
         hBox1 = QtGui.QHBoxLayout()
         # noise Type combo
         self.SOIcombo = QtGui.QComboBox()
         self.SOIcombo.addItem('Zischen', 'Z')
+        self.SOIcombo.setItemData(0,QtGui.QColor('#d8b365'),QtCore.Qt.BackgroundRole)#add backgroundcolor to combo Z
+        self.SOIcombo.setItemData(0,QtGui.QColor('#f5f5f5'),QtCore.Qt.TextColorRole)#change text color
         self.SOIcombo.addItem('Kreischen', 'KG')
+        self.SOIcombo.setItemData(1,QtGui.QColor('#5ab4ac'),QtCore.Qt.BackgroundRole)#add backgroundcolor to combo K
+        self.SOIcombo.setItemData(1,QtGui.QColor('#f5f5f5'),QtCore.Qt.TextColorRole)#change text color
         hBox1.addWidget(self.SOIcombo)
         # visualize both cb
         self.cb = QtGui.QCheckBox('both visible', self)
@@ -255,7 +262,26 @@ class CaseCreatorWidget(DetectControlWidget):
         self.buttonSave = QtGui.QPushButton("save",self)
         hBox.addWidget(self.buttonSave)
         hBox.addStretch()
+        # saved data directory group (button to change folder and current folder)
+        groupBox2=QtGui.QGroupBox("Saved data directory")
+        fm=QtGui.QFontMetrics('HelveticaNeue')
+        self.hlab=QtGui.QLabel("Selected directory : "+fm.elidedText(str(self.savefolder),QtCore.Qt.ElideLeft, 250))#crop the displayed path if too long (ElideLeft -> add ... left of the path
+        
+        
+        self.buttonChgSave = QtGui.QPushButton("Change folder",self)
+        hBox2=QtGui.QHBoxLayout()
+        hBox2.addWidget(self.hlab)
+        hBox2.addWidget(self.buttonChgSave)
+        groupBox2.setLayout(hBox2)
+        hBox.addWidget(groupBox2)
         self.vBox.addLayout(hBox)
+        #select color of chg saving folder.
+        if not self.savefolder:
+            self.buttonChgSave.setStyleSheet("background-color: #c2a5cf")
+            self.hlab.setText("Selected directory : "+str(self.savefolder))
+        else:
+            self.buttonChgSave.setStyleSheet("background-color: #a6dba0")
+            self.hlab.setText("Selected directory : "+str(self.savefolder))
         
     def set_current_case(self,key):
         self.releaseKeyboard()
@@ -270,11 +296,10 @@ class CaseCreatorWidget(DetectControlWidget):
         self.current_noise = 'Z'
         self.SOIcombo.setCurrentIndex(self.NoiseTypes.index(self.current_noise))
         if self.currentCase.get('saved',False):
-            self.buttonSave.setStyleSheet("background-color: green")
+            self.buttonSave.setStyleSheet("background-color: #a6dba0")
         else:
-            self.buttonSave.setStyleSheet("background-color: red")
+            self.buttonSave.setStyleSheet("background-color: #c2a5cf")
         self.check_rb(self.case.case['quality'])
-                        
         #set SOI and update Canvas
         self.set_noise_type('Z')
         #plot
@@ -291,7 +316,7 @@ class CaseCreatorWidget(DetectControlWidget):
         self.case.plot_triggers(self.SelectAxis)
         for key, pData in self.currentCase['plotData'].items():
             t,y = pData
-            self.SelectAxis.plot(t, y , label = key)
+            self.SelectAxis.plot(t, y , label = key, color='#f5f5f5', linewidth=1.)#plot display
         tmin = self.currentCase['tmin']
         tmax = self.currentCase['tmax']
         self.SelectAxis.set_xlim(tmin,tmax)
@@ -304,13 +329,26 @@ class CaseCreatorWidget(DetectControlWidget):
         self.update_stay_rect()
 
     def _connections(self):
-        # connections
+        """connects the buttons/combobox to the methods to be applied"""
         self.SOIcombo.currentIndexChanged.connect(self.set_noise_type)
         self.cb.stateChanged.connect(self.set_both_visible)
         self.CaseCombo.currentIndexChanged.connect(self.change_current_case)
         for rb in self.Qradios:
             rb.clicked.connect(self.set_quality)
         self.buttonSave.clicked.connect(self.save_case)
+        self.buttonChgSave.clicked.connect(self.chg_folder)
+        
+    def chg_folder(self):
+        """change the directory where to save the data"""
+        self.savefolder=pathlib.Path(str(QFileDialog.getExistingDirectory(self,"Please select a directory where I can save your data.")))
+        #select color of chg saving folder.
+        if not self.savefolder:
+            self.buttonChgSave.setStyleSheet("background-color: #c2a5cf")
+        else:
+            self.buttonChgSave.setStyleSheet("background-color: #a6dba0")
+        fm=QtGui.QFontMetrics(self.hlab.font())
+        self.hlab.setText("Selected directory : "+fm.elidedText(str(self.savefolder),QtCore.Qt.ElideLeft, self.vBox.sizeHint().width()*0.45))
+        print("Saving Path changed to "+str(self.savefolder))
     
     def set_noise_type(self, index):
         if isinstance(index,int):
@@ -341,7 +379,7 @@ class CaseCreatorWidget(DetectControlWidget):
                 self.case.set_quality(q)
                 
     def check_rb(self, q):
-        self.rbG.setExclusive(False)
+        self.rbG.setExclusive(False)#allows to choose multiple qualities
         for rb, qb in  zip(self.Qradios, ['good', 'medium', 'bad']):
             rb.setChecked(q==qb)
         self.rbG.setExclusive(False)
@@ -415,12 +453,15 @@ class CaseCreatorWidget(DetectControlWidget):
              self.trUtf8("Quality of selection has to be set!"))
         else:
             # set the author
+            if not self.savefolder:
+                #asks for the folder where to save the datas
+                self.savefolder=pathlib.Path(str(QFileDialog.getExistingDirectory(self,"Please select a directory where I can save your data.")))
             self.case.case['author'] = self.author
-            self.case.save(self.mesPath)
+            self.case.save(self.savefolder)
             self.currentCase['saved'] = True
-            self.buttonSave.setStyleSheet("background-color: green")
+            self.buttonSave.setStyleSheet("background-color: #a6dba0")
             currentIndex= self.casesKeys.index(str(self.CaseCombo.currentText()))
-            self.CaseCombo.setItemData(currentIndex,QtGui.QColor('green'),QtCore.Qt.BackgroundRole)
+            self.CaseCombo.setItemData(currentIndex,QtGui.QColor('#a6dba0'),QtCore.Qt.BackgroundRole)
 
 
     def show_info(self):
