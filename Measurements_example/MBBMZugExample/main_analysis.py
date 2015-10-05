@@ -10,7 +10,9 @@ from kg.measurement_values import measuredValues
 from kg.measurement_signal import measuredSignal
 
 #number o cases to prepare
-    
+# Todo: craete a log for detecting anomalies
+# todo: use try statement in situations where errors can occur. such that evaluation is not stopped
+# Todo: separate evaluation in block such thatif analysis stop  the correct we don't lost all the evaluated data
 mesPath = pathlib.Path('').absolute()
 if __name__ == "__main__":  
     # load measured values
@@ -22,13 +24,14 @@ if __name__ == "__main__":
     measuredSignal.setup(mesPath)
     
     # setup algorithms
-    algorithms =[ZischenDetetkt1(3000,0,0.02), ZischenDetetkt1(2000,0,0.05)]
+    algorithms =[ZischenDetetkt2(3000,0,0.02), ZischenDetetkt2(2000,0,0.05)]
     print(repr(algorithms[0]))
     
     # get list of valid ID
     validID = list(mesVal.get_IDs(True))
     validID2 = []
     #for testing
+    # todo: remove it if all signals are in the raw_signal folder
     for id in ['m_0100','m_0101','m_0102','m_0103','m_0104','m_0105','m_0106','m_0107']:
         if id in validID:
             validID2.append(id)
@@ -59,7 +62,6 @@ if __name__ == "__main__":
             micSn.calc_kg(alg)
             # set results in mesVal
             mesVal.set_kg_values(alg,**micSn.get_KG_results(alg))
-        #
         #
     print('finish')
     print('save to json')
