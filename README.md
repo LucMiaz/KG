@@ -107,7 +107,7 @@ This will create a folder called *build* aside the directory KG. You need to do 
  2. Copy the files `libifcoremd.dll` and `libmmd.dll` into build folder (you will find them under `pathtopython/lib/site-packages/numpy/core`
  3. Move the folder `dateutils` from the zipped `build/library` into `build` (i.e. remove it from the archive and place it into build folder)
  4. Add the file `caseToAnalyse.json` in `build`
- 5. 
+ 5. Finaly add the corresponding wav files inside `build/wav`
 
 
 
