@@ -186,9 +186,8 @@ class SetOfIntervals(object):
         """tells if self is empty"""
         return self.length==0
 
-    def discretize(self, zerotime, endtime, dt):
+    def discretize(self, t):
         """returns the characteristic function of the set RangeInter for the deltatimes from zerotime to endtime (return type is a duple of lists)"""
-        t = np.arange(zerotime,endtime+dt,dt)
         ret = np.zeros(len(t)).astype(bool)
         for n, t_i in enumerate(t):
             ret[n] = bool(self.containspoint(t_i))
