@@ -112,7 +112,7 @@ class Case(object):
         ymin,ymax = ax.get_ylim()
         for k, c in zip(['TP','TN','FP','FN'],['#bebada','#8dd3c7','#fb8072','#ffffb3']):#blue green red yellow
             t,x = inter(resTF['t'], resTF[k])
-            ax.fill_between(t,ymin,ymax, where = x,alpha= 0.5, color = c)
+            ax.fill_between(t,ymin,ymax, where = x,alpha= 0.7, color = c)
         
     def __str__(self):
         """prints the name of the case"""

@@ -519,6 +519,49 @@ class CaseCreatorWidget(DetectControlWidget):
                             'tmax':micSn.t.max()}
         return(cls( mesPath, case_dict, author))
 
+def palettesimple(chgmatplotlib=True):
+    textcolor='#f5f5f5'
+    axescolor='#f5f5f5'
+    axbgcolor='#272822'
+    bgcolor='#aaaaaa'
+    palette=QtGui.QPalette()
+    palette.setColor(QtGui.QPalette.Window,'#a3a3a3')
+    palette.setColor(QtGui.QPalette.Button,textcolor)
+    palette.setColor(QtGui.QPalette.ButtonText,axbgcolor)
+    palette.setColor(QtGui.QPalette.Text,axbgcolor)
+    palette.setColor(QtGui.QPalette.Base,textcolor)
+    palette.setColor(QtGui.QPalette.AlternateBase,'#f3f3f3')
+    palette.setColor(QtGui.QPalette.WindowText,textcolor)
+    palette.setColor(QtGui.QPalette.Highlight, '#c2a5cf')
+    palette.setColor(QtGui.QPalette.HighlightedText, axbgcolor)
+    palette.setColor(QtGui.QPalette.AlternateBase,axbgcolor)
+    palette.setColor(QtGui.QPalette.ToolTipBase, axbgcolor)
+    palette.setColor(QtGui.QPalette.Light, axescolor)
+    palette.setColor(QtGui.QPalette.Midlight, bgcolor)
+    palette.setColor(QtGui.QPalette.Dark, axbgcolor)
+    if chgmatplotlib:
+        matplotlib.rcParams['axes.facecolor']=axbgcolor
+        matplotlib.rcParams['axes.edgecolor']=axescolor
+        for i in ['x','y']:
+            matplotlib.rcParams['xtick.color']=axescolor
+        matplotlib.rcParams['grid.color']=textcolor
+        matplotlib.rcParams['ytick.color']=axescolor
+        matplotlib.rcParams['figure.edgecolor']=axescolor
+        matplotlib.rcParams['patch.linewidth']='0.5'
+        matplotlib.rcParams['lines.color']='#7b3294'
+        matplotlib.rcParams['lines.linewidth']='0.75'
+        matplotlib.rcParams['axes.linewidth']='0.4'
+        matplotlib.rcParams['xtick.major.width']='0.4'
+        matplotlib.rcParams['ytick.major.width']='0.4'
+        matplotlib.rcParams['xtick.minor.width']='0.3'
+        matplotlib.rcParams['xtick.minor.width']='0.3'
+        matplotlib.rcParams['text.color']=textcolor
+        matplotlib.rcParams['axes.labelcolor']='#f5f5f5'
+        matplotlib.rcParams['font.family']='HelveticaNeue'
+        font={'family':'sans-serif','weight':'regular','size':11}
+        matplotlib.rc('font',**font)
+    return palette
+
 class CompareCaseAlgWidget(DetectControlWidget):
     #todo: improve graphical quality
     
@@ -526,6 +569,7 @@ class CompareCaseAlgWidget(DetectControlWidget):
         #init super
         super(CompareCaseAlgWidget, self).__init__()
         self.setWindowTitle('Compare Case and Algorithm ')
+        self.window.setPalette(palettesimple())
         #set algorithms
         self.algorithms = algorithms if isinstance(algorithms,list) else [algorithms]
         self.case=case      
@@ -562,6 +606,14 @@ class CompareCaseAlgWidget(DetectControlWidget):
         groupBox.setLayout(hbox1)
         hBox.addWidget(groupBox)
         hBox.addStretch(1)
+        groupBox2 = QtGui.QGroupBox('Plotting')
+        hbox2=QtGui.QHBoxLayout()
+        self.buttonplot=QtGui.QPushButton('Draw')
+        hbox2.addWidget(self.buttonplot)
+        groupBox2.setLayout(hbox2)
+        hBox.addWidget(groupBox2)
+        hBox.addStretch(1)
+        
         self.vBox.addLayout(hBox)
         # Browser
         #todo: add case Info, add alg Info, add test_on_case results
@@ -594,9 +646,25 @@ class CompareCaseAlgWidget(DetectControlWidget):
 
     def _connections(self):
         self.algCombo.currentIndexChanged.connect(self.set_current_alg)
+        self.buttonplot.clicked.connect(self.callTrueFalse)
   
     def show_info(self):
         QtGui.QMessageBox.information(self,"Info", '')
+    
+    def callTrueFalse(self):
+        """plot the true/false positive/negative plots"""
+        f,axes = plt.subplots(2,sharex = True)
+        ax = axes[0]
+        self.micSn.plot_triggers(ax,color = '#272822',lw=1)
+        self.micSn.plot_BPR(algorithm, ax, color = '#272822', linewidth=1)
+        self.case.plot(ax)
+        ax.set_xlim(-0.5,8)
+        ymin,ymax = ax.get_ylim()
+        ax=axes[1]
+        alg_res = micSn.get_KG_results(algorithm)['result']
+        self.micSn.plot_BPR(self.algorithm, ax, color = '#272822', lw=1)
+        self.case.plot_compare(ax,alg_res['result'], alg_res['t'])
+        plt.show()
 
 ##
 if __name__ == "__main__":
