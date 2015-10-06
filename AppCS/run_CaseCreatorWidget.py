@@ -13,7 +13,6 @@ from matplotlib.font_manager import FontProperties
 
 if __name__ == "__main__":
     print("Welcome !")
-    print("I'm initialising the graphical interface")
     #import
     mainPath = pathlib.Path('').absolute()
     #mesPath = mainPath.parent
@@ -62,7 +61,7 @@ if __name__ == "__main__":
         matplotlib.rcParams['font.family']='HelveticaNeue'
         font={'family':'sans-serif','weight':'regular','size':11}
         matplotlib.rc('font',**font)
-    W = CaseCreatorWidget(mesPath, caseToAnalyze)
+    W = CaseCreatorWidget(mesPath, caseToAnalyze, QtPalette=palette)
     if changecolors:
         W.setPalette(palette)
         W.setFont(QtGui.QFont('HelveticaNeue',11))

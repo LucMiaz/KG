@@ -5,11 +5,11 @@ import sys
 if sys.platform == "win32":
     base = "Win32GUI"
 build_exe_options = {
-                    "icon":'icon.ico',
+                    "icon":'icon3.ico',
                     "compressed":True,
-                    "zip_includes":['kg','mySTFT'],
+                    "zip_includes":['../kg','../mySTFT'],
                     'packages':['scipy'],
-                    'build_exe':'../build/',
+                    'build_exe':'../../build/',
                     }
 
 setup(name = "KG Detection",

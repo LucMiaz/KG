@@ -34,7 +34,7 @@ class DetectControlWidget(QMainWindow):
         self.refresh = 35
         self.timer = QtCore.QTimer()
         self.timer.setInterval(self.refresh)
-        self.savefolder=None
+        self.savefolder=pathlib.Path("../test-cases/").absolute()
         #phonon 
         #the media object controls the playback
         self.media = Phonon.MediaObject(self)
@@ -158,7 +158,7 @@ class CaseCreatorWidget(DetectControlWidget):
     tmax: flt
     wavPath: str
     '''
-    def __init__(self, mesPath, casesToAnalyze, author = None):
+    def __init__(self, mesPath, casesToAnalyze, author = None, QtPalette=None):
         #init super
         super(CaseCreatorWidget, self).__init__()
         self.setWindowTitle('Create Case')
@@ -185,6 +185,8 @@ class CaseCreatorWidget(DetectControlWidget):
         self.set_current_case(self.casesKeys[0])
         #add connections
         self.connections()
+        self.palette=QtPalette
+        
         
     def add_widgets(self):
         #Figure Canvas
@@ -328,15 +330,20 @@ class CaseCreatorWidget(DetectControlWidget):
         
     def chg_folder(self):
         """change the directory where to save the data"""
-        self.savefolder=pathlib.Path(str(QFileDialog.getExistingDirectory(self,"Please select a directory where I can save your data.")))
-        #select color of chg saving folder.
-        if not self.savefolder:
-            self.buttonChgSave.setStyleSheet("background-color: #c2a5cf")
+        newpathlib=str(QFileDialog.getExistingDirectory(self,"Please select a directory where I can save your data."))
+        print(newpathlib)
+        if newpathlib!="":
+            self.savefolder=pathlib.Path(newpathlib)
+            #select color of chg saving folder.
+            if not self.savefolder:
+                self.buttonChgSave.setStyleSheet("background-color: #c2a5cf")
+            else:
+                self.buttonChgSave.setStyleSheet("background-color: #a6dba0")
+            fm=QtGui.QFontMetrics(self.hlab.font())
+            self.hlab.setText("Selected directory : "+fm.elidedText(str(self.savefolder),QtCore.Qt.ElideLeft, 250))
+            print("Saving Path changed to "+str(self.savefolder))
         else:
-            self.buttonChgSave.setStyleSheet("background-color: #a6dba0")
-        fm=QtGui.QFontMetrics(self.hlab.font())
-        self.hlab.setText("Selected directory : "+fm.elidedText(str(self.savefolder),QtCore.Qt.ElideLeft, self.vBox.sizeHint().width()*0.45))
-        print("Saving Path changed to "+str(self.savefolder))
+            print("Path not modified.")
     
     def set_noise_type(self, index):
         if isinstance(index,int):
@@ -443,7 +450,7 @@ class CaseCreatorWidget(DetectControlWidget):
             # set the author
             if not self.savefolder:
                 #asks for the folder where to save the datas
-                self.savefolder=pathlib.Path(str(QFileDialog.getExistingDirectory(self,"Please select a directory where I can save your data.")))
+                self.chg_folder()
             self.case.case['author'] = self.author
             self.case.save(self.savefolder)
             self.currentCase['saved'] = True
@@ -453,32 +460,25 @@ class CaseCreatorWidget(DetectControlWidget):
 
 
     def show_info(self):
-        information=\
-"""With this small Widget is possible to analyze audio signals and create tests cases of curve noise:
-----------------------------------------------------------------------
-Hear the recorded signal using the media buttons in the toolbar
-    - Warning: notebook speakers have poor quality. 
-    - Use hearphones or a better audio system to analyze the signal 
-
-We diffentiate between two noise types:
-    - Kreischen: Squeal noise
-    - Zischen: Flanging Noise
-
-Selection of intervals where noise is present is done by:
-    - left mouse button for select span
-    - rigth mouse click on a selected span to remove it
-    - hold key d and left mouse button to remove span
-    - hold key s to select noise while playing
-
-Before saving is important to select quality:
-    - good: noise events are good to recognize
-    - medium: it is possible to detect noise events
-    - bad: noise events almost impossible to detects
-
-Be sure to have analyzed(saved) all the cases before quitting the application. A saved case has a green state.
-    
-    """
-        QtGui.QMessageBox.information(self,"Info", information)
+        """calls info box"""
+        appinfo=QtGui.QApplication([])
+        appinfo.setQuitOnLastWindowClosed(False)
+        winfo=QtGui.QWidget()
+        winfo.setWindowTitle('Information on KG software')
+        if self.palette:
+            winfo.setPalette(self.palette)
+        layoutinfo=QtGui.QVBoxLayout()
+        winfo.setLayout(layoutinfo)
+        
+        infoview=QtGui.QTextBrowser()
+        infoview.setFixedSize(850,550)
+        infoview.setSource(pathlib.Path('info.html').absolute().as_uri())
+        infoview.setWindowTitle("INFO")
+        infoview.show()
+        layoutinfo.addWidget(infoview)
+        winfo.show()
+        appinfo.exec_()
+        #QtGui.QMessageBox.information(self,"Info", view)
         
     @classmethod
     def from_measurement(cls, mesVal, mID, mics, author = None):
