@@ -324,7 +324,6 @@ class CaseSelector(_my_SelectorWidget):
             self.stay_rectprops = stay_rectprops
 
         self.pressv = None
-        
         self.onclick = onclick
         self.onmove_callback = onmove_callback
         self.minspan = minspan
@@ -410,12 +409,16 @@ class CaseSelector(_my_SelectorWidget):
         if vmin > vmax:
             vmin, vmax = vmax, vmin
         span = vmax - vmin
-        if span < self.minspan:
+        if span < self.minspan and event.button==3:#right click to remove span
             self.onclick(vmin)
             return
-        else:
+        elif span> self.minspan and event.button==1:
             self.onselect(vmin, vmax)
             self.pressv = None
+            return False
+        elif span > self.minspan and event.button==3:
+            self.onselect(vmin,vmax, True)
+            self.pressv= None
             return False
 
     def _onmove(self, event):

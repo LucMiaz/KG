@@ -12,7 +12,6 @@ from matplotlib.font_manager import FontProperties
 
 
 if __name__ == "__main__":
-    print("Welcome !")
     #import
     mainPath = pathlib.Path('').absolute()
     #mesPath = mainPath.parent
@@ -23,7 +22,8 @@ if __name__ == "__main__":
     for k,v in caseToAnalyze.items():
         v['case'] = Case(**v['case'])
 
-    app = QtGui.QApplication(sys.argv)
+
+    #color Choice
     changecolors=True
     if changecolors:
         textcolor='#f5f5f5'
@@ -40,7 +40,11 @@ if __name__ == "__main__":
         palette.setColor(QtGui.QPalette.WindowText,textcolor)
         palette.setColor(QtGui.QPalette.Highlight, '#c2a5cf')
         palette.setColor(QtGui.QPalette.HighlightedText, axbgcolor)
-        
+        palette.setColor(QtGui.QPalette.AlternateBase,axbgcolor)
+        palette.setColor(QtGui.QPalette.ToolTipBase, axbgcolor)
+        palette.setColor(QtGui.QPalette.Light, axescolor)
+        palette.setColor(QtGui.QPalette.Midlight, bgcolor)
+        palette.setColor(QtGui.QPalette.Dark, axbgcolor)
         matplotlib.rcParams['axes.facecolor']=axbgcolor
         matplotlib.rcParams['axes.edgecolor']=axescolor
         for i in ['x','y']:
@@ -57,15 +61,14 @@ if __name__ == "__main__":
         matplotlib.rcParams['xtick.minor.width']='0.3'
         matplotlib.rcParams['xtick.minor.width']='0.3'
         matplotlib.rcParams['text.color']=textcolor
-        matplotlib.rcParams['axes.labelcolor']=textcolor
+        matplotlib.rcParams['axes.labelcolor']='#f5f5f5'
         matplotlib.rcParams['font.family']='HelveticaNeue'
         font={'family':'sans-serif','weight':'regular','size':11}
         matplotlib.rc('font',**font)
-    W = CaseCreatorWidget(mesPath, caseToAnalyze, QtPalette=palette)
+    app=QtGui.QApplication(sys.argv)
+    W = CaseCreatorWidget(mesPath, caseToAnalyze)
     if changecolors:
         W.setPalette(palette)
         W.setFont(QtGui.QFont('HelveticaNeue',11))
     W.show()
     sys.exit(app.exec_())
-    
-

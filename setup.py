@@ -5,15 +5,15 @@ import sys
 if sys.platform == "win32":
     base = "Win32GUI"
 build_exe_options = {
-                    "icon":'icon3.ico',
+                    "icon":'AppCS/icons/icon3.ico',
                     "compressed":True,
-                    "zip_includes":['../kg','../mySTFT'],
+                    "zip_includes":['kg','mySTFT'],
                     'packages':['scipy'],
-                    'build_exe':'../../build/',
+                    'build_exe':'../build/',
                     }
 
 setup(name = "KG Detection",
-      version = "0.9",
+      version = "1.0",
       description = "Graphical Interface of noise range selection : Please select the intervals where you here either Kreischen or Zischen.",
       executables = [Executable("run_CaseCreatorWidget.py")],
       options = {"build_exe": build_exe_options},)

@@ -170,35 +170,57 @@ class CaseCreatorWidget(DetectControlWidget):
     tmax: flt
     wavPath: str
     '''
-    def __init__(self, mesPath, casesToAnalyze, author = None, QtPalette=None):
+    def __init__(self, mesPath, casesToAnalyze, author = None):
         #init super
         super(CaseCreatorWidget, self).__init__()
         self.setWindowTitle('Create Case')
-        # set the author
-        if author == None:
+        
+        # set the author        
+        self.mesPath = mesPath
+        self.minspan = 0.05
+        self.remove = False
+        self.author=author
+        self.add_widgets()
+        self.set_centralWidget()
+        #set cases
+        self.NoiseTypes = ['Z','KG']
+        self.casesToAnalyze = casesToAnalyze    
+        self.casesKeys = sorted(list(self.casesToAnalyze.keys()))
+        self.asks_for_info()
+        self.asks_for_author()
+        self.asks_for_ncases()
+        
+        #add connections
+        self.connections()
+    
+    def asks_for_info(self):
+        result = QtGui.QMessageBox.question(self, 'Information', "Would you like to see the information page ?", QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
+        if result==QtGui.QMessageBox.Yes:
+            self.extbrowsercall()
+            QtGui.QMessageBox.information(self, 'Proceeding', "Tell me when you are ready to proceed.")
+    
+    def asks_for_author(self):
+        if self.author == None:
             author, ok = QtGui.QInputDialog.getText(self, "Set author", "Please your name : ")
             if ok:
                 author = author.replace(' ','_')
             else:
                 author =  'anonymus'
         self.author = author
-            
-        self.mesPath = mesPath
-        self.minspan = 0.05
-        self.remove = False
-        self.add_widgets()
-        self.set_centralWidget()
-        #set cases
-        self.NoiseTypes = ['Z','KG']
-        self.casesToAnalyze = casesToAnalyze        
-        self.casesKeys = sorted(list(self.casesToAnalyze.keys()))
+    
+    def asks_for_ncases(self):
+        self.ncases=len(self.casesKeys)
+        #asking for number of cases to treat
+        ncases, ok = QtGui.QInputDialog.getInt(self,"Number of cases to analyse", ("Please insert the number of cases \n you would like to analyse.\n \n (You are not forced to do all \n of the proposed cases). \n \n \n Maximum : "+str(self.ncases)+" : "),  value=min(20, self.ncases), min=1, max=self.ncases, step=1)
+        if ok and ncases <= self.ncases:
+            self.ncases = ncases
+            print("Thank you. Preparing "+str(self.ncases)+" cases.")
+        else:
+            print("Default value, set to maximum : " + str(self.ncases))
+        self.casesKeys=[self.casesKeys[i] for i in range(0,self.ncases)]
         self.CaseCombo.addItems(self.casesKeys)
         #set case
         self.set_current_case(self.casesKeys[0])
-        #add connections
-        self.connections()
-        self.palette=QtPalette
-        
         
     def add_widgets(self):
         #Figure Canvas
@@ -416,12 +438,13 @@ class CaseCreatorWidget(DetectControlWidget):
             if abs(tmax-self._t_int_min) > self.minspan:
                 self.add_int(self._t_int_min,tmax)
         
-    def onselect(self,xmin,xmax):
+    def onselect(self,xmin,xmax, remove=False):
         #add interval1
-        if self.remove:
+        if self.remove or remove:
             self.remove_int(xmin,xmax)
         else:
             self.add_int(xmin,xmax)
+        
         
     def onclick(self,x):
         #remove Interval
@@ -431,7 +454,7 @@ class CaseCreatorWidget(DetectControlWidget):
         if event.isAutoRepeat():
             return
         if event.key() == QtCore.Qt.Key_D:
-            self.remove = True
+            self.remove=True
         elif event.key() == QtCore.Qt.Key_S:
             self.set_int(True)
         event.accept()
@@ -469,29 +492,11 @@ class CaseCreatorWidget(DetectControlWidget):
             self.buttonSave.setStyleSheet("background-color: #a6dba0")
             currentIndex= self.casesKeys.index(str(self.CaseCombo.currentText()))
             self.CaseCombo.setItemData(currentIndex,QtGui.QColor('#a6dba0'),QtCore.Qt.BackgroundRole)
-
-
-    def show_info(self):
-        """calls info box"""
-        appinfo=QtGui.QApplication([])
-        appinfo.setQuitOnLastWindowClosed(False)
-        winfo=QtGui.QWidget()
-        winfo.setWindowTitle('Information on KG software')
-        if self.palette:
-            winfo.setPalette(self.palette)
-        layoutinfo=QtGui.QVBoxLayout()
-        winfo.setLayout(layoutinfo)
-        
-        infoview=QtGui.QTextBrowser()
-        infoview.setFixedSize(850,550)
-        infoview.setSource(pathlib.Path('info.html').absolute().as_uri())
-        infoview.setWindowTitle("INFO")
-        infoview.show()
-        layoutinfo.addWidget(infoview)
-        winfo.show()
-        appinfo.exec_()
-        #QtGui.QMessageBox.information(self,"Info", view)
-        
+    
+    def extbrowsercall(self):
+        """call opening info page in external web browser"""
+        os.startfile(pathlib.Path('info.html').absolute().as_uri())
+    
     @classmethod
     def from_measurement(cls, mesVal, mID, mics, author = None):
         mesPath = mesVal.path.absolute()

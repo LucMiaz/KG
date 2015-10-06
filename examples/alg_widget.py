@@ -13,8 +13,10 @@ from kg.measurement_signal import measuredSignal
 import seaborn as sns
 
 #number o cases to prepare
-
-mesPath = pathlib.Path('d:\github\mykg\measurements_example\MBBMZugExample')
+try:
+    mesPath = pathlib.Path('C:\lucmiaz\KG_dev_branch\KG\measurements_example\MBBMZugExample')
+except PermissionError:
+    mesPath = pathlib.Path('d:\github\mykg\measurements_example\MBBMZugExample')
 if __name__ == "__main__":  
     # load measured values
     mesVal = measuredValues.from_json(mesPath)
