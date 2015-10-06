@@ -182,7 +182,7 @@ class measuredValues():
         else:
             return(dict)
     
-    def set_kg_values(self, algorithm, ID, mic, results ):
+    def set_kg_values(self, algorithm, ID, mic, result ):
         """
         set algorithm information in self.kgValues['algorithm'] 
 
@@ -194,7 +194,7 @@ class measuredValues():
             self.kgValues['algorithms'][str(algorithm)] = algorithm.get_info()
         # add results
         dict = self.kgValues['results'].setdefault(ID,{}).setdefault(mic,{})
-        dict[str(algorithm)] = results
+        dict[str(algorithm)] = result
         
     def kg_values_to_json(self, variables = []):
         '''

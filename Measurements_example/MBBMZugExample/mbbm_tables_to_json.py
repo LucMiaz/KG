@@ -11,17 +11,6 @@ if __name__ == "__main__":
     #mesPath = 'D:\GitHub\myKG\Measurements_example\MBBMZugExample'
     mesPath = pathlib.Path('')
     read_MBBM_tables(mesPath,True)
+    
+    #load mesVal
     mesVal = measuredValues.from_json(mesPath)
-    ## some tests
-    s = mesVal.get_variables_values(ID= ['m_0100','m_0191'], mic= 1,
-     variables = ['Tb', 'v1', 'Tp_b', 'Tp_e'])
-    print(s)
-
-    ## get evaluated signals
-    allID = mesVal.get_IDs(evaluated = False)
-    print( 'Total N. of IDs:' , len(allID))
-    evalID = mesVal.get_IDs(evaluated = True)
-    print( 'evaluated IDs:' , len(evalID))
-    nonEvalID = list(set(allID)-set(evalID))
-    print(nonEvalID)
-    print('m_0120'in allID)

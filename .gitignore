@@ -15,3 +15,5 @@ old/
 /TODO
 kg/widgets.py
 kg/intervals.py
+Measurements_example/MBBMZugExample/wav/m_0104_mic_6.wav
+*.wav
