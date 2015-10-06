@@ -9,7 +9,6 @@ from kg.algorithm import Case
 from kg.widgets import *
 from kg.measurement_values import measuredValues
 from kg.measurement_signal import measuredSignal
-
 import seaborn as sns
 
 #number o cases to prepare
@@ -42,17 +41,41 @@ if __name__ == "__main__":
     micSn = MicSignal.from_measurement(mesVal,case.case['mID'],case.case['mic'])
     micSn.calc_kg(algorithm)
     ##
-    sns.color_palette("hls", 4)
+    #sns.color_palette("hls", 4)
+    textcolor='#f5f5f5'
+    axescolor='#f5f5f5'
+    axbgcolor='#272822'
+    bgcolor='#aaaaaa'
+    matplotlib.rcParams['axes.facecolor']=bgcolor
+    matplotlib.rcParams['axes.edgecolor']=axescolor
+    for i in ['x','y']:
+        matplotlib.rcParams['xtick.color']=axescolor
+    matplotlib.rcParams['grid.color']=textcolor
+    matplotlib.rcParams['ytick.color']=axescolor
+    matplotlib.rcParams['figure.edgecolor']=axescolor
+    matplotlib.rcParams['patch.linewidth']='0.5'
+    matplotlib.rcParams['lines.color']='#7b3294'
+    matplotlib.rcParams['lines.linewidth']='0.75'
+    matplotlib.rcParams['axes.linewidth']='0.4'
+    matplotlib.rcParams['xtick.major.width']='0.4'
+    matplotlib.rcParams['ytick.major.width']='0.4'
+    matplotlib.rcParams['xtick.minor.width']='0.3'
+    matplotlib.rcParams['xtick.minor.width']='0.3'
+    matplotlib.rcParams['text.color']=textcolor
+    matplotlib.rcParams['axes.labelcolor']='#f5f5f5'
+    matplotlib.rcParams['font.family']='HelveticaNeue'
+    font={'family':'sans-serif','weight':'regular','size':11}
+    matplotlib.rc('font',**font)
     f,axes = plt.subplots(2,sharex = True)
     ax = axes[0]
-    micSn.plot_triggers(ax,color = 'green',lw=3)
-    micSn.plot_BPR(algorithm, ax, color = 'red')
+    micSn.plot_triggers(ax,color = '#f5f5f5',lw=1)
+    micSn.plot_BPR(algorithm, ax, color = '#f5f5f5', linewidth=1)
     case.plot(ax)
     ax.set_xlim(-0.5,8)
     ymin,ymax = ax.get_ylim()
     ax=axes[1]
     alg_res = micSn.get_KG_results(algorithm)['result']
-    micSn.plot_BPR(algorithm, ax, color = 'red')
+    micSn.plot_BPR(algorithm, ax, color = '#f5f5f5', lw=1)
     case.plot_compare(ax,alg_res['result'], alg_res['t'])
     plt.show()
     

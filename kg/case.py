@@ -110,9 +110,9 @@ class Case(object):
             xint = np.interp(tint,t,x)>=0.5
             return(tint,xint)
         ymin,ymax = ax.get_ylim()
-        for k, c in zip(['TP','TN','FP','FN'],['b','g','r','y']):
+        for k, c in zip(['TP','TN','FP','FN'],['#bebada','#8dd3c7','#fb8072','#ffffb3']):#blue green red yellow
             t,x = inter(resTF['t'], resTF[k])
-            ax.fill_between(t,ymin,ymax, where = x,alpha= 0.3, color = c)
+            ax.fill_between(t,ymin,ymax, where = x,alpha= 0.5, color = c)
         
     def __str__(self):
         """prints the name of the case"""

@@ -39,7 +39,7 @@ def plot_spectrogram(X, param, ax, colorbar = True, title = 'Spectrogram', dB= T
     ax.set_title(title, fontsize = 10)
     #cmap = brewer2mpl.get_map('RdPu', 'Sequential', 9).mpl_colormap
     cmap=['#fff7f3','#fde0dd','#fcc5c0', '#fa9fb5', '#f768a1', '#dd3497', '#ae017e','#7a0177', '#49006a']
-    # cmap=LinearSegmentedColormap('RdPu',cmap)
+    cmap=LinearSegmentedColormap('RdPu',cmap)
     if dBMax==None:
         norm = matplotlib.colors.Normalize(vmin = 0)
     else:
@@ -64,7 +64,7 @@ def plot_spectrogram(X, param, ax, colorbar = True, title = 'Spectrogram', dB= T
     else:
         ax.set_yscale('linear')
     ax.xaxis.set_minor_locator(matplotlib.ticker.AutoMinorLocator())
-    ax.grid(which= 'both' ,ls="-", linewidth=0.4, color=cmap(0), alpha=0.8)
+    ax.grid(which= 'both' ,ls="-", linewidth=0.15, color='#aaaaaa', alpha=0.3)
     ax.set_xlim(t.min(),t.max())
     ax.set_ylim(freq.min(),freq.max())
     if not colorbar:
