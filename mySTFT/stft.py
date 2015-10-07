@@ -249,7 +249,6 @@ def stft_PSD(X, param, scaling = 'density', **kwargs):
 
     # calculate PSD    
     PS_i = np.real(np.conjugate(X)*X)*scale
-
     #onesided
     if N % 2:
         freq = freq[:(N+1)//2]
@@ -296,3 +295,4 @@ def time_resolution(df,sR):
     return N dt
     '''
     return(sR /(df),1/(df))
+    

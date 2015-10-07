@@ -30,6 +30,7 @@ if __name__ == "__main__":
     algorithm = ZischenDetetkt2(3000,2,0.02)
         
     ##load cases
+    
     # todo: if necessary serialize on mesVal
     mesValues = measuredValues.from_json(mesPath)
     casePath1 = mesValues.path.joinpath('test_cases/esr/case_m_0101_4_esr.json')
@@ -43,9 +44,11 @@ if __name__ == "__main__":
     ##
     #sns.color_palette("hls", 4)
 
-
+    app=QtGui.QApplication()
  ##   
-    W = CompareCaseAlgWidget(mesVal,case,[algorithm])
+    W = CompareCaseAlgWidget([algorithm],mesVal,case)
+    #W=CompareCaseAlgWidget.from_wav(pathlib.Path('C:/lucmiaz/KG_dev_branch/KG/Measurements_example/various_passby/kreischen.wav'), [algorithm])
     W.show()
+    
 
 

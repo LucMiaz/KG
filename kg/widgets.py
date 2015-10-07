@@ -21,6 +21,7 @@ from kg.case import Case
 from kg.case import Interval
 from kg.measurement_values import measuredValues
 from kg.measurement_signal import measuredSignal
+from scipy.io import wavfile
 #import seaborn as sns
 #sns.set(style='ticks',palette='Set2')
                           
@@ -565,24 +566,45 @@ def palettesimple(chgmatplotlib=True):
 class CompareCaseAlgWidget(DetectControlWidget):
     #todo: improve graphical quality
     
-    def __init__(self, mesVal, case, algorithms):
+    def __init__(self, algorithms, mesVal=None, case=None, micSn=None, wavPath=None):
         #init super
         super(CompareCaseAlgWidget, self).__init__()
-        self.setWindowTitle('Compare Case and Algorithm ')
-        self.window.setPalette(palettesimple())
+        self.mesVal=mesVal
+        self.case=case
+        self.micSn=micSn
         #set algorithms
         self.algorithms = algorithms if isinstance(algorithms,list) else [algorithms]
-        self.case=case      
         self.currentAlg = self.algorithms[0]
-        #calculate algorithms on case
-        for n,alg in enumerate(self.algorithms):
-            if n==0:
-                self.micSn = alg.test_on_case(self.case, mesVal)
-            else:
-                alg.test_on_case(self.case, mesVal,self.micSn)
-            alg.calc_rates()
+        self.wavPath=wavPath
+        if self.mesVal:
+            self.perform_algorithm()
+            self.connect_wav()
+        self.set_media_source(str(self.wavPath), self.micSn.t.min())
         #self.df = pd.DataFrame({'name':[1,2,3,4,5]})
+        self.__init__graphical_output()
+        self.connections()
+        
+    def connect_wav(self):
+        """Connects the paths to wav if necessary"""
+        # connect wav
+        mesPath = self.mesVal.path
+        self.wavPath = self.micSn.export_to_Wav(mesPath)
+        self.wavPath = mesPath.joinpath(self.wavPath)
     
+    def perform_algorithm(self):
+        """runs the algorithm on either the case"""
+        if self.case:
+            #calculate algorithms on case
+            for n,alg in enumerate(self.algorithms):
+                if n==0:
+                    self.micSn = alg.test_on_case(self.case, self.mesVal)
+                else:
+                    alg.test_on_case(self.case, self.mesVal,self.micSn)
+                alg.calc_rates()
+        
+    def __init__graphical_output(self):
+        """initialise the graphical output"""
+        self.setWindowTitle('Compare Case and Algorithm ')
         #add canvas
         plt.ioff()
         self.fig = Figure((15,10))
@@ -623,15 +645,6 @@ class CompareCaseAlgWidget(DetectControlWidget):
         #SET CENTRAL WIDGET
         self.set_centralWidget()
         
-        # connect wav
-        mesPath = mesVal.path
-        wavPath = self.micSn.export_to_Wav(mesPath)
-        wavPath = mesPath.joinpath(wavPath)
-        self.set_media_source(str(wavPath), self.micSn.t.min())
-        
-        self.connections() 
-    
-    
     def set_current_alg(self,index):
         self.timer.stop()
         self.media.stop()
@@ -656,15 +669,20 @@ class CompareCaseAlgWidget(DetectControlWidget):
         f,axes = plt.subplots(2,sharex = True)
         ax = axes[0]
         self.micSn.plot_triggers(ax,color = '#272822',lw=1)
-        self.micSn.plot_BPR(algorithm, ax, color = '#272822', linewidth=1)
+        self.micSn.plot_BPR(self.currentAlg, ax, color = '#272822', linewidth=1)
         self.case.plot(ax)
         ax.set_xlim(-0.5,8)
         ymin,ymax = ax.get_ylim()
         ax=axes[1]
-        alg_res = micSn.get_KG_results(algorithm)['result']
-        self.micSn.plot_BPR(self.algorithm, ax, color = '#272822', lw=1)
+        alg_res = self.micSn.get_KG_results(self.currentAlg)['result']
+        self.micSn.plot_BPR(self.currentAlg, ax, color = '#272822', lw=1)
         self.case.plot_compare(ax,alg_res['result'], alg_res['t'])
         plt.show()
+    @classmethod
+    def from_wav(cls, wav, algorithm):
+        """configures a CompareCaseAlgWidget from a wav (file or path) and an algorithm"""
+        micSnfw, wavp=MicSignal.from_wav(wav)
+        return cls(algorithm, micSn=micSnfw, wavPath=wavp)
 
 ##
 if __name__ == "__main__":
@@ -688,6 +706,7 @@ if __name__ == "__main__":
     #W = DetectControlWidget.alg_results(micSn,algorithm)
     ##
     mic= [1,2,4,5,6]
-    W = CaseCreatorWidget.from_measurement(mesVal,mID,mic)
+    #W = CaseCreatorWidget.from_measurement(mesVal,mID,mic)
+    W=CaseCreatorWidget.from_wav('C:\lucmiaz\KG_dev_branch\Measurements_example\various_passby\kreischen.wav')
     W.show()
     
