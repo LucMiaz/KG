@@ -341,37 +341,21 @@ class MicSignal(object):
         return(cls(ID,mic,y,t,sR, micValues ))
         
     @classmethod
-    def from_wav(cls, wav, stereo=False):
+    def from_wav(cls, wavPath):
         """initialise a MicSignal from a wav file given either as str filename, path to file, or list containing the samplerate and the array"""
-        if isinstance(wav,str):
-            fp,data=wavfile.read(wav)
-            wavPathfw=pathlib.Path(wav).absolute()
-        elif isinstance(wav,pathlib.Path):
-            fp,data=wavfile.read(wav.as_posix())
-            wavPathfw=wav.absolute()
-        elif isinstance(wav,list):
-            try:
-                fp,data=wav
-            except:
-                raise("Please give a list with rate and array")
-                return None
-            else:
-                wavPathfw='CompareCaseAlg.wav'
-                wavfile.write(self.wavPath,fp,data)
-                wavPathfw=pathlib.Path(self.wavPath).absolute()
+        if isinstance(wavPath, str)
+            wavPath = pathlib.Path(wavPath).absolute()
         else:
-            raise("The given input is not a file/path or an array")
-        if stereo:#it the input is in stereo
-            data=data[0]#takes only one array
+            wavPath=wavPath.absolute()
+            
+        sR,data = wavfile.read(wav) 
+        if len(data.shape)>1:#it the input is in stereo
+            data = data[0]#takes only one array
         data=data.astype(np.float16, copy=False)
-        if fp==0:
-            print("Wrong sample rate")
-            return
-        ID = 'wav_'+time.strftime("%Y-%m-d_%H:%M:%S")+".wav"
-        mic = 0
+        ID = wavPath.name
         micValues={'Tb':0,'Te':len(data)/fp,'Tp_b':0,'Tp_e':0,'LAEQ':0,'description':0,'gleis':0,'sec':0}
         t = np.linspace(micValues['Tb'],micValues['Te'], len(data))
-        return [cls(ID, 0, data, t, fp, micValues), wavPathfw]
+        return(cls(ID, '' , data, t, sR, micValues))
         
 ##functions
 def isclipped(xn, K=301, threshold=0.55, axdisplay=None, normalizehist=False):
