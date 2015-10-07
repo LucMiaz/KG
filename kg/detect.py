@@ -177,7 +177,7 @@ class MicSignal(object):
             tb,te = tlim
         return(np.logical_and(t >= tb,t <= te))
         
-    def plot_spectrogram(self, name, ax, freqscale = 'lin', dBMax = 110):
+    def plot_spectrogram(self, name, ax, freqscale = 'lin', **kwargs):
         '''
         plot spectrogram
         '''
@@ -195,10 +195,9 @@ class MicSignal(object):
             print("STFT dict has no key " + str(name))
             M, N, overlap = [int(i) for i in name.split('_')]
             print("Computing STFT")
-            name self.calc_stft(M, N, overlap)
+            name = self.calc_stft(M, N, overlap)
             STFT=self.STFT[name]
-        plot_spectrogram(STFT['X'], STFT['param'], ax,\
-                                            dBMax=dBMax, zorder = 1,**kwargs )
+        plot_spectrogram(STFT['X'], STFT['param'], ax, zorder = 1,**kwargs )
             
                 
     def plot_triggers(self, ax, type ='eval', **kwargs):
@@ -343,17 +342,17 @@ class MicSignal(object):
     @classmethod
     def from_wav(cls, wavPath):
         """initialise a MicSignal from a wav file given either as str filename, path to file, or list containing the samplerate and the array"""
-        if isinstance(wavPath, str)
+        if isinstance(wavPath, str):
             wavPath = pathlib.Path(wavPath).absolute()
         else:
-            wavPath=wavPath.absolute()
+            wavPath = wavPath.absolute()
             
-        sR,data = wavfile.read(wav) 
+        sR,data = wavfile.read(wavPath.as_posix()) 
         if len(data.shape)>1:#it the input is in stereo
             data = data[0]#takes only one array
         data=data.astype(np.float16, copy=False)
         ID = wavPath.name
-        micValues={'Tb':0,'Te':len(data)/fp,'Tp_b':0,'Tp_e':0,'LAEQ':0,'description':0,'gleis':0,'sec':0}
+        micValues={'Tb':0,'Te':len(data)/sR,'Tp_b':0,'Tp_e':0,'LAEQ':0,'description':0,'gleis':0,'sec':0}
         t = np.linspace(micValues['Tb'],micValues['Te'], len(data))
         return(cls(ID, '' , data, t, sR, micValues))
         
