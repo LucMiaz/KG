@@ -666,18 +666,20 @@ class CompareCaseAlgWidget(DetectControlWidget):
     
     def callTrueFalse(self):
         """plot the true/false positive/negative plots"""
-        f,axes = plt.subplots(2,sharex = True)
-        ax = axes[0]
-        self.micSn.plot_triggers(ax,color = '#272822',lw=1)
-        self.micSn.plot_BPR(self.currentAlg, ax, color = '#272822', linewidth=1)
-        self.case.plot(ax)
-        ax.set_xlim(-0.5,8)
-        ymin,ymax = ax.get_ylim()
-        ax=axes[1]
-        alg_res = self.micSn.get_KG_results(self.currentAlg)['result']
-        self.micSn.plot_BPR(self.currentAlg, ax, color = '#272822', lw=1)
-        self.case.plot_compare(ax,alg_res['result'], alg_res['t'])
-        plt.show()
+        if self.case: 
+            f,axes = plt.subplots(2,sharex = True)
+            ax = axes[0]
+            self.micSn.plot_triggers(ax,color = '#272822',lw=1)
+            self.micSn.plot_BPR(self.currentAlg, ax, color = '#272822', linewidth=1)
+            self.case.plot(ax)
+            ax.set_xlim(-0.5,8)
+            ymin,ymax = ax.get_ylim()
+            ax=axes[1]
+            alg_res = self.micSn.get_KG_results(self.currentAlg)['result']
+            self.micSn.plot_BPR(self.currentAlg, ax, color = '#272822', lw=1)
+            self.case.plot_compare(ax,alg_res['result'], alg_res['t'])
+            plt.show()
+    
     @classmethod
     def from_wav(cls, wav, algorithm):
         """configures a CompareCaseAlgWidget from a wav (file or path) and an algorithm"""
