@@ -46,8 +46,8 @@ if __name__ == "__main__":
 
     app=QtGui.QApplication()
  ##   
-    W = CompareCaseAlgWidget([algorithm],mesVal,case)
-    #W=CompareCaseAlgWidget.from_wav(pathlib.Path('C:/lucmiaz/KG_dev_branch/KG/Measurements_example/various_passby/kreischen.wav'), [algorithm])
+    #W = CompareCaseAlgWidget([algorithm],mesVal,case)
+    W=CompareCaseAlgWidget.from_wav(pathlib.Path('C:/lucmiaz/KG_dev_branch/KG/Measurements_example/various_passby/kreischen.wav'), [algorithm])
     W.show()
     
 

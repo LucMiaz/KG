@@ -183,7 +183,7 @@ class MicSignal(object):
         '''
         # datenvorbereitung
         kwargs = {
-        'fmin': -10000,
+        'fmin': 200,
         'fmax':10000,
         't0': min(self.t),
         'tmin': min(self.t),
@@ -382,7 +382,6 @@ class MicSignal(object):
         mic = 0
         micValues={'Tb':0,'Te':len(data)/fp,'Tp_b':0,'Tp_e':0,'LAEQ':0,'description':0,'gleis':0,'sec':0}
         t = np.linspace(micValues['Tb'],micValues['Te'], len(data))
-        
         return [cls(ID, 0, data, t, fp, micValues), wavPathfw]
         
 ##functions

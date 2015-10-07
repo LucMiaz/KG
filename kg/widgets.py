@@ -682,6 +682,8 @@ class CompareCaseAlgWidget(DetectControlWidget):
     def from_wav(cls, wav, algorithm):
         """configures a CompareCaseAlgWidget from a wav (file or path) and an algorithm"""
         micSnfw, wavp=MicSignal.from_wav(wav)
+        for alg in algorithm:
+            micSnfw.calc_kg(alg)
         return cls(algorithm, micSn=micSnfw, wavPath=wavp)
 
 ##
