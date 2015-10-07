@@ -193,7 +193,7 @@ class MicSignal(object):
             STFT = self.STFT[name]
         except KeyError:
             print("STFT dict has no key " + str(name))
-            M, N, overlap = [int(i) for i in name.split('_')
+            M, N, overlap = [int(i) for i in name.split('_')]
             print("Computing STFT")
             name self.calc_stft(M, N, overlap)
             STFT=self.STFT[name]
