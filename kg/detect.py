@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 import collections
 import time#to set the ID of MicSignal if created from wav only.
 from kg.measurement_signal import measuredSignal
-import mySTFT.stft as Fourier
+from  mySTFT.stft import stft, stft_PSD
 from mySTFT.stft_plot import plot_spectrogram
 
 class MicSignal(object):
@@ -85,7 +85,7 @@ class MicSignal(object):
         
         
     def calc_stft(self, M , N = None, overlap = 2, window = 'hann',**kwargs):
-        X, freq, frame_i, param = Fourier.stft( self.y, M = M,\
+        X, freq, frame_i, param = stft( self.y, M = M,\
                                                 N = N, \
                                                 overlap = overlap,\
                                                 sR = self.sR,\
@@ -106,13 +106,13 @@ class MicSignal(object):
         calculate PSD for all frames f_i
         '''
         try:
-            stft = self.STFT[stftName]
+            STFT = self.STFT[stftName]
         except KeyError:
             pass
         else:
             #set interval to evaluate spectrum
             kwargs['t0'] = self.t.min()
-        return(Fourier.stft_PSD(stft['X'], stft['param'], scaling = 'density', **kwargs))
+        return(stft_PSD(STFT['X'], STFT['param'], scaling = 'density', **kwargs))
 
     def calc_kg(self, algorithm):
         '''
@@ -133,7 +133,7 @@ class MicSignal(object):
         
     def calc_spectrum_welch(stftName = None, tint = None):
         try:
-            stft = self.STFT[stftName]
+            STFT = self.STFT[stftName]
         except KeyError:
             pass
         else:
@@ -144,7 +144,7 @@ class MicSignal(object):
                 kwargs['tmin']= self.micValues['Te']
             else:
                 kwargs['tmax'],kwargs['tmin'] = tlim
-            sectrum ,freq = stft_welch(stft['X_i'], stft['param'],'density', **kwargs)
+            sectrum ,freq = stft_welch(STFT['X_i'], STFT['param'],'density', **kwargs)
                 
     def get_stft_name(self,algorithm):
         par = algorithm.get_stft_param(self.sR)
@@ -177,7 +177,7 @@ class MicSignal(object):
             tb,te = tlim
         return(np.logical_and(t >= tb,t <= te))
         
-    def plot_spectrogram(self, name, ax, freqscale = 'lin', dBMax = 110):
+    def plot_spectrogram(self, name, ax, freqscale = 'lin', **kwargs):
         '''
         plot spectrogram
         '''
@@ -190,26 +190,14 @@ class MicSignal(object):
         'tmax': max(self.t)
         }
         try:
-            hstft = self.STFT[name]
+            STFT = self.STFT[name]
         except KeyError:
             print("STFT dict has no key " + str(name))
-            M=name.partition("_")[0]
-            try:
-                M=int(M)
-            except:
-                print("Cannot compute STFT")
-                return None
-            else:
-                print("Computing STFT")
-                print("kwargs tmax"+str(kwargs['tmax']))
-                print("kwargs tmin"+str(kwargs['tmin']))
-                self.STFT[name]=Fourier.stft(self.y,self.sR)
-                hstft=self.STFT[name]
-                plot_spectrogram(hstft[0],hstft[3],ax,dBMax=dBMax, zorder=1, **kwargs)
-        else:
-            
-            plot_spectrogram(hstft['X'], hstft['param'], ax,\
-                                            dBMax=dBMax, zorder = 1,**kwargs )
+            M, N, overlap = [int(i) for i in name.split('_')]
+            print("Computing STFT")
+            name = self.calc_stft(M, N, overlap)
+            STFT=self.STFT[name]
+        plot_spectrogram(STFT['X'], STFT['param'], ax, zorder = 1,**kwargs )
             
                 
     def plot_triggers(self, ax, type ='eval', **kwargs):
@@ -352,37 +340,21 @@ class MicSignal(object):
         return(cls(ID,mic,y,t,sR, micValues ))
         
     @classmethod
-    def from_wav(cls, wav, stereo=False):
+    def from_wav(cls, wavPath):
         """initialise a MicSignal from a wav file given either as str filename, path to file, or list containing the samplerate and the array"""
-        if isinstance(wav,str):
-            fp,data=wavfile.read(wav)
-            wavPathfw=pathlib.Path(wav).absolute()
-        elif isinstance(wav,pathlib.Path):
-            fp,data=wavfile.read(wav.as_posix())
-            wavPathfw=wav.absolute()
-        elif isinstance(wav,list):
-            try:
-                fp,data=wav
-            except:
-                raise("Please give a list with rate and array")
-                return None
-            else:
-                wavPathfw='CompareCaseAlg.wav'
-                wavfile.write(self.wavPath,fp,data)
-                wavPathfw=pathlib.Path(self.wavPath).absolute()
+        if isinstance(wavPath, str):
+            wavPath = pathlib.Path(wavPath).absolute()
         else:
-            raise("The given input is not a file/path or an array")
-        if stereo:#it the input is in stereo
-            data=data[0]#takes only one array
+            wavPath = wavPath.absolute()
+            
+        sR,data = wavfile.read(wavPath.as_posix()) 
+        if len(data.shape)>1:#it the input is in stereo
+            data = data[0]#takes only one array
         data=data.astype(np.float16, copy=False)
-        if fp==0:
-            print("Wrong sample rate")
-            return
-        ID = 'wav_'+time.strftime("%Y-%m-d_%H:%M:%S")+".wav"
-        mic = 0
-        micValues={'Tb':0,'Te':len(data)/fp,'Tp_b':0,'Tp_e':0,'LAEQ':0,'description':0,'gleis':0,'sec':0}
+        ID = wavPath.name
+        micValues={'Tb':0,'Te':len(data)/sR,'Tp_b':0,'Tp_e':0,'LAEQ':0,'description':0,'gleis':0,'sec':0}
         t = np.linspace(micValues['Tb'],micValues['Te'], len(data))
-        return [cls(ID, 0, data, t, fp, micValues), wavPathfw]
+        return(cls(ID, '' , data, t, sR, micValues))
         
 ##functions
 def isclipped(xn, K=301, threshold=0.55, axdisplay=None, normalizehist=False):

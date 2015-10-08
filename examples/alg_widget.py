@@ -13,7 +13,7 @@ import seaborn as sns
 
 #number o cases to prepare
 try:
-    mesPath = pathlib.Path('C:\lucmiaz\KG_dev_branch\KG\measurements_example\MBBMZugExample')
+    mesPath = pathlib.Path('measurements_example\MBBMZugExample')
 except PermissionError:
     mesPath = pathlib.Path('d:\github\mykg\measurements_example\MBBMZugExample')
 if __name__ == "__main__":  
@@ -42,12 +42,27 @@ if __name__ == "__main__":
     micSn = MicSignal.from_measurement(mesVal,case.case['mID'],case.case['mic'])
     micSn.calc_kg(algorithm)
     ##
-    #sns.color_palette("hls", 4)
 
-    app=QtGui.QApplication()
+    f,axes = plt.subplots(2,sharex = True)
+    ax = axes[0]
+    micSn.plot_triggers(ax,color = '#272822',lw=1)
+    micSn.plot_BPR(algorithm, ax, color = '#272822', linewidth=1)
+    case.plot(ax)
+    ax.set_xlim(-0.5,8)
+    ymin,ymax = ax.get_ylim()
+    ax=axes[1]
+    alg_res = micSn.get_KG_results(algorithm)['result']
+    micSn.plot_BPR(algorithm, ax, color = '#272822', lw=1)
+    case.plot_compare(ax,alg_res['result'], alg_res['t'])
+    plt.show()
+
+    
  ##   
-    #W = CompareCaseAlgWidget([algorithm],mesVal,case)
-    W=CompareCaseAlgWidget.from_wav(pathlib.Path('C:/lucmiaz/KG_dev_branch/KG/Measurements_example/various_passby/kreischen.wav'), [algorithm])
+    app=QtGui.QApplication()
+    W = CompareCaseAlgWidget.from_measurement(mesVal, [algorithm], case)
+    #W = CompareCaseAlgWidget.from_measurement(mesVal, [algorithm], ID='m_0100',mic=6)
+    wavPath = pathlib.Path('Measurements_example/various_passby/kreischen.wav')
+    #W=CompareCaseAlgWidget.from_wav(wavPath,[algorithm])
     W.show()
     
 

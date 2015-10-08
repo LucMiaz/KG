@@ -302,22 +302,21 @@ class ZischenDetetkt2(Algorithm):
             ax2= fig.add_subplot(2,1,2,sharex = ax1)
         #ax1
         MicSnObj.plot_spectrogram(stftName, ax1) 
-        MicSnObj.plot_triggers(ax1)
-        MicSnObj.plot_KG(self,ax1,color = 'cyan')
+        MicSnObj.plot_KG(self,ax1, color = 'cyan')
         #ax2
         MicSnObj.plot_triggers(ax2)
-        MicSnObj.plot_BPR(self,ax2)
+        MicSnObj.plot_BPR(self,ax2, color = '#272822',lw=1)
         if case is not None:
-            case.plot(ax2,color= 'b')
+            case.plot(ax2, color= 'b')
             
         if case is not None:
-            MicSnObj.plot_BPR(self,ax3)
+            MicSnObj.plot_BPR(self,ax3,color = '#272822',lw=1)
             alg_res = MicSnObj.get_KG_results(self)['result']
             case.plot_compare(ax3, noiseType = self.noiseType , **alg_res)
             return(ax1,ax2,ax3)
         else:
             return(ax1,ax2)
-        
+    
     def __str__(self):
         s = '{}_{}s'.format( self.__class__.__name__, self.param['dt'])
         s += '_{}Hz_{}dB'.format(self.param['fc'],self.param['threshold'])
