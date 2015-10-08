@@ -237,7 +237,7 @@ class CaseCreatorWidget(DetectControlWidget):
                 while len(self.casesKeys) < self.ncases:
                     cas=keys[random.randint(0,ncmax)]
                     if cas not in self.casesKeys:
-                        self.casesKeys.append()
+                        self.casesKeys.append(cas)
         self.CaseCombo.addItems(self.casesKeys)
         #set case
         self.set_current_case(self.casesKeys[0])
