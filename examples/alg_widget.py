@@ -13,26 +13,33 @@ import seaborn as sns
 
 #number o cases to prepare
 try:
-    mesPath = pathlib.Path('measurements_example\MBBMZugExample')
-except PermissionError:
-    mesPath = pathlib.Path('d:\github\mykg\measurements_example\MBBMZugExample')
+    mesPath = pathlib.Path('C:/lucmiaz/KG_dev_branch/KG')
+except:
+    mesPath = pathlib.Path('d:\github\mykg')
 if __name__ == "__main__":  
-    # load measured values
-    mesVal = measuredValues.from_json(mesPath)
-    location =  mesVal.location
-    measurement = mesVal.measurement
     
-    # setup  measured signal 
-    measuredSignal.setup(mesPath)
     
+    app=QtGui.QApplication()
+    CTW=QtGui.QWidget()
+    algorithmclass, valid=QtGui.QInputDialog.getItem(CTW,"Algorithm","Please select an algorithm type", [str(cls.__name__) for cls in vars()['Algorithm'].__subclasses__()])
+    if valid:
+        print(algorithmclass)
+        algorithm=eval(algorithmclass+"askforattributes(CTW)")
     # setup algorithms
     # todo: parametrize alg parameter in the best possible way 
     algorithm = ZischenDetetkt2(3000,2,0.02)
         
     ##load cases
+    # load measured values
+    jsonpath=mesPath.joinpath(pathlib.Path('measurements_example/MBBMZugExample'))
+    mesVal = measuredValues.from_json(jsonpath)
+    location =  mesVal.location
+    measurement = mesVal.measurement
     
+    # setup  measured signal 
+    measuredSignal.setup(jsonpath)
     # todo: if necessary serialize on mesVal
-    mesValues = measuredValues.from_json(mesPath)
+    mesValues = measuredValues.from_json(jsonpath)
     casePath1 = mesValues.path.joinpath('test_cases/esr/case_m_0101_4_esr.json')
     case1 = Case.from_JSON(casePath1)
     casePath2 = mesValues.path.joinpath('test_cases/esr/case_m_0100_6_esr.json')
@@ -58,12 +65,13 @@ if __name__ == "__main__":
 
     
  ##   
-    app=QtGui.QApplication()
-    W = CompareCaseAlgWidget.from_measurement(mesVal, [algorithm], case)
-    #W = CompareCaseAlgWidget.from_measurement(mesVal, [algorithm], ID='m_0100',mic=6)
-    wavPath = pathlib.Path('Measurements_example/various_passby/kreischen.wav')
-    #W=CompareCaseAlgWidget.from_wav(wavPath,[algorithm])
-    W.show()
+    
+    #W = CompareCaseAlgWidget.from_measurement(mesVal, [algorithm], case)
+    #Q = CompareCaseAlgWidget.from_measurement(mesVal, [algorithm], ID='m_0100',mic=6)
+    wavPath = mesPath.joinpath('Measurements_example/various_passby/kreischen.wav')
+    R=CompareCaseAlgWidget.from_wav(wavPath,[algorithm])
+    #W.show()
+    R.show()
     
 
 

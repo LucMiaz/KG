@@ -54,6 +54,7 @@ class Case(object):
                 retTF[k]= int(v.sum())
         else:
             retTF['t'] = t
+            retTF['disc'] = disc
         return(retTF)
     
     def set_quality(self, quality):

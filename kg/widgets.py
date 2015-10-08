@@ -22,6 +22,8 @@ from kg.case import Interval
 from kg.measurement_values import measuredValues
 from kg.measurement_signal import measuredSignal
 from scipy.io import wavfile
+import random
+import json
 #import seaborn as sns
 #sns.set(style='ticks',palette='Set2')
                           
@@ -211,6 +213,7 @@ class CaseCreatorWidget(DetectControlWidget):
     
     def asks_for_ncases(self):
         self.ncases=len(self.casesKeys)
+        ncmax=self.ncases
         #asking for number of cases to treat
         ncases, ok = QtGui.QInputDialog.getInt(self,"Number of cases to analyse", ("Please insert the number of cases \n you would like to analyse.\n \n (You are not forced to do all \n of the proposed cases). \n \n \n Maximum : "+str(self.ncases)+" : "),  value=min(20, self.ncases), min=1, max=self.ncases, step=1)
         if ok and ncases <= self.ncases:
@@ -218,7 +221,23 @@ class CaseCreatorWidget(DetectControlWidget):
             print("Thank you. Preparing "+str(self.ncases)+" cases.")
         else:
             print("Default value, set to maximum : " + str(self.ncases))
-        self.casesKeys=[self.casesKeys[i] for i in range(0,self.ncases)]
+        try:
+            with open("firstcases.json",'r') as l:
+                firstcaseslist=json.load(l)
+        except:
+            self.casesKeys=[self.casesKeys[i] for i in range(0,self.ncases)]
+        else:
+            firstcaseskeys=[('m_'+i[0]+'_'+str(i[1])) for i in firstcaseslist]
+            print("first: "+str(firstcaseskeys))
+            if self.ncases <len(firstcaseslist)+1:
+                self.casesKeys=[firstcaseskeys[i] for i in range(0,self.ncases)]
+            else:
+                self.casesKeys=firstcaseskeys
+                keys=list(self.casesToAnalyze.keys())
+                while len(self.casesKeys) < self.ncases:
+                    cas=keys[random.randint(0,ncmax)]
+                    if cas not in self.casesKeys:
+                        self.casesKeys.append()
         self.CaseCombo.addItems(self.casesKeys)
         #set case
         self.set_current_case(self.casesKeys[0])
