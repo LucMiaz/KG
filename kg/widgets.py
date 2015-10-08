@@ -21,6 +21,9 @@ from kg.case import Case
 from kg.case import Interval
 from kg.measurement_values import measuredValues
 from kg.measurement_signal import measuredSignal
+from scipy.io import wavfile
+import random
+import json
 #import seaborn as sns
 #sns.set(style='ticks',palette='Set2')
                           
@@ -36,7 +39,7 @@ class DetectControlWidget(QMainWindow):
         self.ca_update_handle = []
         self.ca_set_bar_handle = []
         #refresh timer
-        self.refresh = 35
+        self.refresh = 30
         self.timer = QtCore.QTimer()
         self.timer.setInterval(self.refresh)
         self.savefolder=pathlib.Path("../test-cases/").absolute()
@@ -47,7 +50,7 @@ class DetectControlWidget(QMainWindow):
         self.seeker = Phonon.SeekSlider(self)
         self.seeker.setFixedHeight(20)
         self.seeker.setMediaObject(self.media)
-        self.media.setTickInterval(10)
+        self.media.setTickInterval(15)
         # audio data from the media object goes to the audio output object
         Phonon.createPath(self.media, self.audio_output)
         # set up actions to control the playback
@@ -210,6 +213,7 @@ class CaseCreatorWidget(DetectControlWidget):
     
     def asks_for_ncases(self):
         self.ncases=len(self.casesKeys)
+        ncmax=self.ncases
         #asking for number of cases to treat
         ncases, ok = QtGui.QInputDialog.getInt(self,"Number of cases to analyse", ("Please insert the number of cases \n you would like to analyse.\n \n (You are not forced to do all \n of the proposed cases). \n \n \n Maximum : "+str(self.ncases)+" : "),  value=min(20, self.ncases), min=1, max=self.ncases, step=1)
         if ok and ncases <= self.ncases:
@@ -217,7 +221,23 @@ class CaseCreatorWidget(DetectControlWidget):
             print("Thank you. Preparing "+str(self.ncases)+" cases.")
         else:
             print("Default value, set to maximum : " + str(self.ncases))
-        self.casesKeys=[self.casesKeys[i] for i in range(0,self.ncases)]
+        try:
+            with open("firstcases.json",'r') as l:
+                firstcaseslist=json.load(l)
+        except:
+            self.casesKeys=[self.casesKeys[i] for i in range(0,self.ncases)]
+        else:
+            firstcaseskeys=[('m_'+i[0]+'_'+str(i[1])) for i in firstcaseslist]
+            print("first: "+str(firstcaseskeys))
+            if self.ncases <len(firstcaseslist)+1:
+                self.casesKeys=[firstcaseskeys[i] for i in range(0,self.ncases)]
+            else:
+                self.casesKeys=firstcaseskeys
+                keys=list(self.casesToAnalyze.keys())
+                while len(self.casesKeys) < self.ncases:
+                    cas=keys[random.randint(0,ncmax)]
+                    if cas not in self.casesKeys:
+                        self.casesKeys.append(cas)
         self.CaseCombo.addItems(self.casesKeys)
         #set case
         self.set_current_case(self.casesKeys[0])
@@ -565,27 +585,27 @@ def palettesimple(chgmatplotlib=True):
 class CompareCaseAlgWidget(DetectControlWidget):
     #todo: improve graphical quality
     
-    def __init__(self, mesVal, case, algorithms):
+    def __init__(self, wavPath, algorithms, micSn, case = None):
         #init super
         super(CompareCaseAlgWidget, self).__init__()
-        self.setWindowTitle('Compare Case and Algorithm ')
-        self.window.setPalette(palettesimple())
+        self.resize(1300, 900)
+        self.case = case
+        self.micSn = micSn
         #set algorithms
-        self.algorithms = algorithms if isinstance(algorithms,list) else [algorithms]
-        self.case=case      
+        self.algorithms = algorithms
         self.currentAlg = self.algorithms[0]
-        #calculate algorithms on case
-        for n,alg in enumerate(self.algorithms):
-            if n==0:
-                self.micSn = alg.test_on_case(self.case, mesVal)
-            else:
-                alg.test_on_case(self.case, mesVal,self.micSn)
-            alg.calc_rates()
-        #self.df = pd.DataFrame({'name':[1,2,3,4,5]})
-    
+        self.wavPath = wavPath#this wav path is indipendent of micSn if initiated from wav
+        print(wavPath)
+        self.set_media_source(str(self.wavPath), self.micSn.t.min())
+        self.add_widgets()
+        self.connections()
+        
+    def add_widgets(self):
+        """initialise the graphical output"""
+        self.setWindowTitle('Compare Case and Algorithm ')
         #add canvas
         plt.ioff()
-        self.fig = Figure((15,10))
+        self.fig = Figure((17,15))
         self.fig.set_dpi(110)
         ca = FigureCanvas(self.fig)
         # plot
@@ -606,13 +626,13 @@ class CompareCaseAlgWidget(DetectControlWidget):
         groupBox.setLayout(hbox1)
         hBox.addWidget(groupBox)
         hBox.addStretch(1)
-        groupBox2 = QtGui.QGroupBox('Plotting')
-        hbox2=QtGui.QHBoxLayout()
-        self.buttonplot=QtGui.QPushButton('Draw')
-        hbox2.addWidget(self.buttonplot)
-        groupBox2.setLayout(hbox2)
-        hBox.addWidget(groupBox2)
-        hBox.addStretch(1)
+        # groupBox2 = QtGui.QGroupBox('Plotting')
+        # hbox2=QtGui.QHBoxLayout()
+        # self.buttonplot=QtGui.QPushButton('Draw')
+        # hbox2.addWidget(self.buttonplot)
+        # groupBox2.setLayout(hbox2)
+        # hBox.addWidget(groupBox2)
+        # hBox.addStretch(1)
         
         self.vBox.addLayout(hBox)
         # Browser
@@ -620,18 +640,9 @@ class CompareCaseAlgWidget(DetectControlWidget):
         self.edit = QtGui.QTextBrowser()
         self.vBox.addWidget(self.edit)
         self.edit.setHtml(md.markdown('###This is title'))
-        #SET CENTRAL WIDGET
+        #set central widget
         self.set_centralWidget()
         
-        # connect wav
-        mesPath = mesVal.path
-        wavPath = self.micSn.export_to_Wav(mesPath)
-        wavPath = mesPath.joinpath(wavPath)
-        self.set_media_source(str(wavPath), self.micSn.t.min())
-        
-        self.connections() 
-    
-    
     def set_current_alg(self,index):
         self.timer.stop()
         self.media.stop()
@@ -641,30 +652,75 @@ class CompareCaseAlgWidget(DetectControlWidget):
         self.timer.start()
         
     def plot(self):
-        self.axes = self.currentAlg.visualize(self.fig,self.micSn,self.case)
+        self.axes = self.currentAlg.visualize(self.fig, self.micSn, self.case)
         self.canvas[0].draw()
 
     def _connections(self):
         self.algCombo.currentIndexChanged.connect(self.set_current_alg)
-        self.buttonplot.clicked.connect(self.callTrueFalse)
+        #self.buttonplot.clicked.connect(self.callTrueFalse)
   
     def show_info(self):
-        QtGui.QMessageBox.information(self,"Info", '')
+        pass
     
-    def callTrueFalse(self):
-        """plot the true/false positive/negative plots"""
-        f,axes = plt.subplots(2,sharex = True)
-        ax = axes[0]
-        self.micSn.plot_triggers(ax,color = '#272822',lw=1)
-        self.micSn.plot_BPR(algorithm, ax, color = '#272822', linewidth=1)
-        self.case.plot(ax)
-        ax.set_xlim(-0.5,8)
-        ymin,ymax = ax.get_ylim()
-        ax=axes[1]
-        alg_res = micSn.get_KG_results(algorithm)['result']
-        self.micSn.plot_BPR(self.algorithm, ax, color = '#272822', lw=1)
-        self.case.plot_compare(ax,alg_res['result'], alg_res['t'])
-        plt.show()
+    # def callTrueFalse(self):
+    #     """plot the true/false positive/negative plots"""
+    #     if self.case: 
+    #         f,axes = plt.subplots(2,sharex = True)
+    #         ax = axes[0]
+    #         self.micSn.plot_triggers(ax,color = '#272822',lw=1)
+    #         self.micSn.plot_BPR(self.currentAlg, ax, color = '#272822', linewidth=1)
+    #         self.case.plot(ax)
+    #         ax.set_xlim(-0.5,8)
+    #         ymin,ymax = ax.get_ylim()
+    #         ax=axes[1]
+    #         alg_res = self.micSn.get_KG_results(self.currentAlg)['result']
+    #         self.micSn.plot_BPR(self.currentAlg, ax, color = '#272822', lw=1)
+    #         self.case.plot_compare(ax,alg_res['result'], alg_res['t'])
+    #         plt.show()
+    
+    @classmethod
+    def from_measurement(cls , mesVal, algorithms, case = None, ID = None, mic = None):
+        """initiate from measurement"""
+        mesPath = mesVal.path.absolute()
+        if case is not None:
+            ID = case.case['mID']
+            mic = case.case['mic']
+        elif mic is None or ID is None:
+            raise(ValueError)
+        #initiate micSn    
+        measuredSignal.setup(mesPath)
+        mS = measuredSignal(ID,mic)
+        y,t,sR = mS.get_signal(mic)
+        ch_info = mS.channel_info(mic)
+        var = ['Tb','Te','Tp_b','Tp_e','LAEQ']
+        micValues = mesVal.get_variables_values(ID, mic, var)
+        micValues.update(ch_info)
+        micSn = MicSignal(ID,mic,y,t,sR, micValues)
+        #calculations
+        if not isinstance(algorithms,list):
+            algorithms = [algorithms]
+        for n,alg in enumerate(algorithms):
+            #calculate algorithms on case
+            if case is not None:
+                alg.test_on_case(case, mesVal, micSn)
+                alg.calc_rates()
+            #calculate kg on micSn
+            else:
+                micSn.calc_kg(alg)
+        wavPath = micSn.export_to_Wav(mesPath)
+        return cls(mesPath.joinpath(wavPath),  algorithms,micSn, case)
+    
+    @classmethod
+    def from_wav(cls, wavPath, algorithms):
+        """configures a CompareCaseAlgWidget from a wav (file or path) and an algorithm"""
+        micSn = MicSignal.from_wav(wavPath)
+        if not isinstance(algorithms,list):
+            algorithms = [algorithms]
+        for alg in algorithms:
+            micSn.calc_kg(alg)
+        return cls(wavPath, algorithms, micSn)
+        
+    
 
 ##
 if __name__ == "__main__":
@@ -688,6 +744,7 @@ if __name__ == "__main__":
     #W = DetectControlWidget.alg_results(micSn,algorithm)
     ##
     mic= [1,2,4,5,6]
-    W = CaseCreatorWidget.from_measurement(mesVal,mID,mic)
+    #W = CaseCreatorWidget.from_measurement(mesVal,mID,mic)
+    #W=CaseCreatorWidget.from_wav('C:\lucmiaz\KG_dev_branch\Measurements_example\various_passby\kreischen.wav')
     W.show()
     

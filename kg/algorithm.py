@@ -55,9 +55,12 @@ class Algorithm(object):
         micSn.calc_kg(self)
         output = micSn.get_KG_results(self)['result']
         # compare case and alg results
-        comparation = case.compare(output['result'], output['t'])
+        comparation = case.compare(output['result'], output['t'],sum =True)
 
         #fill test cases
+        # todo: if ROC evaluation
+        # todo: addr BPR vector to case_tests masked in Te Tb
+        # todo: add TF vectors
         self.case_tests[str(case)] = {'mic':mic,'mID':mID,'location':loc,\
                                     'measurement':mes,'author':author, \
                                     'quality':quality}
@@ -113,6 +116,13 @@ class Algorithm(object):
         s += 'description: {}\n'.format(self.description)
         s += 'parameter:\n{}'.format(self.param)
         return(s)
+    
+    @classmethod
+    def askforattributes(cls, window):
+        """asks for the attributes of the class and return a object with these properties"""
+        noiseType=QtGui.QInputDialog.getItem(window,"Algorithm","Please select noise type", ['Z','K'])
+        parameter=QtGui.QInputDialog.getInt(window,"Algorithm", "Please select parameter value",  value=200, min=1, max=10000, step=1)
+        return cls(noiseType, parameter)
 
 class ZischenDetetkt1(Algorithm):
     '''
@@ -216,7 +226,13 @@ class ZischenDetetkt1(Algorithm):
     @classmethod
     def from_info(cls):
         pass
-
+    @classmethod
+    def askforattributes(cls, window):
+        """asks for the attributes of the class and return a object with these properties"""
+        threshold=QtGui.QInputDialog.getInt(window,"ZischenDetetkt1","Please select threshold",value=3000, min=1, max=10000, step=1)
+        parameter=QtGui.QInputDialog.getInt(window,"ZischenDetetkt1", "Please select fc",  value=3000, min=1, max=10000, step=1)
+        dt=QtGui.QInputDialog.getDouble(window,"ZischenDetetkt1", "Please select dt",  value=0.02, min=1, max=1, decimals=2)
+        return cls(fc,threshold,dt)
 
 class ZischenDetetkt2(Algorithm):
     '''
@@ -302,22 +318,21 @@ class ZischenDetetkt2(Algorithm):
             ax2= fig.add_subplot(2,1,2,sharex = ax1)
         #ax1
         MicSnObj.plot_spectrogram(stftName, ax1) 
-        MicSnObj.plot_triggers(ax1)
-        MicSnObj.plot_KG(self,ax1,color = 'cyan')
+        MicSnObj.plot_KG(self,ax1, color = 'cyan')
         #ax2
         MicSnObj.plot_triggers(ax2)
-        MicSnObj.plot_BPR(self,ax2)
+        MicSnObj.plot_BPR(self,ax2, color = '#272822',lw=1)
         if case is not None:
-            case.plot(ax2,color= 'b')
+            case.plot(ax2, color= 'b')
             
         if case is not None:
-            MicSnObj.plot_BPR(self,ax3)
+            MicSnObj.plot_BPR(self,ax3,color = '#272822',lw=1)
             alg_res = MicSnObj.get_KG_results(self)['result']
             case.plot_compare(ax3, noiseType = self.noiseType , **alg_res)
             return(ax1,ax2,ax3)
         else:
             return(ax1,ax2)
-        
+    
     def __str__(self):
         s = '{}_{}s'.format( self.__class__.__name__, self.param['dt'])
         s += '_{}Hz_{}dB'.format(self.param['fc'],self.param['threshold'])
@@ -326,6 +341,13 @@ class ZischenDetetkt2(Algorithm):
     @classmethod
     def from_info(cls):
         pass
+    @classmethod
+    def askforattributes(cls, window):
+        """asks for the attributes of the class and return a object with these properties"""
+        threshold=QtGui.QInputDialog.getInt(window,"ZischenDetetkt2","Please select threshold",value=3000, min=1, max=10000, step=1)
+        parameter=QtGui.QInputDialog.getInt(window,"ZischenDetetkt2", "Please select fc",  value=3000, min=1, max=10000, step=1)
+        dt=QtGui.QInputDialog.getDouble(window,"ZischenDetetkt2", "Please select dt",  value=0.02, min=1, max=1, decimals=2)
+        return cls(fc,threshold, dt)
         
 ##functions
 def moving_average(a, n=3) :

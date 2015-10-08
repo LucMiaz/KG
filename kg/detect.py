@@ -10,9 +10,9 @@ import copy
 import struct
 import matplotlib.pyplot as plt
 import collections
-
+import time#to set the ID of MicSignal if created from wav only.
 from kg.measurement_signal import measuredSignal
-from mySTFT.stft import stft, stft_PSD
+from  mySTFT.stft import stft, stft_PSD
 from mySTFT.stft_plot import plot_spectrogram
 
 class MicSignal(object):
@@ -75,7 +75,7 @@ class MicSignal(object):
             xn=self.y[self.get_mask()]
         else:
             xn=self.y
-        if not overwrite or (overwrite and 'isclipped' not in self.micValues.keys()):
+        if overwrite or (not overwrite and 'isclipped' not in self.micValues.keys()):
             ans=isclipped(xn,K,threshold,ax,normalize)
             self.micValues['isclipped']=ans
             return ans
@@ -106,13 +106,13 @@ class MicSignal(object):
         calculate PSD for all frames f_i
         '''
         try:
-            stft = self.STFT[stftName]
+            STFT = self.STFT[stftName]
         except KeyError:
             pass
         else:
             #set interval to evaluate spectrum
             kwargs['t0'] = self.t.min()
-        return(stft_PSD(stft['X'], stft['param'], scaling = 'density', **kwargs))
+        return(stft_PSD(STFT['X'], STFT['param'], scaling = 'density', **kwargs))
 
     def calc_kg(self, algorithm):
         '''
@@ -133,7 +133,7 @@ class MicSignal(object):
         
     def calc_spectrum_welch(stftName = None, tint = None):
         try:
-            stft = self.STFT[stftName]
+            STFT = self.STFT[stftName]
         except KeyError:
             pass
         else:
@@ -144,7 +144,7 @@ class MicSignal(object):
                 kwargs['tmin']= self.micValues['Te']
             else:
                 kwargs['tmax'],kwargs['tmin'] = tlim
-            sectrum ,freq = stft_welch(stft['X_i'], stft['param'],'density', **kwargs)
+            sectrum ,freq = stft_welch(STFT['X_i'], STFT['param'],'density', **kwargs)
                 
     def get_stft_name(self,algorithm):
         par = algorithm.get_stft_param(self.sR)
@@ -177,25 +177,28 @@ class MicSignal(object):
             tb,te = tlim
         return(np.logical_and(t >= tb,t <= te))
         
-    def plot_spectrogram(self, name, ax, freqscale = 'lin', dBMax = 110):
+    def plot_spectrogram(self, name, ax, freqscale = 'lin', **kwargs):
         '''
         plot spectrogram
         '''
         # datenvorbereitung
-        try:
-            stft = self.STFT[name]
-        except KeyError:
-            print("STFT dict has no key " + str(name))
         kwargs = {
         'fmin': 200,
         'fmax':10000,
-        't0': self.t.min(),
-        'tmin': self.t.min(),
-        'tmax': self.t.max()
+        't0': min(self.t),
+        'tmin': min(self.t),
+        'tmax': max(self.t)
         }
-        plot_spectrogram(stft['X'], stft['param'], ax,\
-                                            dBMax=dBMax, zorder = 1,**kwargs )
-        
+        try:
+            STFT = self.STFT[name]
+        except KeyError:
+            print("STFT dict has no key " + str(name))
+            M, N, overlap = [int(i) for i in name.split('_')]
+            print("Computing STFT")
+            name = self.calc_stft(M, N, overlap)
+            STFT=self.STFT[name]
+        plot_spectrogram(STFT['X'], STFT['param'], ax, zorder = 1,**kwargs )
+            
                 
     def plot_triggers(self, ax, type ='eval', **kwargs):
         """
@@ -336,6 +339,23 @@ class MicSignal(object):
         micValues.update(ch_info)
         return(cls(ID,mic,y,t,sR, micValues ))
         
+    @classmethod
+    def from_wav(cls, wavPath):
+        """initialise a MicSignal from a wav file given either as str filename, path to file, or list containing the samplerate and the array"""
+        if isinstance(wavPath, str):
+            wavPath = pathlib.Path(wavPath).absolute()
+        else:
+            wavPath = wavPath.absolute()
+            
+        sR,data = wavfile.read(wavPath.as_posix()) 
+        if len(data.shape)>1:#it the input is in stereo
+            data = data[0]#takes only one array
+        data=data.astype(np.float16, copy=False)
+        ID = wavPath.name
+        micValues={'Tb':0,'Te':len(data)/sR,'Tp_b':0,'Tp_e':0,'LAEQ':0,'description':0,'gleis':0,'sec':0}
+        t = np.linspace(micValues['Tb'],micValues['Te'], len(data))
+        return(cls(ID, '' , data, t, sR, micValues))
+        
 ##functions
 def isclipped(xn, K=301, threshold=0.55, axdisplay=None, normalizehist=False):
     """
@@ -346,6 +366,8 @@ def isclipped(xn, K=301, threshold=0.55, axdisplay=None, normalizehist=False):
     N=len(xn)
     H=histogram(xn,K,display=axdisplay, normalize=normalizehist)
     #Find the very left non-zero k_l histogram bin index
+    if not H:
+        return None
     kl=0
     while H[kl]==0 and kl<=K/2:
         k+=1
@@ -382,14 +404,17 @@ def isclipped(xn, K=301, threshold=0.55, axdisplay=None, normalizehist=False):
 def histogram(xn, K, display=None, normalize=False):
     """returns the function histogram of discrete time signal xn with K bins in histogram"""
     N=len(xn)
-    xmin=xn[0]
-    xmax=xn[0]
+    xmin=min(xn)
+    xmax=max(xn)
     #find min and max values of signal xn
-    for n in range(0,N):
-        if xn[n]<xmin:
-            xmin=xn[n]
-        if xn[n]>xmax:
-            xmax=xn[n]
+    #for n in range(0,N):
+    #    if xn[n]<xmin:
+    #        xmin=xn[n]
+    #    if xn[n]>xmax:
+    #        xmax=xn[n]
+    if xmax==xmin:
+        print("xmin=xmax")
+        return None
     #setting histogram to 0
     H=[0 for i in range(0,K)]
     for n in range(0,N):
