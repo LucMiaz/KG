@@ -38,8 +38,10 @@ class DetectControlWidget(QMainWindow):
         self.mpl = {}
         self.ca_update_handle = []
         self.ca_set_bar_handle = []
+        #bools to know if the timer is to be activated
+        self.barplay=False
         #refresh timer
-        self.refresh = 30
+        self.refresh = 60
         self.timer = QtCore.QTimer()
         self.timer.setInterval(self.refresh)
         self.savefolder=pathlib.Path("../test-cases/").absolute()
@@ -92,6 +94,7 @@ class DetectControlWidget(QMainWindow):
         self.media.pause()
         
     def media_finish(self):
+        self.timer.stop()
         self.media.stop()
         self.media.pause()
         
@@ -122,13 +125,34 @@ class DetectControlWidget(QMainWindow):
         self.timer.timeout.connect(self.update_canvas)
         self.media.tick.connect(self.update_time)
         self.media.finished.connect(self.media_finish)
+        self.media.stateChanged.connect(self.timer_status)#update timer status on media Statechange
         self._connections()
         #start refresh
-        self.timer.start()
+        #self.timer.start()
         
     def _connections(self):
         pass
-        
+            
+    def timer_status(self,newstate, oldstate):
+        """changes the timer status according to played audio"""
+        print(str(newstate))
+        try:
+            print(newstate)
+        except:
+            print("cannot print")
+        if newstate==2:
+            self.timer.start()
+            print("newstate TRUE")
+            self.barplay=True
+        elif newstate==1:
+            print("newstate False")
+            self.timer.stop()
+            self.barplay=False
+        elif newstate==4:
+            self.timer.stop()
+            print("newstate pause")
+            self.barplay=False
+    
     def update_time(self,t):
         self.t = t/1000 + self.tShift
 
@@ -439,6 +463,8 @@ class CaseCreatorWidget(DetectControlWidget):
         self.SOI.append(Int)
         #print('Add '+ repr(Int))
         self.update_stay_rect()
+        if self.barplay==False:
+            self.update_canvas()
         
     def remove_int(self, xmin, xmax = None):
         if xmax == None:
@@ -449,6 +475,8 @@ class CaseCreatorWidget(DetectControlWidget):
         else:
             self.SOI.remove(Interval(xmin,xmax))
         self.update_stay_rect()
+        if self.barplay==False:
+            self.update_canvas()
         
     def set_int(self,press):
         if press:
@@ -458,6 +486,8 @@ class CaseCreatorWidget(DetectControlWidget):
             tmax = self.t
             if abs(tmax-self._t_int_min) > self.minspan:
                 self.add_int(self._t_int_min,tmax)
+        if self.barplay==False:
+            self.update_canvas()
         
     def onselect(self,xmin,xmax, remove=False):
         #add interval1
