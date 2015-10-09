@@ -221,6 +221,7 @@ class CaseCreatorWidget(DetectControlWidget):
             print("Thank you. Preparing "+str(self.ncases)+" cases.")
         else:
             print("Default value, set to maximum : " + str(self.ncases))
+            self.ncases=20
         try:
             with open("firstcases.json",'r') as l:
                 firstcaseslist=json.load(l)
