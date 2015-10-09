@@ -12,7 +12,7 @@ nav{
 	float:right;
 	color: #f5f5f5;
 	font-family: Avenir, Helvetica Neue, Arial, sans-serif;
-	font-size: 12px;
+	font-size: 14px;
 	margin-right: auto;
 	margin-top: 3vh;
 	margin-bottom:auto;
@@ -41,13 +41,12 @@ body{
 	font-family: Avenir, Helvetica Neue, Arial, sans-serif;
 	background-repeat:repeat;
 	/*background-image:url(img/bkg/patternlines.png);*/
-	background-size: 0.5cm;
 	background-position:center top;
 	background-color:#272822;
 	color:#f5f5f5;
 	overflow-x:hidden;
 	background-attachment:fixed;
-	font-size: 12px;
+	font-size: 14px;
 	min-width: 940px;}
 h1{
 	font-family: Georgia, Helvetica Neue, sans-serif;

@@ -512,10 +512,12 @@ class CaseCreatorWidget(DetectControlWidget):
             self.buttonSave.setStyleSheet("background-color: #a6dba0")
             currentIndex= self.casesKeys.index(str(self.CaseCombo.currentText()))
             self.CaseCombo.setItemData(currentIndex,QtGui.QColor('#a6dba0'),QtCore.Qt.BackgroundRole)
+    def show_info(self):
+        self.extbrowsercall()
     
     def extbrowsercall(self):
         """call opening info page in external web browser"""
-        os.startfile(pathlib.Path('info.html').absolute().as_uri())
+        os.startfile('info.html')
     
     @classmethod
     def from_measurement(cls, mesVal, mID, mics, author = None):
