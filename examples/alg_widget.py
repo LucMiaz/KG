@@ -21,10 +21,9 @@ if __name__ == "__main__":
     
     app=QtGui.QApplication()
     CTW=QtGui.QWidget()
-    algorithmclass, valid=QtGui.QInputDialog.getItem(CTW,"Algorithm","Please select an algorithm type", [str(cls.__name__) for cls in vars()['Algorithm'].__subclasses__()])
-    if valid:
-        print(algorithmclass)
-        algorithm=eval(algorithmclass+"askforattributes(CTW)")
+    #algorithmclass, valid=QtGui.QInputDialog.getItem(CTW,"Algorithm","Please select an algorithm type", [str(cls.__name__) for cls in vars()['Algorithm'].__subclasses__()])
+    #if valid:
+    #    algorithm=eval(algorithmclass+".askforattributes(CTW)")
     # setup algorithms
     # todo: parametrize alg parameter in the best possible way 
     algorithm = ZischenDetetkt2(3000,2,0.02)
@@ -49,27 +48,28 @@ if __name__ == "__main__":
     micSn = MicSignal.from_measurement(mesVal,case.case['mID'],case.case['mic'])
     micSn.calc_kg(algorithm)
     ##
-
-    f,axes = plt.subplots(2,sharex = True)
-    ax = axes[0]
-    micSn.plot_triggers(ax,color = '#272822',lw=1)
-    micSn.plot_BPR(algorithm, ax, color = '#272822', linewidth=1)
-    case.plot(ax)
-    ax.set_xlim(-0.5,8)
-    ymin,ymax = ax.get_ylim()
-    ax=axes[1]
-    alg_res = micSn.get_KG_results(algorithm)['result']
-    micSn.plot_BPR(algorithm, ax, color = '#272822', lw=1)
-    case.plot_compare(ax,alg_res['result'], alg_res['t'])
-    plt.show()
+    if 2<1:
+        f,axes = plt.subplots(2,sharex = True)
+        ax = axes[0]
+        micSn.plot_triggers(ax,color = '#272822',lw=1)
+        micSn.plot_BPR(algorithm, ax, color = '#272822', linewidth=1)
+        case.plot(ax)
+        ax.set_xlim(-0.5,8)
+        ymin,ymax = ax.get_ylim()
+        ax=axes[1]
+        alg_res = micSn.get_KG_results(algorithm)['result']
+        micSn.plot_BPR(algorithm, ax, color = '#272822', lw=1)
+        case.plot_compare(ax,alg_res['result'], alg_res['t'])
+        plt.show()
 
     
  ##   
     
     #W = CompareCaseAlgWidget.from_measurement(mesVal, [algorithm], case)
     #Q = CompareCaseAlgWidget.from_measurement(mesVal, [algorithm], ID='m_0100',mic=6)
-    wavPath = mesPath.joinpath('Measurements_example/various_passby/kreischen.wav')
+    wavPath = mesPath.joinpath('Measurements_example/various_passby/zischen.wav')
     R=CompareCaseAlgWidget.from_wav(wavPath,[algorithm])
+    R.setPalette(palettesimple(True))
     #W.show()
     R.show()
     

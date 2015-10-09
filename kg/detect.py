@@ -243,7 +243,7 @@ class MicSignal(object):
         else:
             l, = ax.plot(detection['t'], 10*np.log10(1+detection['BPR']),\
                         label=label,**kwarks)
-            ax.axhline(algorithm.param['threshold'],lw=2,\
+            ax.axhline(algorithm.param['threshold'],lw=1,\
                         color = plt.getp(l,'color'))
             
     def plot_signal(self, ax , label = None,**kwargs):

@@ -276,11 +276,11 @@ class CaseCreatorWidget(DetectControlWidget):
         # noise Type combo
         self.SOIcombo = QtGui.QComboBox()
         self.SOIcombo.addItem('Zischen', 'Z')
-        self.SOIcombo.setItemData(0,QtGui.QColor('#d8b365'),QtCore.Qt.BackgroundRole)#add backgroundcolor to combo Z
-        self.SOIcombo.setItemData(0,QtGui.QColor('#f5f5f5'),QtCore.Qt.TextColorRole)#change text color
+        self.SOIcombo.setItemData(0,QtGui.QColor('#d8b365'),QtCore.Qt.BackgroundRole)#add backgroundcolor of combo Z
+        self.SOIcombo.setItemData(0,QtGui.QColor('#f5f5f5'),QtCore.Qt.ForegroundRole)#change text color
         self.SOIcombo.addItem('Kreischen', 'KG')
-        self.SOIcombo.setItemData(1,QtGui.QColor('#5ab4ac'),QtCore.Qt.BackgroundRole)#add backgroundcolor to combo K
-        self.SOIcombo.setItemData(1,QtGui.QColor('#f5f5f5'),QtCore.Qt.TextColorRole)#change text color
+        self.SOIcombo.setItemData(1,QtGui.QColor('#5ab4ac'),QtCore.Qt.BackgroundRole)#add backgroundcolor of combo K
+        self.SOIcombo.setItemData(1,QtGui.QColor('#f5f5f5'),QtCore.Qt.ForegroundRole)#change text color
         hBox1.addWidget(self.SOIcombo)
         # visualize both cb
         self.cb = QtGui.QCheckBox('both visible', self)
@@ -360,7 +360,7 @@ class CaseCreatorWidget(DetectControlWidget):
         self.case.plot_triggers(self.SelectAxis)
         for key, pData in self.currentCase['plotData'].items():
             t,y = pData
-            self.SelectAxis.plot(t, y , label = key, color='#f5f5f5', linewidth=1.)#plot display
+            self.SelectAxis.plot(t, y , label = key, color='#272822', linewidth=1.)#plot display
         tmin = self.currentCase['tmin']
         tmax = self.currentCase['tmax']
         self.SelectAxis.set_xlim(tmin,tmax)
@@ -560,27 +560,38 @@ def palettesimple(chgmatplotlib=True):
     palette.setColor(QtGui.QPalette.Midlight, bgcolor)
     palette.setColor(QtGui.QPalette.Dark, axbgcolor)
     if chgmatplotlib:
-        matplotlib.rcParams['axes.facecolor']=axbgcolor
-        matplotlib.rcParams['axes.edgecolor']=axescolor
-        for i in ['x','y']:
-            matplotlib.rcParams['xtick.color']=axescolor
-        matplotlib.rcParams['grid.color']=textcolor
-        matplotlib.rcParams['ytick.color']=axescolor
-        matplotlib.rcParams['figure.edgecolor']=axescolor
-        matplotlib.rcParams['patch.linewidth']='0.5'
-        matplotlib.rcParams['lines.color']='#7b3294'
-        matplotlib.rcParams['lines.linewidth']='0.75'
-        matplotlib.rcParams['axes.linewidth']='0.4'
-        matplotlib.rcParams['xtick.major.width']='0.4'
-        matplotlib.rcParams['ytick.major.width']='0.4'
-        matplotlib.rcParams['xtick.minor.width']='0.3'
-        matplotlib.rcParams['xtick.minor.width']='0.3'
-        matplotlib.rcParams['text.color']=textcolor
-        matplotlib.rcParams['axes.labelcolor']='#f5f5f5'
-        matplotlib.rcParams['font.family']='HelveticaNeue'
-        font={'family':'sans-serif','weight':'regular','size':11}
-        matplotlib.rc('font',**font)
+        matplotlibsimple()
     return palette
+    
+def matplotlibsimple():
+    textcolor='#f5f5f5'
+    axescolor='#f5f5f5'
+    axbgcolor='#272822'
+    bgcolor='#aaaaaa'      
+    matplotlib.rcParams['axes.facecolor']=axescolor#background of ax   
+    matplotlib.rcParams['axes.edgecolor']=axbgcolor
+    matplotlib.rcParams['xtick.color']=axescolor
+    matplotlib.rcParams['grid.color']=bgcolor
+    matplotlib.rcParams['ytick.color']=axescolor
+    matplotlib.rcParams['figure.edgecolor']=textcolor
+    matplotlib.rcParams['figure.facecolor']='#eeee00'
+    matplotlib.rcParams['patch.linewidth']='0.25'
+    matplotlib.rcParams['lines.color']=axbgcolor
+    matplotlib.rcParams['lines.linewidth']='0.75'
+    matplotlib.rcParams['axes.linewidth']='0.4'
+    matplotlib.rcParams['xtick.major.width']='0.4'
+    matplotlib.rcParams['ytick.major.width']='0.4'
+    matplotlib.rcParams['xtick.minor.width']='0.3'
+    matplotlib.rcParams['xtick.minor.width']='0.3'
+    matplotlib.rcParams['text.color']=bgcolor#LAFast (on ax)
+    matplotlib.rcParams['axes.labelcolor']=axescolor#labels diplayed on the figure (LA, t(s))
+    matplotlib.rcParams['font.family']='HelveticaNeue'
+    matplotlib.rcParams['grid.linewidth']=0.2
+    matplotlib.rcParams['grid.alpha']=0.5
+    matplotlib.rcParams['legend.framealpha']=0.4
+    matplotlib.rcParams['figure.autolayout']=True
+    font={'family':'sans-serif','weight':'regular','size':11}
+    matplotlib.rc('font',**font)  
 
 class CompareCaseAlgWidget(DetectControlWidget):
     #todo: improve graphical quality
@@ -599,10 +610,13 @@ class CompareCaseAlgWidget(DetectControlWidget):
         self.set_media_source(str(self.wavPath), self.micSn.t.min())
         self.add_widgets()
         self.connections()
-        
+        self.palette=True
+    
     def add_widgets(self):
         """initialise the graphical output"""
         self.setWindowTitle('Compare Case and Algorithm ')
+        if self.palette:
+            matplotlibsimple()
         #add canvas
         plt.ioff()
         self.fig = Figure((17,15))

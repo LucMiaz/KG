@@ -6,7 +6,7 @@ import copy
 import datetime
 import collections
 import json
-
+from PySide import QtGui, QtCore
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.pyplot as plt
 
@@ -120,10 +120,12 @@ class Algorithm(object):
     @classmethod
     def askforattributes(cls, window):
         """asks for the attributes of the class and return a object with these properties"""
-        noiseType=QtGui.QInputDialog.getItem(window,"Algorithm","Please select noise type", ['Z','K'])
-        parameter=QtGui.QInputDialog.getInt(window,"Algorithm", "Please select parameter value",  value=200, min=1, max=10000, step=1)
-        return cls(noiseType, parameter)
-
+        noiseType, validnt=QtGui.QInputDialog.getItem(window,"Algorithm","Please select noise type", ['Z','K'])
+        parameter, validp=QtGui.QInputDialog.getInt(window,"Algorithm", "Please select parameter value",  value=200, min=1, max=10000, step=1)
+        if validnt and valip:
+            return cls(noiseType, parameter)
+        else:
+            return None
 class ZischenDetetkt1(Algorithm):
     '''
     implement the Algorithm:
@@ -229,11 +231,13 @@ class ZischenDetetkt1(Algorithm):
     @classmethod
     def askforattributes(cls, window):
         """asks for the attributes of the class and return a object with these properties"""
-        threshold=QtGui.QInputDialog.getInt(window,"ZischenDetetkt1","Please select threshold",value=3000, min=1, max=10000, step=1)
-        parameter=QtGui.QInputDialog.getInt(window,"ZischenDetetkt1", "Please select fc",  value=3000, min=1, max=10000, step=1)
-        dt=QtGui.QInputDialog.getDouble(window,"ZischenDetetkt1", "Please select dt",  value=0.02, min=1, max=1, decimals=2)
-        return cls(fc,threshold,dt)
-
+        threshold, validt=QtGui.QInputDialog.getInt(window,"ZischenDetetkt1","Please select threshold",value=3000, min=1, max=10000, step=1)
+        parameter, validp=QtGui.QInputDialog.getInt(window,"ZischenDetetkt1", "Please select fc",  value=3000, min=1, max=10000, step=1)
+        dt, validdt=QtGui.QInputDialog.getDouble(window,"ZischenDetetkt1", "Please select dt",  value=0.02, min=1, max=1, decimals=2)
+        if validt and validdt and validp:
+            return cls(fc,threshold,dt)
+        else:
+            return None
 class ZischenDetetkt2(Algorithm):
     '''
     implement the Algorithm:
@@ -344,11 +348,13 @@ class ZischenDetetkt2(Algorithm):
     @classmethod
     def askforattributes(cls, window):
         """asks for the attributes of the class and return a object with these properties"""
-        threshold=QtGui.QInputDialog.getInt(window,"ZischenDetetkt2","Please select threshold",value=3000, min=1, max=10000, step=1)
-        parameter=QtGui.QInputDialog.getInt(window,"ZischenDetetkt2", "Please select fc",  value=3000, min=1, max=10000, step=1)
-        dt=QtGui.QInputDialog.getDouble(window,"ZischenDetetkt2", "Please select dt",  value=0.02, min=1, max=1, decimals=2)
-        return cls(fc,threshold, dt)
-        
+        threshold,validt=QtGui.QInputDialog.getInt(window,"ZischenDetetkt2","Please select threshold",value=3000, min=1, max=10000, step=1)
+        fc,validfc=QtGui.QInputDialog.getInt(window,"ZischenDetetkt2", "Please select fc",  value=2, min=0, max=10000, step=1)
+        dt,validdt=QtGui.QInputDialog.getDouble(window,"ZischenDetetkt2", "Please select dt",  value=0.02, min=1, max=1, decimals=2)
+        if validt and validfc and validdt:
+            return cls(fc,threshold, dt)
+        else:
+            return None
 ##functions
 def moving_average(a, n=3) :
     a = np.pad(a,(n//2,n//2),mode = 'constant', constant_values=0)
