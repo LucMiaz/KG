@@ -41,7 +41,7 @@ class DetectControlWidget(QMainWindow):
         #bools to know if the timer is to be activated
         self.barplay=False
         #refresh timer
-        self.refresh = 60
+        self.refresh = 30
         self.timer = QtCore.QTimer()
         self.timer.setInterval(self.refresh)
         self.savefolder=pathlib.Path("../test-cases/").absolute()
