@@ -242,7 +242,6 @@ class CaseCreatorWidget(DetectControlWidget):
     
     def asks_for_ncases(self):
         self.ncases=len(self.casesKeys)
-        ncmax=self.ncases
         #asking for number of cases to treat
         ncases, ok = QtGui.QInputDialog.getInt(self,"Number of cases to analyse", ("Please insert the number of cases \n you would like to analyse.\n \n (You are not forced to do all \n of the proposed cases). \n \n \n Maximum : "+str(self.ncases)+" : "),  value=min(20, self.ncases), min=1, max=self.ncases, step=1)
         if ok and ncases <= self.ncases:
@@ -264,10 +263,14 @@ class CaseCreatorWidget(DetectControlWidget):
             else:
                 self.casesKeys=firstcaseskeys
                 keys=list(self.casesToAnalyze.keys())
-                while len(self.casesKeys) < self.ncases:
+                ncmax=len(keys)
+                while len(self.casesKeys) < min(ncases, ncmax):
+                    print("lenkeys"+str(len(keys)))
                     cas=keys[random.randint(0,ncmax)]
+                    print(str(cas))
                     if cas not in self.casesKeys:
                         self.casesKeys.append(cas)
+                        print(len(self.casesKeys))
         self.CaseCombo.addItems(self.casesKeys)
         #set case
         self.set_current_case(self.casesKeys[0])
@@ -446,6 +449,7 @@ class CaseCreatorWidget(DetectControlWidget):
         key = self.casesKeys[index]
         #self.currentCase.get('saved',False):
         self.set_current_case(key)
+        self.update_canvas()
         # else:
         #     QtGui.QMessageBox.warning(self, self.trUtf8("save error"), 
         #      self.trUtf8("Before switching case save it!"))
@@ -508,7 +512,7 @@ class CaseCreatorWidget(DetectControlWidget):
             self.currentCase['case'].give_saved(False)
             self.buttonSave.setStyleSheet("background-color: #c2a5cf")
             currentIndex= self.casesKeys.index(str(self.CaseCombo.currentText()))
-            self.CaseCombo.setItemData(currentIndex,QtGui.QColor('#a6dba0'),QtCore.Qt.BackgroundRole)
+            self.CaseCombo.setItemData(currentIndex,QtGui.QColor('#c2a5cf'),QtCore.Qt.BackgroundRole)
         
     def onclick(self,x):
         #remove Interval
