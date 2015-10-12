@@ -402,7 +402,7 @@ class ComplexEncoder(json.JSONEncoder):
         # if isinstance(obj,GraphicalIntervals):
         #     return obj.toJSON()
         if isinstance(obj, SetOfIntervals):
-           return obj.toJSON()
+            return obj.toJSON()
         if isinstance(obj, Interval):
             return obj.toJSON()
         # Let the base class default method raise the TypeError

@@ -41,10 +41,10 @@ class DetectControlWidget(QMainWindow):
         #bools to know if the timer is to be activated
         self.barplay=False
         #refresh timer
-        self.refresh = 30
-        self.timer = QtCore.QTimer()
-        self.timer.setInterval(self.refresh)
-        self.savefolder=pathlib.Path("../test-cases/").absolute()
+        #self.refresh = 30
+        #self.timer = QtCore.QTimer()
+        #self.timer.setInterval(self.refresh)
+        self.savefolder=pathlib.Path("").absolute().parent
         #phonon 
         #the media object controls the playback
         self.media = Phonon.MediaObject(self)
@@ -52,7 +52,7 @@ class DetectControlWidget(QMainWindow):
         self.seeker = Phonon.SeekSlider(self)
         self.seeker.setFixedHeight(20)
         self.seeker.setMediaObject(self.media)
-        self.media.setTickInterval(15)
+        self.media.setTickInterval(25)
         # audio data from the media object goes to the audio output object
         Phonon.createPath(self.media, self.audio_output)
         # set up actions to control the playback
@@ -94,7 +94,7 @@ class DetectControlWidget(QMainWindow):
         self.media.pause()
         
     def media_finish(self):
-        self.timer.stop()
+        #self.timer.stop()
         self.media.stop()
         self.media.pause()
         
@@ -122,7 +122,7 @@ class DetectControlWidget(QMainWindow):
             
     def connections(self):
         # connections
-        self.timer.timeout.connect(self.update_canvas)
+        #self.timer.timeout.connect(self.update_canvas)
         self.media.tick.connect(self.update_time)
         self.media.finished.connect(self.media_finish)
         self.media.stateChanged.connect(self.timer_status)#update timer status on media Statechange
@@ -135,26 +135,19 @@ class DetectControlWidget(QMainWindow):
             
     def timer_status(self,newstate, oldstate):
         """changes the timer status according to played audio"""
-        print(str(newstate))
-        try:
-            print(newstate)
-        except:
-            print("cannot print")
         if newstate==2:
-            self.timer.start()
-            print("newstate TRUE")
+            #self.timer.start()
             self.barplay=True
         elif newstate==1:
-            print("newstate False")
-            self.timer.stop()
+            #self.timer.stop()
             self.barplay=False
         elif newstate==4:
-            self.timer.stop()
-            print("newstate pause")
+            #self.timer.stop()
             self.barplay=False
     
     def update_time(self,t):
         self.t = t/1000 + self.tShift
+        self.update_canvas()
 
     def update_canvas(self):
         for handle in self.ca_set_bar_handle:
@@ -197,26 +190,37 @@ class CaseCreatorWidget(DetectControlWidget):
     tmax: flt
     wavPath: str
     '''
-    def __init__(self, mesPath, casesToAnalyze, author = None):
+    def __init__(self, mesPath):
         #init super
         super(CaseCreatorWidget, self).__init__()
         self.setWindowTitle('Create Case')
         
         # set the author        
         self.mesPath = mesPath
+        self.infofolder=pathlib.Path("").absolute()
         self.minspan = 0.05
         self.remove = False
-        self.author=author
         self.add_widgets()
         self.set_centralWidget()
+        self.author=None
         #set cases
         self.NoiseTypes = ['Z','KG']
-        self.casesToAnalyze = casesToAnalyze    
-        self.casesKeys = sorted(list(self.casesToAnalyze.keys()))
         self.asks_for_info()
         self.asks_for_author()
+        #import cases
+        with mesPath.joinpath('caseToAnalyze.json').open('r+') as input:
+            self.casesToAnalyze = json.load(input)
+        for k,v in self.casesToAnalyze.items():
+            v['case']['author']=self.author
+            v['case']= Case(**v['case'])
+        self.casesKeys = sorted(list(self.casesToAnalyze.keys()))#list of name of cases
+        #gets number of cases to analyse
         self.asks_for_ncases()
-        
+        #removing cases not displayed
+        newdictionary={}
+        for k in self.casesKeys:
+            newdictionary[k]=self.casesToAnalyze[k]
+        self.casesToAnalyze=newdictionary
         #add connections
         self.connections()
     
@@ -227,12 +231,13 @@ class CaseCreatorWidget(DetectControlWidget):
             QtGui.QMessageBox.information(self, 'Proceeding', "Tell me when you are ready to proceed.")
     
     def asks_for_author(self):
-        if self.author == None:
-            author, ok = QtGui.QInputDialog.getText(self, "Set author", "Please your name : ")
-            if ok:
-                author = author.replace(' ','_')
-            else:
-                author =  'anonymus'
+        author, ok = QtGui.QInputDialog.getText(self, "Set author", "Please your name : ")
+        if ok:
+            author = author.replace(' ','_')
+            if author=="":
+                author='anonymus'
+        else:
+            author =  'anonymus'
         self.author = author
     
     def asks_for_ncases(self):
@@ -354,7 +359,7 @@ class CaseCreatorWidget(DetectControlWidget):
         
     def set_current_case(self,key):
         self.releaseKeyboard()
-        self.timer.stop()
+        #self.timer.stop()
         self.media.stop()
         self.currentCase = self.casesToAnalyze[key]
         #attributes
@@ -364,11 +369,11 @@ class CaseCreatorWidget(DetectControlWidget):
         self.cb.setChecked(self.both_visibles)
         self.current_noise = 'Z'
         self.SOIcombo.setCurrentIndex(self.NoiseTypes.index(self.current_noise))
-        if self.currentCase.get('saved',False):
+        if self.case.get_saved():
             self.buttonSave.setStyleSheet("background-color: #a6dba0")
         else:
             self.buttonSave.setStyleSheet("background-color: #c2a5cf")
-        self.check_rb(self.case.case['quality'])
+        self.check_rb(self.case.get_quality())
         #set SOI and update Canvas
         self.set_noise_type('Z')
         #plot
@@ -377,7 +382,7 @@ class CaseCreatorWidget(DetectControlWidget):
         wavPath = self.mesPath.joinpath(self.currentCase['wavPath'])
         self.set_media_source(str(wavPath), self.currentCase['tmin'])
         #start timer
-        self.timer.start()
+        #self.timer.start()
         self.grabKeyboard()
         
     def plot(self):
@@ -410,7 +415,6 @@ class CaseCreatorWidget(DetectControlWidget):
     def chg_folder(self):
         """change the directory where to save the data"""
         newpathlib=str(QFileDialog.getExistingDirectory(self,"Please select a directory where I can save your data."))
-        print(newpathlib)
         if newpathlib!="":
             self.savefolder=pathlib.Path(newpathlib)
             #select color of chg saving folder.
@@ -420,7 +424,6 @@ class CaseCreatorWidget(DetectControlWidget):
                 self.buttonChgSave.setStyleSheet("background-color: #a6dba0")
             fm=QtGui.QFontMetrics(self.hlab.font())
             self.hlab.setText("Selected directory : "+fm.elidedText(str(self.savefolder),QtCore.Qt.ElideLeft, 250))
-            print("Saving Path changed to "+str(self.savefolder))
         else:
             print("Path not modified.")
     
@@ -429,7 +432,7 @@ class CaseCreatorWidget(DetectControlWidget):
             self.current_noise = self.NoiseTypes[index]
         else:
             self.current_noise = index
-        self.SOI = self.case.case[self.current_noise]
+        self.SOI = self.case.get_SOI(self.current_noise)
         self.update_stay_rect()
         
     def set_both_visible(self, state):
@@ -441,8 +444,8 @@ class CaseCreatorWidget(DetectControlWidget):
         
     def change_current_case(self, index):
         key = self.casesKeys[index]
-        if True:#self.currentCase.get('saved',False):
-            self.set_current_case(key)
+        #self.currentCase.get('saved',False):
+        self.set_current_case(key)
         # else:
         #     QtGui.QMessageBox.warning(self, self.trUtf8("save error"), 
         #      self.trUtf8("Before switching case save it!"))
@@ -459,6 +462,7 @@ class CaseCreatorWidget(DetectControlWidget):
         self.rbG.setExclusive(False)
         
     def add_int(self, xmin,xmax):
+        self.unsave()
         Int = Interval(xmin,xmax)
         self.SOI.append(Int)
         #print('Add '+ repr(Int))
@@ -467,6 +471,7 @@ class CaseCreatorWidget(DetectControlWidget):
             self.update_canvas()
         
     def remove_int(self, xmin, xmax = None):
+        self.unsave()
         if xmax == None:
             index = self.SOI.containspoint(xmin)
             if index is not None:
@@ -479,6 +484,7 @@ class CaseCreatorWidget(DetectControlWidget):
             self.update_canvas()
         
     def set_int(self,press):
+        self.unsave()
         if press:
             self._t_int_min = self.t
             return
@@ -495,7 +501,14 @@ class CaseCreatorWidget(DetectControlWidget):
             self.remove_int(xmin,xmax)
         else:
             self.add_int(xmin,xmax)
-        
+     
+    def unsave(self):
+        """get back to unsaved status"""
+        if self.currentCase['case'].get_saved:
+            self.currentCase['case'].give_saved(False)
+            self.buttonSave.setStyleSheet("background-color: #c2a5cf")
+            currentIndex= self.casesKeys.index(str(self.CaseCombo.currentText()))
+            self.CaseCombo.setItemData(currentIndex,QtGui.QColor('#a6dba0'),QtCore.Qt.BackgroundRole)
         
     def onclick(self,x):
         #remove Interval
@@ -524,12 +537,12 @@ class CaseCreatorWidget(DetectControlWidget):
             if nT == self.current_noise:
                 self.CS.set_stay_rects_x_bounds(self.SOI.tolist(),index)
             elif self.both_visibles:
-                self.CS.set_stay_rects_x_bounds(self.case.case[nT].tolist(), index)
+                self.CS.set_stay_rects_x_bounds(self.case.get_SOI(nT).tolist(), index)
             else:
                 self.CS.set_stay_rect_visible(False, index)
     
     def save_case(self):
-        if self.case.case['quality'] == None:
+        if self.case.get_quality() == None:
             QtGui.QMessageBox.warning(self, self.trUtf8("save error"), 
              self.trUtf8("Quality of selection has to be set!"))
         else:
@@ -537,18 +550,19 @@ class CaseCreatorWidget(DetectControlWidget):
             if not self.savefolder:
                 #asks for the folder where to save the datas
                 self.chg_folder()
-            self.case.case['author'] = self.author
-            self.case.save(self.savefolder)
-            self.currentCase['saved'] = True
+            #self.case.case['author'] = self.author
+            casepath=self.case.save(self.savefolder)
             self.buttonSave.setStyleSheet("background-color: #a6dba0")
             currentIndex= self.casesKeys.index(str(self.CaseCombo.currentText()))
             self.CaseCombo.setItemData(currentIndex,QtGui.QColor('#a6dba0'),QtCore.Qt.BackgroundRole)
+            #self.AnalysedCases.append(self.casesKeys[currentIndex])
     def show_info(self):
         self.extbrowsercall()
     
     def extbrowsercall(self):
         """call opening info page in external web browser"""
-        os.startfile('info.html')
+        pathtoinfo=self.infofolder.joinpath('info.html').absolute().as_uri()
+        os.startfile(pathtoinfo)
     
     @classmethod
     def from_measurement(cls, mesVal, mID, mics, author = None):
@@ -691,12 +705,12 @@ class CompareCaseAlgWidget(DetectControlWidget):
         self.set_centralWidget()
         
     def set_current_alg(self,index):
-        self.timer.stop()
+        #self.timer.stop()
         self.media.stop()
         self.currentAlg = self.algorithms[index]
         self.plot()
         #start timer
-        self.timer.start()
+        #self.timer.start()
         
     def plot(self):
         self.axes = self.currentAlg.visualize(self.fig, self.micSn, self.case)

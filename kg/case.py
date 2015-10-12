@@ -27,7 +27,8 @@ class Case(object):
                 "Te": Te,
                 "KG": SetOfIntervals(), #Kreischen
                 "Z": SetOfIntervals(),#Zischen
-                "quality": None #quality of the detection
+                "quality": None, #quality of the detection
+                "saved":False,
                 }
         self.case['caseID'] = str(self)
     
@@ -80,11 +81,29 @@ class Case(object):
         name = str(self) + '.json'
         casePath = casePath.joinpath(name)
         self.to_JSON(casePath)
+        self.case['saved']=True
         return(casePath)
     
     def get_SOI(self, noiseType='Z'):
         return(self.case[noiseType])
-        
+    def get_mIDmic(self):
+        """returns the mID and mic"""
+        return(self.case['mID']+"_"+str(self.case['mic']))
+    def get_mID(self):
+        """returns the mID of case"""
+        return(self.case['mID'])
+    def get_mic(self):
+        """returns the mci of case"""
+        return(self.case['mic'])
+    def get_quality(self):
+        """returns case quality"""
+        return(self.case['quality'])
+    def get_saved(self):
+        """tells if the case has been saved"""
+        return(self.case['saved'])
+    def give_saved(self, truthvalue):
+        """gives the truthvalue of this case savestate"""
+        self.case['saved']=bool(truthvalue)
     def plot_triggers(self, ax, **kwargs):
         """
         Plot evaluation bounds Times as MBBM evaluations
@@ -117,8 +136,7 @@ class Case(object):
         
     def __str__(self):
         """prints the name of the case"""
-        return( "case_"+str(self.case['mID'])+"_"+str(self.case['mic'])+'_'+\
-        str(self.case['author']))
+        return( "case_"+str(self.case['mID'])+"_"+str(self.case['mic'])+'_'+str(self.case['author']))
     
     def __repr__(self):
         """gives a representation of the case"""
@@ -141,6 +159,8 @@ class Case(object):
     def from_JSON(cls, casePath,**kwargs):
         """@classmethod is used to pass the class to the method as implicit argument. Then we open a file in JSON located at casePath and give it to the class with **kwargs (meaning that we pass an arbitrary number of arguments to the class)
         """
+        if not isinstance(casePath, pathlib.Path):
+            casePath=pathlib.Path(casePath)
         with casePath.open('r+') as file:
             dict = json.load(file)
         cl = cls(**dict)

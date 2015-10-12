@@ -16,13 +16,6 @@ if __name__ == "__main__":
     mainPath = pathlib.Path('').absolute()
     #mesPath = mainPath.parent
     mesPath = pathlib.Path('').absolute()
-    print("The Path is " +str(mesPath))
-    with mainPath.joinpath('caseToAnalyze.json').open('r+') as input:
-        caseToAnalyze = json.load(input)
-    for k,v in caseToAnalyze.items():
-        v['case'] = Case(**v['case'])
-
-
     #color Choice
     changecolors=True
     if changecolors:
@@ -71,7 +64,7 @@ if __name__ == "__main__":
         matplotlib.rc('font',**font)  
 
     app=QtGui.QApplication(sys.argv)
-    W = CaseCreatorWidget(mesPath, caseToAnalyze)
+    W = CaseCreatorWidget(mesPath)
     if changecolors:
         W.setPalette(palette)
         W.setFont(QtGui.QFont('HelveticaNeue',11))
