@@ -424,7 +424,11 @@ class CaseSelector(_my_SelectorWidget):
             self.onselect(vmin,vmax, True)
             self.pressv= None
             return False
-
+    
+    def simonmove(self):
+        """simulates on move"""
+        self.update()
+            
     def _onmove(self, event):
         self.rect.set_visible(self.visible)
         """on motion notify event"""

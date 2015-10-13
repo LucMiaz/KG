@@ -221,12 +221,19 @@ class CaseCreatorWidget(DetectControlWidget):
         self.casesKeys = sorted(list(self.casesToAnalyze.keys()))#list of name of cases
         #gets number of cases to analyse
         self.asks_for_ncases()
+        self.CaseCombo.addItems(self.casesKeys)
         #removing cases not displayed
         newdictionary={}
         for k in self.casesKeys:
             newdictionary[k]=self.casesToAnalyze[k]
+        #select a spare case (just in case ;))
+        self.sparecase=None
+        for k,v in self.casesToAnalyze.items():
+            if k not in self.casesKeys:
+                self.sparecase=(k,v)
+                break
         self.casesToAnalyze=newdictionary
-        self.TurnTheSavedGreen()
+        self.TurnTheSavedGreen()#set caseCombo
         #add connections
         self.connections()
         
@@ -276,22 +283,16 @@ class CaseCreatorWidget(DetectControlWidget):
                 keys=list(self.casesToAnalyze.keys())
                 ncmax=len(keys)
                 while len(self.casesKeys) < min(ncases, ncmax):
-                    print("lenkeys"+str(len(keys)))
                     cas=keys[random.randint(0,ncmax)]
-                    print(str(cas))
                     if cas not in self.casesKeys:
                         self.casesKeys.append(cas)
-                        print(len(self.casesKeys))
-        self.CaseCombo.addItems(self.casesKeys)
-        #set case
-        self.set_current_case(self.casesKeys[0])
         
     def add_widgets(self):
         #Figure Canvas
         canvas={}
         plt.ioff()
         fig = Figure((15,10))
-        fig.set_dpi(110)
+        fig.set_dpi(110)#default 110
         ax = fig.add_subplot(111)
         ca = FigureCanvas(fig)
         self.SelectAxis = ax
@@ -310,6 +311,7 @@ class CaseCreatorWidget(DetectControlWidget):
         # select case combo 
         groupBox = QtGui.QGroupBox('Select case to analyze ')
         self.CaseCombo = QtGui.QComboBox()
+        
         hbox1 = QtGui.QHBoxLayout()
         hbox1.addWidget(self.CaseCombo)
         groupBox.setLayout(hbox1)
@@ -540,14 +542,20 @@ class CaseCreatorWidget(DetectControlWidget):
         return(savedIDs)
     
     def TurnTheSavedGreen(self):
-        """as its name tells, it turns the saved cases green"""
+        """
+        as its name tells, it turns the saved cases green
+        initiates the combobox Casecombo
+        """
         try:
             sIDs=self.checkSavedCases()
         except:
             print("No folder was found")
-        else:
+            self.CaseCombo.setCurrentIndex(0)
+        else:  
+            zind=[i for i in range(0,len(self.casesKeys))]
             for scased in sIDs:
                 if scased in self.casesKeys:
+                    zind.remove(self.casesKeys.index(scased))
                     currentIndex= self.casesKeys.index(scased)
                     self.CaseCombo.setItemData(currentIndex,QtGui.QColor('#a6dba0'),QtCore.Qt.BackgroundRole)
                     self.casesToAnalyze[scased]['case'].set_saved(True)
@@ -556,7 +564,27 @@ class CaseCreatorWidget(DetectControlWidget):
                     self.casesToAnalyze[scased]['case'].set_quality(caseinfile.get_quality())
                     for type in self.NoiseTypes:
                         self.casesToAnalyze[scased]['case'].set_SOI(caseinfile.get_SOI(type),type)
-                        print(str(caseinfile.get_SOI(type)))
+            print(len(zind))
+            if len(zind)==0:
+                if self.sparecase:
+                    k,v = self.sparecase
+                    ok=QtGui.QMessageBox.warning(self, "All cases were treated!", "You have already reviewed all the cases. \n I have added the case "+k+" to the list.")
+                    self.casesToAnalyze[k]=v
+                    self.CaseCombo.addItem(self.sparecase[0])
+                    self.casesKeys.append(self.sparecase[0])
+                    self.CaseCombo.setCurrentIndex(self.casesKeys.index(k))
+                    self.set_current_case(k)
+                else:
+                    ok=QtGui.QMessageBox.warning(self, "All cases were treated!", "You have already reviewed all the cases.")
+                    self.CaseCombo.setCurrentIndex(-1)
+                    self.current_noise='Z'
+                    self.SOI=self.casesToAnalyze[self.casesKeys[0]]['case'].get_SOI()
+            else:
+                zind=min(zind)
+                self.CaseCombo.setCurrentIndex(zind)
+                self.set_current_case(self.casesKeys[zind])
+                
+
     
     def onclick(self,x):
         #remove Interval
