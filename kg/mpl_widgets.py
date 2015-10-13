@@ -334,7 +334,11 @@ class CaseSelector(_my_SelectorWidget):
         # Reset canvas so that `new_axes` connects events.
         self.canvas = None
         self.new_axes(ax, nrect)
-
+    def setUpdateOnExtEvent(self, truth=None):
+        """set truthvalue of update_on_ext_event"""
+        if truth in [True, False]:
+            self.update_on_ext_event=truth
+        
     def new_axes(self, ax, nrect):
         self.ax = ax
         if self.canvas is not ax.figure.canvas:

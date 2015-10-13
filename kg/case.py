@@ -83,9 +83,15 @@ class Case(object):
         self.to_JSON(casePath)
         self.case['saved']=True
         return(casePath)
-    
+    def set_saved(self, truth):
+        if truth in [True, False]:
+            self.case['saved']=truth
     def get_SOI(self, noiseType='Z'):
         return(self.case[noiseType])
+    def set_SOI(self,listofSOI,noiseType='Z'):
+        if isinstance(listofSOI, SetOfIntervals):
+            self.case[noiseType]=SetOfIntervals()
+            self.case[noiseType].copySOI(listofSOI)
     def get_mIDmic(self):
         """returns the mID and mic"""
         return(self.case['mID']+"_"+str(self.case['mic']))

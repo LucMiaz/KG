@@ -57,7 +57,7 @@ if __name__ == "__main__":
         matplotlib.rcParams['axes.labelcolor']=axescolor#labels diplayed on the figure (LA, t(s))
         matplotlib.rcParams['font.family']='HelveticaNeue'
         matplotlib.rcParams['grid.linewidth']=0.2
-        matplotlib.rcParams['grid.alpha']=0.5
+        matplotlib.rcParams['grid.alpha']=0.8
         matplotlib.rcParams['legend.framealpha']=0.4
         matplotlib.rcParams['figure.autolayout']=True
         font={'family':'sans-serif','weight':'regular','size':11}

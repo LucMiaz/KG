@@ -51,6 +51,10 @@ class SetOfIntervals(object):
                 return None
         else:
             return None
+    def copySOI(self,SOI):
+        """makes a copy of a SetOfInterval Object"""
+        if isinstance(SOI, SetOfIntervals):
+            self.appendlistofduples(SOI.tolist())
     
     def appendlistofduples(self,listofduples):
         """adds a list of duples (viewed as an interval) to the SetOfRange. Alternatively one can give a list of lists containg two elements, e.g. [[1.0,2.0],[2.5,3.0],[2.8,4.0]]"""
