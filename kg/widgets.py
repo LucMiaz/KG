@@ -221,10 +221,17 @@ class CaseCreatorWidget(DetectControlWidget):
         self.casesKeys = sorted(list(self.casesToAnalyze.keys()))#list of name of cases
         #gets number of cases to analyse
         self.asks_for_ncases()
+        self.CaseCombo.addItems(self.casesKeys)
         #removing cases not displayed
         newdictionary={}
         for k in self.casesKeys:
             newdictionary[k]=self.casesToAnalyze[k]
+        #select a spare case (just in case ;))
+        self.sparecase=None
+        for k,v in self.casesToAnalyze.items():
+            if k not in self.casesKeys:
+                self.sparecase=(k,v)
+                break
         self.casesToAnalyze=newdictionary
         self.TurnTheSavedGreen()#set caseCombo
         #add connections
@@ -285,7 +292,7 @@ class CaseCreatorWidget(DetectControlWidget):
         canvas={}
         plt.ioff()
         fig = Figure((15,10))
-        fig.set_dpi(110)
+        fig.set_dpi(110)#default 110
         ax = fig.add_subplot(111)
         ca = FigureCanvas(fig)
         self.SelectAxis = ax
@@ -304,6 +311,7 @@ class CaseCreatorWidget(DetectControlWidget):
         # select case combo 
         groupBox = QtGui.QGroupBox('Select case to analyze ')
         self.CaseCombo = QtGui.QComboBox()
+        
         hbox1 = QtGui.QHBoxLayout()
         hbox1.addWidget(self.CaseCombo)
         groupBox.setLayout(hbox1)
@@ -538,7 +546,6 @@ class CaseCreatorWidget(DetectControlWidget):
         as its name tells, it turns the saved cases green
         initiates the combobox Casecombo
         """
-        self.CaseCombo.addItems(self.casesKeys)
         try:
             sIDs=self.checkSavedCases()
         except:
@@ -559,15 +566,25 @@ class CaseCreatorWidget(DetectControlWidget):
                         self.casesToAnalyze[scased]['case'].set_SOI(caseinfile.get_SOI(type),type)
             print(len(zind))
             if len(zind)==0:
-                text, result = QtGui.QInputDialog.getItem(self, "All cases were treated!", "You have already reviewed all the cases. Please choose the case you would like to modify first :", self.casesKeys, current=-1)
-                if result:
-                    zind=self.casesKeys.index(text)
+                if self.sparecase:
+                    k,v = self.sparecase
+                    ok=QtGui.QMessageBox.warning(self, "All cases were treated!", "You have already reviewed all the cases. \n I have added the case "+k+" to the list.")
+                    self.casesToAnalyze[k]=v
+                    self.CaseCombo.addItem(self.sparecase[0])
+                    self.casesKeys.append(self.sparecase[0])
+                    self.CaseCombo.setCurrentIndex(self.casesKeys.index(k))
+                    self.set_current_case(k)
                 else:
-                    zind=0
+                    ok=QtGui.QMessageBox.warning(self, "All cases were treated!", "You have already reviewed all the cases.")
+                    self.CaseCombo.setCurrentIndex(-1)
+                    self.current_noise='Z'
+                    self.SOI=self.casesToAnalyze[self.casesKeys[0]]['case'].get_SOI()
             else:
                 zind=min(zind)
-            self.CaseCombo.setCurrentIndex(zind)
-            self.change_current_case(zind)
+                self.CaseCombo.setCurrentIndex(zind)
+                self.set_current_case(self.casesKeys[zind])
+                
+
     
     def onclick(self,x):
         #remove Interval
