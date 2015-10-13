@@ -52,7 +52,7 @@ class DetectControlWidget(QMainWindow):
         self.seeker = Phonon.SeekSlider(self)
         self.seeker.setFixedHeight(20)
         self.seeker.setMediaObject(self.media)
-        self.media.setTickInterval(25)
+        self.media.setTickInterval(40)
         # audio data from the media object goes to the audio output object
         Phonon.createPath(self.media, self.audio_output)
         # set up actions to control the playback
@@ -75,7 +75,7 @@ class DetectControlWidget(QMainWindow):
         #layout
         self.vBox = QtGui.QVBoxLayout()
         self.vBox.addWidget(self.seeker)
-        
+        self.modifiers= None
         #finish setup
         if setup:
             #Set mediafile
@@ -86,7 +86,81 @@ class DetectControlWidget(QMainWindow):
             self.set_centralWidget()
             #add connections
             self.connections()
-
+    def keyPressEvent(self, event):
+        self.modifiers = QtGui.QApplication.keyboardModifiers()#checks on keypress what modifyers there is
+        if event.isAutoRepeat():
+            return
+        if event.key() == QtCore.Qt.Key_D:
+            self.set_remove(True)
+        elif event.key() == QtCore.Qt.Key_S and not self.modifiers==QtCore.Qt.ControlModifier:
+            self.set_int(True)
+        elif event.key()== QtCore.Qt.Key_S and self.modifiers==QtCore.Qt.ControlModifier:
+            self.media.stop()
+            self.save_case()
+        elif event.key()==QtCore.Qt.Key_Space:
+            if self.modifiers==QtCore.Qt.ControlModifier:#if ctrl pressed, go stops
+                self.media.stop()
+            else:
+                if self.media.state()==1:#if stopped
+                    self.media.play()
+                elif self.media.state()==4:#if paused
+                    self.media.play()
+                else:#if playing (2), buffering (3), loading(0) or error(5)
+                    self.media.pause()
+        elif event.key()==QtCore.Qt.Key_Up or event.key()==QtCore.Qt.Key_Left:
+            self.media.stop()
+            self.case_up()
+        elif event.key()==QtCore.Qt.Key_Down or event.key()==QtCore.Qt.Key_Right:
+            self.media.stop()
+            self.case_down()
+        elif event.key()==QtCore.Qt.Key_F:
+            self.media.stop()
+            self.chg_folder()
+        elif event.key()==QtCore.Qt.Key_Z:
+            self.media.pause()
+            self.chg_type()
+        elif event.key()==QtCore.Qt.Key_K:
+            self.media.pause()
+            self.chg_type()
+        elif event.key()==QtCore.Qt.Key_T:
+            self.media.pause()
+            self.chg_type()
+        elif event.key()==QtCore.Qt.Key_B:
+            self.media.pause()
+            self.chg_typedisplay()
+        elif event.key()==QtCore.Qt.Key_1:
+            self.change_quality('bad')
+        elif event.key()==QtCore.Qt.Key_2:
+            self.change_quality('medium')
+        elif event.key()==QtCore.Qt.Key_3:
+            self.change_quality('good')
+        event.accept()
+        
+    def keyReleaseEvent(self, event):
+        if event.isAutoRepeat():
+            return
+        if event.key() == QtCore.Qt.Key_D:
+            self.set_remove(False)
+        elif event.key() == QtCore.Qt.Key_S and not self.modifiers==QtCore.Qt.ControlModifier:
+            self.set_int(False)
+        event.accept()
+        
+    def case_up(self):
+        pass
+    def case_down(self):
+        pass
+    def chg_folder(self):
+        pass
+    def chg_type(self):
+        pass
+    def chg_typedisplay(self):
+        pass
+    def set_int(self, truth):
+        pass
+    def set_remove(self, truth):
+        pass
+    def save_cases(self):
+        pass
     def set_media_source(self, wavPath, t0 = 0, **kwargs):
         self.tShift = t0
         self.t = self.tShift
@@ -96,8 +170,8 @@ class DetectControlWidget(QMainWindow):
     def media_finish(self):
         pass
         #self.timer.stop()
-        #self.media.stop()
-        #self.media.pause()
+        self.media.stop()
+        self.media.pause()
         
     def set_mpl(self, mpl = {}, **kwargs):
         self.canvas = []
@@ -204,10 +278,10 @@ class CaseCreatorWidget(DetectControlWidget):
         self.mesPath = mesPath
         self.infofolder=pathlib.Path("").absolute()
         self.minspan = 0.05
-        self.remove = False
         self.add_widgets()
         self.set_centralWidget()
         self.author=None
+        self.both_visible=True
         #set cases
         self.NoiseTypes = ['Z','KG']
         self.asks_for_info()
@@ -457,7 +531,38 @@ class CaseCreatorWidget(DetectControlWidget):
         else:
             self.both_visibles= False
         self.update_stay_rect()
-        
+    def case_up(self):
+        """changes case to the previous one"""
+        index=self.CaseCombo.currentIndex()
+        if index>0:
+            self.change_current_case(index-1)
+            self.CaseCombo.setCurrentIndex(index-1)
+        else:
+            self.change_current_case(len(self.casesKeys)-1)
+            self.Casecombo.setCurrentIndex(len(self.casesKeys)-1)
+    def case_down(self):
+        """changes case to the next one"""
+        index=self.CaseCombo.currentIndex()
+        if index<len(self.casesKeys)-1:
+            self.change_current_case(index+1)
+            self.CaseCombo.setCurrentIndex(index+1)
+        else:
+            self.change_current_case(0)
+            self.CaseCombo.setCurrentIndex(0)
+    def chg_type(self):
+        """change the noise type to the next one on the list (and back to the first)"""
+        current_noise_index= self.NoiseTypes.index(self.current_noise)
+        if current_noise_index <len(self.NoiseTypes)-1:
+            self.set_noise_type(current_noise_index+1)
+            self.SOIcombo.setCurrentIndex(current_noise_index+1)
+        else:
+            self.set_noise_type(0)
+            self.SOIcombo.setCurrentIndex(0)
+    def chg_typedisplay(self):
+        """toggle between show both and show one"""
+        self.both_visible = not self.both_visible
+        self.cb.setChecked(self.both_visible)
+        self.update_stay_rect
     def change_current_case(self, index):
         key = self.casesKeys[index]
         #self.currentCase.get('saved',False):
@@ -471,7 +576,19 @@ class CaseCreatorWidget(DetectControlWidget):
         for q,rb in zip( ['good','medium','bad'],self.Qradios):
             if rb.isChecked():
                 self.case.set_quality(q)
-                
+    def change_quality(self, quality):
+        if quality in ['good','medium','bad']:
+            self.case.set_quality(quality)
+            if quality=='good':
+                curr=self.Qradios[0].isChecked()
+                self.Qradios[0].setChecked(not curr)
+            elif quality=='medium':
+                curr=self.Qradios[1].isChecked()
+                self.Qradios[1].setChecked(not curr)
+            else:
+                curr=self.Qradios[2].isChecked()
+                self.Qradios[2].setChecked(not curr)
+    
     def check_rb(self, q):
         self.rbG.setExclusive(False)#allows to choose multiple qualities
         for rb, qb in  zip(self.Qradios, ['good', 'medium', 'bad']):
@@ -511,10 +628,23 @@ class CaseCreatorWidget(DetectControlWidget):
                 self.add_int(self._t_int_min,tmax)
         if self.barplay==False:
             self.update_canvas()
+            
+    def set_remove(self,press):
+        """removes int while playing audio"""
+        self.unsave()
+        if press:
+            self._t_int_min = self.t
+            return
+        else:
+            tmax = self.t
+            if abs(tmax-self._t_int_min) > self.minspan:
+                self.remove_int(self._t_int_min,tmax)
+        if self.barplay==False:
+            self.update_canvas()
         
     def onselect(self,xmin,xmax, remove=False):
         #add interval1
-        if self.remove or remove:
+        if remove:
             self.remove_int(xmin,xmax)
         else:
             self.add_int(xmin,xmax)
@@ -564,7 +694,6 @@ class CaseCreatorWidget(DetectControlWidget):
                     self.casesToAnalyze[scased]['case'].set_quality(caseinfile.get_quality())
                     for type in self.NoiseTypes:
                         self.casesToAnalyze[scased]['case'].set_SOI(caseinfile.get_SOI(type),type)
-            print(len(zind))
             if len(zind)==0:
                 if self.sparecase:
                     k,v = self.sparecase
@@ -589,24 +718,6 @@ class CaseCreatorWidget(DetectControlWidget):
     def onclick(self,x):
         #remove Interval
         self.remove_int(x)
-        
-    def keyPressEvent(self, event):
-        if event.isAutoRepeat():
-            return
-        if event.key() == QtCore.Qt.Key_D:
-            self.remove=True
-        elif event.key() == QtCore.Qt.Key_S:
-            self.set_int(True)
-        event.accept()
-        
-    def keyReleaseEvent(self, event):
-        if event.isAutoRepeat():
-            return
-        if event.key() == QtCore.Qt.Key_D:
-            self.remove = False
-        elif event.key() == QtCore.Qt.Key_S:
-            self.set_int(False)
-        event.accept()
         
     def update_stay_rect(self):
         for index,nT in enumerate(self.NoiseTypes):
