@@ -94,9 +94,10 @@ class DetectControlWidget(QMainWindow):
         self.media.pause()
         
     def media_finish(self):
+        pass
         #self.timer.stop()
-        self.media.stop()
-        self.media.pause()
+        #self.media.stop()
+        #self.media.pause()
         
     def set_mpl(self, mpl = {}, **kwargs):
         self.canvas = []
@@ -137,13 +138,17 @@ class DetectControlWidget(QMainWindow):
         """changes the timer status according to played audio"""
         if newstate==2:
             #self.timer.start()
-            self.barplay=True
+            self._barplay(True)
         elif newstate==1:
             #self.timer.stop()
-            self.barplay=False
+            self._barplay(False)
         elif newstate==4:
             #self.timer.stop()
-            self.barplay=False
+            self._barplay(False)
+    
+    def _barplay(self, truth):
+        """define what to do when audio is playing/not playing"""
+        self.barplay=truth
     
     def update_time(self,t):
         self.t = t/1000 + self.tShift
@@ -221,8 +226,14 @@ class CaseCreatorWidget(DetectControlWidget):
         for k in self.casesKeys:
             newdictionary[k]=self.casesToAnalyze[k]
         self.casesToAnalyze=newdictionary
+        self.TurnTheSavedGreen()
         #add connections
         self.connections()
+        
+    def _barplay(self, truth):
+        """tells what to do if audio is playing or not"""
+        super(CaseCreatorWidget, self)._barplay(truth)
+        self.CS.setUpdateOnExtEvent(truth)
     
     def asks_for_info(self):
         result = QtGui.QMessageBox.question(self, 'Information', "Would you like to see the information page ?", QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
@@ -513,7 +524,40 @@ class CaseCreatorWidget(DetectControlWidget):
             self.buttonSave.setStyleSheet("background-color: #c2a5cf")
             currentIndex= self.casesKeys.index(str(self.CaseCombo.currentText()))
             self.CaseCombo.setItemData(currentIndex,QtGui.QColor('#c2a5cf'),QtCore.Qt.BackgroundRole)
-        
+    
+    def checkSavedCases(self, folder=None):
+        """returns the IDs in """
+        if folder==None:
+            folder=self.savefolder.joinpath(pathlib.Path('test_cases/'+self.author))
+        if not isinstance(folder, pathlib.Path):
+            folder=pathlib.Path(folder)
+        savedIDs=[]
+        for cs in folder.iterdir():
+            if cs.match('case_**'+self.author+'.json'):
+                cx=str(cs).split('\\')[-1]
+                mid, mic=cx.split('_')[2:4]
+                savedIDs.append('m_'+mid+'_'+mic)
+        return(savedIDs)
+    
+    def TurnTheSavedGreen(self):
+        """as its name tells, it turns the saved cases green"""
+        try:
+            sIDs=self.checkSavedCases()
+        except:
+            print("No folder was found")
+        else:
+            for scased in sIDs:
+                if scased in self.casesKeys:
+                    currentIndex= self.casesKeys.index(scased)
+                    self.CaseCombo.setItemData(currentIndex,QtGui.QColor('#a6dba0'),QtCore.Qt.BackgroundRole)
+                    self.casesToAnalyze[scased]['case'].set_saved(True)
+                    pathtofile=self.savefolder.joinpath('test_cases/'+self.author+'/case_'+scased+'_'+self.author+'.json')
+                    caseinfile=Case.from_JSON(pathtofile)
+                    self.casesToAnalyze[scased]['case'].set_quality(caseinfile.get_quality())
+                    for type in self.NoiseTypes:
+                        self.casesToAnalyze[scased]['case'].set_SOI(caseinfile.get_SOI(type),type)
+                        print(str(caseinfile.get_SOI(type)))
+    
     def onclick(self,x):
         #remove Interval
         self.remove_int(x)
