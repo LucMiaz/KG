@@ -52,7 +52,10 @@ class DetectControlWidget(QMainWindow):
         self.seeker = Phonon.SeekSlider(self)
         self.seeker.setFixedHeight(20)
         self.seeker.setMediaObject(self.media)
-        self.media.setTickInterval(40)
+        self.mediarate='Fairly High 25ms'
+        self.media.setTickInterval(25)
+        self.comboratedict={'High 15ms':15, 'Fairly High 25ms':25, ' Medium 30ms':30, 'Pretty Low 40ms':40, 'Low 50ms':50, 'Ancient 60ms':60}
+        self.comboratelist=['High 15ms', 'Fairly High 25ms', ' Medium 30ms', 'Pretty Low 40ms', 'Low 50ms', 'Ancient60ms']
         # audio data from the media object goes to the audio output object
         Phonon.createPath(self.media, self.audio_output)
         # set up actions to control the playback
@@ -99,7 +102,7 @@ class DetectControlWidget(QMainWindow):
             self.save_case()
         elif event.key()==QtCore.Qt.Key_Space:
             if self.modifiers==QtCore.Qt.ControlModifier:#if ctrl pressed, go stops
-                self.media.stop()
+                self.media_finish()
             else:
                 if self.media.state()==1:#if stopped
                     self.media.play()
@@ -112,6 +115,12 @@ class DetectControlWidget(QMainWindow):
             self.case_up()
         elif event.key()==QtCore.Qt.Key_Down or event.key()==QtCore.Qt.Key_Right:
             self.media.stop()
+            self.case_down()
+        elif event.key()==QtCore.Qt.Key_Backspace:
+            self.media.stop()
+            if not self.get_quality:
+                self.change_quality(2)
+            self.save_cases()
             self.case_down()
         elif event.key()==QtCore.Qt.Key_F:
             self.media.stop()
@@ -134,6 +143,13 @@ class DetectControlWidget(QMainWindow):
             self.change_quality('medium')
         elif event.key()==QtCore.Qt.Key_3:
             self.change_quality('good')
+        elif event.key()==QtCore.Qt.Key_U:
+            self.update_canvas()
+        elif event.key()==QtCore.Qt.Key_R and self.modifiers==QtCore.Qt.ControlModifier:
+            text,ok=QtGui.QInputDialog.getItem(self,"Display Quality", "Current quality is "+self.mediarate+"\n Please select an update quality :", self.comboratelist, self.comboratelist.index(self.mediarate))
+            if ok:
+                self.mediarate=str(text)
+                self.media.setTickInterval(self.comboratedict[self.mediarate])
         event.accept()
         
     def keyReleaseEvent(self, event):
@@ -161,6 +177,10 @@ class DetectControlWidget(QMainWindow):
         pass
     def save_cases(self):
         pass
+    def change_quality(self):
+        pass
+    def set_quality(self, val):
+        pass
     def set_media_source(self, wavPath, t0 = 0, **kwargs):
         self.tShift = t0
         self.t = self.tShift
@@ -168,7 +188,6 @@ class DetectControlWidget(QMainWindow):
         self.media.pause()
         
     def media_finish(self):
-        pass
         #self.timer.stop()
         self.media.stop()
         self.media.pause()
@@ -207,7 +226,7 @@ class DetectControlWidget(QMainWindow):
         
     def _connections(self):
         pass
-            
+    
     def timer_status(self,newstate, oldstate):
         """changes the timer status according to played audio"""
         if newstate==2:
@@ -229,10 +248,10 @@ class DetectControlWidget(QMainWindow):
         self.update_canvas()
 
     def update_canvas(self):
-        for handle in self.ca_set_bar_handle:
-            handle.set_bar_position(self.t)
         for handle in self.ca_update_handle:
             handle.update()
+        for handle in self.ca_set_bar_handle:
+            handle.set_bar_position(self.t)
             
     def show_info(self):
         pass
@@ -558,11 +577,13 @@ class CaseCreatorWidget(DetectControlWidget):
         else:
             self.set_noise_type(0)
             self.SOIcombo.setCurrentIndex(0)
+        self.update_canvas()
     def chg_typedisplay(self):
         """toggle between show both and show one"""
         self.both_visible = not self.both_visible
         self.cb.setChecked(self.both_visible)
         self.update_stay_rect
+        self.update_canvas()
     def change_current_case(self, index):
         key = self.casesKeys[index]
         #self.currentCase.get('saved',False):
@@ -588,7 +609,9 @@ class CaseCreatorWidget(DetectControlWidget):
             else:
                 curr=self.Qradios[2].isChecked()
                 self.Qradios[2].setChecked(not curr)
-    
+    def get_quality(self):
+        return(self.currentCase['case'].get('quality',False))
+        
     def check_rb(self, q):
         self.rbG.setExclusive(False)#allows to choose multiple qualities
         for rb, qb in  zip(self.Qradios, ['good', 'medium', 'bad']):
@@ -603,7 +626,6 @@ class CaseCreatorWidget(DetectControlWidget):
         self.update_stay_rect()
         if self.barplay==False:
             self.update_canvas()
-        
     def remove_int(self, xmin, xmax = None):
         self.unsave()
         if xmax == None:
@@ -628,7 +650,7 @@ class CaseCreatorWidget(DetectControlWidget):
                 self.add_int(self._t_int_min,tmax)
         if self.barplay==False:
             self.update_canvas()
-            
+
     def set_remove(self,press):
         """removes int while playing audio"""
         self.unsave()
@@ -641,7 +663,7 @@ class CaseCreatorWidget(DetectControlWidget):
                 self.remove_int(self._t_int_min,tmax)
         if self.barplay==False:
             self.update_canvas()
-        
+
     def onselect(self,xmin,xmax, remove=False):
         #add interval1
         if remove:
@@ -681,6 +703,7 @@ class CaseCreatorWidget(DetectControlWidget):
         except:
             print("No folder was found")
             self.CaseCombo.setCurrentIndex(0)
+            self.set_current_case(self.casesKeys[0])
         else:  
             zind=[i for i in range(0,len(self.casesKeys))]
             for scased in sIDs:

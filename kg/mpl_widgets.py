@@ -24,12 +24,12 @@ class _SelectorWidget(AxesWidget):
 
         self.background = None
         self.artists = []
-
+    
         if isinstance(button, int):
             self.validButtons = [button]
         else:
             self.validButtons = button
-
+    
         # will save the data (position at mouseclick)
         self.eventpress = None
         # will save the data (pos. at mouserelease)
@@ -104,8 +104,7 @@ class _SelectorWidget(AxesWidget):
                 self.canvas.restore_region(self.background)
             for artist in self.artists:
                 self.ax.draw_artist(artist)
-
-            self.canvas.blit(self.ax.bbox)
+            self.canvas.update()
 
         else:
             self.canvas.draw_idle()
@@ -366,7 +365,6 @@ class CaseSelector(_my_SelectorWidget):
         #bar
         self.bar = ax.axvline(0,w,h,visible = False, **self.lineprops)
         self.artists.append(self.bar)
-
         
     def set_bar_position(self, x):
         self.bar.set_xdata(x)
@@ -482,14 +480,20 @@ class Bar(AxesWidget):
         self.needclear = False
         self.connect_event('draw_event', self.clear)
 
-    def clear(self, event):
+    def clear(self, event=None):
         """clear the cursor"""
-        if self.ignore(event):
-            return
-        self.background = self.canvas.copy_from_bbox(self.ax.bbox)
-        self.linev.set_visible(False)
+        if event:
+            if self.ignore(event):
+                return
+
+            self.background = self.canvas.copy_from_bbox(self.ax.bbox)
+            self.linev.set_visible(False)
+        else:
+            self.background = self.canvas.copy_from_bbox(self.ax.bbox)
+            self.linev.set_visible(False)
 
     def set_bar_position(self, x):
+        self.clear()
         self.linev.set_xdata(x)
         self.linev.set_visible(True)
 
@@ -499,4 +503,5 @@ class Bar(AxesWidget):
         self.ax.draw_artist(self.linev)
         self.canvas.blit(self.ax.bbox)
         return False
+
     
