@@ -11,29 +11,27 @@
    <li><a href="#startup">Startup</a></li>
    <ol>
    	<li><a href="#username">Select Username</a></li>
-    <li><a href="#ncases">Select number of cases to analyse</a></li>
+    <li><a href="#ncases">Select number of cases to analyze</a></li>
    </ol>
     <li><a href="#analysis">Cases analysis</a></li>
     <ol>
     	<li><a href="#listen">Listening</a></li>
-        <li><a href="#selecting">Selecting</a></li>
-    	<li><a href="#quality">Select the quality of the sampling</a></li>
+        <li><a href="#selecting">Selecting intervals</a></li>
+    	<li><a href="#quality">Quality</a></li>
     	<li><a href="#save">Saving samplings</a></li>
-        <li><a href="#newcase">Go to a new case</a></li>
+        <li><a href="#newcase">New case</a></li>
     </ol>
-    <li><a href="#changefolder">Change saving folder</a></li>
+    <li><a href="#changefolder">Saving folder</a></li>
     <li><a href="#summary">Summary of the keyboard shortcuts</a></li>
   </ol>
   </nav>
 <div class="wrapper">
 <h1>Description of the software</h1>
 <hr></hr>
-<p>The aim of this program is to provide a way of selecting ranges where trains squeal or flang. Each case is denoted by a measure code <i>m_0***_#</i> (where <i>#</i> denotes the number of the microphone).
-You are kindly asked to select the ranges where you here a squealing noise or a flanging noise using both the audio - accessible with the media buttons : 
+<p>This program is one of the first steps in creating an efficient algorithm that can detect flanging and squealing noises produces by trains wheels. In this prospect, we would like put together a set of human selected intervals where noise is present. We have selected a hundred cases (i.e. mainly an audio file with a few characteristics). Each of these cases is denoted by a measure code <i>m_0***_#</i> (where <i>#</i> denotes the number of the microphone). You are kindly asked to analyse a few set of cases. To do so, please select the ranges where you hear a squealing noise or a flanging noise using both the audio - accessible with the media buttons and the associated plot - it is the sound level with fast time weighting. The following images illustrate these two tools.
+<br/>
 <br/>
 <img src="infoimg/media.png"/>
-<br/>
-and the associated plot - it is the sound level with fast weighing 
 <br/>
 <img src="infoimg/main.png"/>
 <br/>
@@ -42,25 +40,36 @@ and the associated plot - it is the sound level with fast weighing
 <br/>
 <br/>
 <h2 id="startup"> Startup</h2>
-<h4 id="username"> Select a username (your initials for example)</h4>
-<h4 id="ncases"> Then select the number of cases you would like to treat. Note that it takes approximately 5 to 10 minutes per case. You do not have to analyse every case you chose, and you do no have to analyse them in order.</h4>
-<br/>
-<img src="infoimg/name.png"/>
-<br/>
-<h4> After you have answered these two questions, you can start analysing the cases you selected </h4>
+<ul>
+<li><h4>Initialization questions : </h4>
+<ul>
+   <li><h4 id="username"> Select a username (your initials for example)</h4></li>
+      <br/>
+   <img src="infoimg/name.png"/>
+   <br/>
+   <li><h4 id="ncases"> Then select the number of cases you would like to treat.<h4></li>
+      <ul><li><p> Note that it takes approximately 5 to 10 minutes per case. You do not have to analyse every case you chose, and you do no have to analyse them in order.</p></li> </ul>
 <br/>
 <img src="infoimg/numbercases.png"/>
 <br/>
-<h5>You can come back to this help page whenever you need, it opens on your default web browser. If you closed the tab, simply click on the INFO button on top of the program's page and this help will open again in your web browser.</h5>
+   </ul>  
+</li>
+<li><h4> After you have answered these two questions, you can start analysing the cases you selected </h4></li>
+
+<li><h4>You can come back to this help page whenever you need, it opens on your default web browser.</h4>
+<ul><li><p>If you closed the tab, simply click on the INFO button on top of the program's page and this help will open again in your web browser.<p></li>
 <br/>
 <img src="infoimg/info.png"/>
 <br/>
+</ul></li>
+</ul>
+
 <br/>
 <hr/>
 <br/>
 <h2 id="analysis">To fulfil the analysis, please proceed as follow :</h2>
 <ol>
-	<li><h2 id="listen">Listen to the recorded signal using the media buttons in the toolbar</h2></li>
+	<li><h3 id="listen">Listen to the recorded signal using the media buttons in the toolbar (or the <a href='#summary'>keyboard shortcut</a> SPACE)</h3></li>
     <ul>
     <li> <b>Warning</b>: This step require a silent environment and an quality audio system.</li>
     	<ul><li>Notebook speakers have poor quality. </li>
@@ -68,71 +77,84 @@ and the associated plot - it is the sound level with fast weighing
         </ul>
     	<li>We look at <b>two types</b> of noise:
     	<ul>
-        	<li> <font color=#5ab4ac><b>Kreischen</b></font>: Squeal noise.</li>
+        	<li> <font color=#5ab4ac><b>Kreischen</b></font>: Squeal noise. It spans the harmonics.</li>
     		<li> <font color=#d8b365><b>Zischen</b></font>: Flanging noise.</li>
     	</ul>
 		The following plot and audio illustrate the difference between these two types of noise:
+		<br/>
 		<br/>
 		<audio id="kz-player" controls><source src="infoimg/m_00198_mic_1.wav" type="audio/wav"></audio>
 		<img src="infoimg/KGinterval.png" width=800px height=auto/>
     </ul>
     
-	<li><h2 id="selecting">Select the intervals (ranges) where you hear a squealing/flanging noise</h2>
+	<li><h3 id="selecting">Select the intervals (ranges) where you hear a squealing/flanging noise</h3>
     <ol>
-    	<li> Check that you have selected the right type of noise under <i>Noise Type to select</i>. (You can click <i>both visible</i> if you want to see the interval you selected for both noise type. Unclick it if you only want to see the noise type selected).</li>
-        <br>
+    	<li> Check that you have selected the right type of noise under <i>Noise Type to select</i> (Toggle between the types with KEY T).
+         <ul>
+            <li>You can click <i>both visible</i> if you want to see the interval you selected for both noise type.</li>
+            <li>Unclick it if you only want to see the noise type selected. </li>
+            <li>KEY B toggle between these two states.</li>
+            </ul>
+        <br/>
     	<img src="infoimg/Noisetypetoselect.png"/>
-    	<li> <h3>Select the intervals by either:</h3>
+    	<br/>
+      </li>
+      <br/>
+    	<li>Select the intervals by either:
     	<ul>
         	<li> Using left mouse click to span the interval (works with and without the audio playing)</li>
-    	<li> Hold key <i><b> s</b></i> while the audio is playing to select the interval spanned by the <font color=#e66101>orange bar</font>.</li>
+         <li> Hold <i><b>KEY S</b></i> while the audio is playing to select the interval spanned by the <font color=#e66101>orange bar</font>.</li>
         </ul>
     	<br/>
     	<img src="infoimg/full.png"/>
-    	<br/></li>
-    	<li><h3> If necessary, you can remove :</h3></li>
+    	<br/>
+    	</li>
+    	<li> If necessary, you can remove :
     	<ul>
         	<li>an <b>entire interval</b>, by right-clicking on it;</li>
-    		<li>an <b>interval of your choice</b>, by spanning the interval with right click or alternatively, by holding key <i><b>d</b></i> while spanning the interval with left mouse clicked.</li>
-    	</ul></li>
+    		<li>an <b>interval of your choice</b>, by spanning the interval with right click or alternatively.</li>
+    		<li>a spanned interval by holding <i><b>KEY D</b></i> while audio is playing</li>
+    	</ul>
+    	</li>
     </ol>
-		<li><h2 id="quality">Select the quality of the sampling</h2></li>
+		<li><h3 id="quality">Select the quality of the sampling with radio buttons</h3></li>
     	<ul>
-        	<li> <b>good</b>: noise events are good to recognize;</li>
-    		<li> <b>medium</b>: it is possible to detect noise events;</li>
-    		<li> <b>bad</b>: noise events almost impossible to detects.</li>
+        	<li> <b>good</b>: noise events are good to recognize; (KEY 3)</li>
+    		<li> <b>medium</b>: it is possible to detect noise events; (KEY 2)</li>
+    		<li> <b>bad</b>: noise events almost impossible to detects. (KEY 1)</li>
     	<br/>
     	<img src="infoimg/selectquality.png"/>
         </ul>
 
-		<li><h2>If you have <font color=#7b3294>not</font> completed the selection for both type of noise, go back to 1.</h2>
+		<li><h3>If you have <font color=#7b3294>not</font> completed the selection for both type of noise, go back to 1.</h3>
 
-		<li><h2 id="save">Save the intervals you have selected</h2></li>
+		<li><h3 id="save">Save the intervals you have selected</h3></li>
 		<ul>
         	<li>To do this check that the saving path is appropriate (if it is <i>None</i> you'll be asked for one) :</li>
 			<br/>
     		<img src="infoimg/savefolder.png"/>
-			<li>Click the button <i>Save</i> (it will change color from violet to green)</li>
+			<li>Click the button <i>Save</i> (it will change color from violet to green);</li>
+			<li>Or press <i><b>CTRL + S</b></i>.</li>
 			<br/>
 			<img src="infoimg/save.png"/><img src="infoimg/noun_arrow.png"/><img src="infoimg/saved.png"/>
 			<br/>
 		</ul>
-	<li><h2 id="newcase">Go to a new case</h2></li>
+	<li><h3 id="newcase">Go to a new case</h3></li>
 		<ul>
     	<li>To select the intervals for a new case (after having saved the current one), click on the combo box under <i>Select case to analyze</i>.</li>
+    	<li>Or use ARROW KEYS UP,LEFT/DOWN,RIGHT to move to previous/next case</li>
 		<br/>
 		<img src="infoimg/selectcase.png"/>
 		<br/>
+		<ul>
 		<li> Notice that the cases that were saved are now <font color=#008837>green</font> in the combo list:</li>
-    	</ul>
     	<br/>
 		<img src="infoimg/savedcases.png"/>
 		<br/>
+		</ul>
+    	</ul>
+    	
 	</ol>
-	<h3 id="changefolder">If you need to change the saving folder, click on the button <b>Change folder</b> under <i>Saved data directory</i> :
-    <br/>
-    <img src="infoimg/savefolder.png"/>
-    </h3>
 <h2 id="summary">Keyboard Shortcuts</h2>
 <table id="hor-minimalist-b">
 	<tr>
@@ -184,7 +206,12 @@ and the associated plot - it is the sound level with fast weighing
         <td>Change saving folder</td>
     </tr>
 </table>
-
+<br/>
+<br/>
+<h3 id="changefolder">If you need to change the saving folder, click on the button <b>Change folder</b> under <i>Saved data directory</i> :
+    <br/>
+    <img src="infoimg/savefolder.png"/>
+    </h3>
 <h3>Make sure you have analyzed and <font color=#7b3294><b>saved</b></font> all the cases before quitting the application. A saved case has a <font color=#008837>green</font> state (on the combo list and on the <i>save</i> button).</h3></div>
 </body>
 </html>
