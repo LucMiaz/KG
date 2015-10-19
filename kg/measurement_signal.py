@@ -23,13 +23,17 @@ class measuredSignal():
         self.ID = ID
         self.path = measuredSignal.PATH
         self.signals = {}
+        self.initialized=False
         if not mics == None:
             if not isinstance(mics,list):
                 mics=[mics]
             for mic in mics:
-                self.read_signal(mic)
-                if prms:
-                    self.read_signal('prms'+ str(mic))
+                ret=self.read_signal(mic)
+                if ret:
+                    if prms:
+                        self.read_signal('prms'+ str(mic))
+                    self.initialized=True
+        
         
     def list_signals(self):
         data = []
@@ -56,6 +60,7 @@ class measuredSignal():
         except KeyError:
             print( 'Channel' +channel+ 'is missing')
             raise e
+            return False
         
         if not channel in self.signals.keys():
             signal = measuredSignal._SIGNALS[channel]
@@ -66,8 +71,9 @@ class measuredSignal():
             try:
                 y = np.ravel(loadmat(path, variable_names = arrN)[arrN])
             except FileNotFoundError as e:
-                print(e)
-                raise(Exception('Class instance is invalid: ID ' + self.ID + ' is missing'))
+                #print(e)
+                #raise(Exception('Class instance is invalid: ID ' + self.ID + ' is missing'))
+                return False
             #load t vector
             path = str(dataPath.joinpath(time['fileName'])).replace('ID',self.ID)
             arrN = self.ID + '_X'
@@ -75,6 +81,8 @@ class measuredSignal():
             #calculate the framerate of the signal
             sR =np.round(len(t)/(t[-1] - t[0]))
             self.signals[channel] = {'t': t, 'y':y, 'sR': int(sR) }
+            return True
+        return False
     
     def channel_info(self, channel):
         '''

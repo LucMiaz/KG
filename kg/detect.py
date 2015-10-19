@@ -335,13 +335,15 @@ class MicSignal(object):
     @ classmethod
     def from_measurement(cls, mesValues, ID, mic):
         mS = measuredSignal(ID,mic)
-        y,t,sR = mS.get_signal(mic)
-        ch_info = mS.channel_info(mic)
-        var = ['Tb','Te','Tp_b','Tp_e','LAEQ']
-        micValues = mesValues.get_variables_values(ID, mic, var)
-        micValues.update(ch_info)
-        return(cls(ID,mic,y,t,sR, micValues ))
-        
+        if mS.initialized:
+            y,t,sR = mS.get_signal(mic)
+            ch_info = mS.channel_info(mic)
+            var = ['Tb','Te','Tp_b','Tp_e','LAEQ']
+            micValues = mesValues.get_variables_values(ID, mic, var)
+            micValues.update(ch_info)
+            return(cls(ID,mic,y,t,sR, micValues ))
+        else:#if the signal could not be found return None
+            return None
     @classmethod
     def from_wav(cls, wavPath):
         """initialise a MicSignal from a wav file given either as str filename, path to file, or list containing the samplerate and the array"""

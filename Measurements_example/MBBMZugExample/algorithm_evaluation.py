@@ -42,19 +42,23 @@ if __name__ == "__main__":
             print(authP)
             cases.extend([Case.from_JSON(cp) for cp in authP.iterdir()\
                             if cp.match('case_**.json') ])
-    
+    notfound=[]
     print('Case cases:')
     print('----------------------')
-    for case in cases[1:3]:
+    for case in cases:
         print(str(case))
         mID = case.case['mID']
         mic = case.case['mic']
         # initaite mic signal
         micSn = MicSignal.from_measurement(mesValues, mID, mic)
-        for alg in algorithms:
-            print(str(alg),end = ', ')
-            alg.test_on_case(case, mesVal, micSn)
-        print('.')
+        if micSn:
+            for alg in algorithms:
+                print(str(alg),end = ', ')
+                alg.test_on_case(case, mesVal, micSn)
+                print('.')
+        else:
+            notfound.append(mID)
+            print(mID+" not found. Pass.")
         
     #calc global Rates
     print('Calculate global Rates')
@@ -64,5 +68,6 @@ if __name__ == "__main__":
     print('save to json')
     for n,alg in enumerate(algorithms):
         alg.export_test_results(mesPath)
+    print("List of cases not found :"+str(notfound))
 
 
