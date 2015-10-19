@@ -14,6 +14,7 @@ from kg.mpl_widgets import Bar
 from kg.detect import MicSignal
 from kg.case import Case
 from kg.measurement_values import measuredValues
+import math
 
 class Algorithm(object):
     def __init__(self, noiseType, parameter, description =''):
@@ -24,6 +25,8 @@ class Algorithm(object):
         #structure of case_tests {mID:{mic:{author:TP,TN,FP,FN}}}
         self.case_tests = {}
         self.rates={}
+        self.disc=[]
+        self.testingvalues=[]
         
     def get_info(self):
         return({'class': self.__class__.__name__ , 'noiseType': self.noiseType, \
@@ -55,8 +58,8 @@ class Algorithm(object):
         micSn.calc_kg(self)
         output = micSn.get_KG_results(self)['result']
         # compare case and alg results
-        comparation = case.compare(output['result'], output['t'],sum =True)
-
+        comparation, disc = case.compare(output['result'], output['t'],sum =True)
+        self.disc.append(disc)
         #fill test cases
         # todo: if ROC evaluation
         # todo: addr BPR vector to case_tests masked in Te Tb
@@ -64,11 +67,11 @@ class Algorithm(object):
         self.case_tests[str(case)] = {'mic':mic,'mID':mID,'location':loc,\
                                     'measurement':mes,'author':author, \
                                     'quality':quality}
+        self.case_tests[str(case)].update(output)
         self.case_tests[str(case)].update(comparation)
         # add rates
         self.case_tests[str(case)].update(rates(**comparation))
         return(micSn)
-    
     def calc_rates(self):
         '''return a dict of the global rates
            {'TPR':,
@@ -108,8 +111,9 @@ class Algorithm(object):
         export['algorithm'] = self.get_info()
         export['rates'] = self.rates
         export['case_tests'] = self.case_tests
+        export['compare']={'test':self.testingvalues, 'disc': self.disc}
         with resultsPath.open('w+') as file:
-            json.dump(export,file)
+            json.dump(export,file, cls=ArrayEncoder, allow_nan=False)
         
     def __repr__(self):
         s = '{}\n'.format(self.__class__.__name__)
@@ -299,13 +303,25 @@ class ZischenDetetkt2(Algorithm):
             bandPower[k]= PSD_i.sum(axis = 1)
         # 3:build ratio and compare to threshold
         avBPR = moving_average(bandPower['high']/bandPower['low'])
+        if 2<3:
+            pass
         decision = 10 * np.log10(1 + avBPR) > par['threshold']
         # at least 1 neighborr has to be 1 
         avDecision = np.logical_and(moving_average(decision) > 0.5 , decision)
         output['result'] = avDecision
         output['t'] = t
         output['dt'] = self.param['dt']
-        output['BPR'] = avBPR
+        #output['vBPR']={}
+        #output['vBPR']['high']=list(bandPower['high'])
+        #output['vBPR']['low']=list(bandPower['low']) #vector BPR
+        BPRforR=[]
+        for el in avBPR:
+            if math.isnan(el):
+                BPRforR.append(str("NaN"))
+            else:
+                BPRforR.append(el)
+        output['BPR'] = list(BPRforR)
+        self.testingvalues.append(list(BPRforR))
         return(output)
         
     def visualize(self,fig, MicSnObj, case = None):
@@ -325,7 +341,8 @@ class ZischenDetetkt2(Algorithm):
         MicSnObj.plot_KG(self,ax1, color = 'cyan')
         #ax2
         MicSnObj.plot_triggers(ax2)
-        MicSnObj.plot_BPR(self,ax2, color = '#272822',lw=1)
+        MicSnObj.plot_signal(ax2)
+        #MicSnObj.plot_BPR(self,ax2, color = '#272822',lw=1)
         if case is not None:
             case.plot(ax2, color= 'b')
             
@@ -336,7 +353,7 @@ class ZischenDetetkt2(Algorithm):
             return(ax1,ax2,ax3)
         else:
             return(ax1,ax2)
-    
+        
     def __str__(self):
         s = '{}_{}s'.format( self.__class__.__name__, self.param['dt'])
         s += '_{}Hz_{}dB'.format(self.param['fc'],self.param['threshold'])
@@ -357,11 +374,11 @@ class ZischenDetetkt2(Algorithm):
             return None
 ##functions
 def moving_average(a, n=3) :
-    a = np.pad(a,(n//2,n//2),mode = 'constant', constant_values=0)
-    ret = np.cumsum(a, dtype=float)
+    a = np.pad(a,(n//2,n//2),mode = 'constant', constant_values=0)#adds n//2 values 0 to the left and right of a
+    ret = np.cumsum(a, dtype=float)#returns i-th entry as (a_0+a_1+...+a_i)
     ret[n:] = ret[n:] - ret[:-n]
-    return ret[n - 1:] / n
-    
+    return(ret[n-1:]/n)
+        
 def rates(TP,TN,FN,FP,**kwargs):
     '''definition of specifity and sensitivity'''
     if (TP + FN)==0:
@@ -374,3 +391,13 @@ def rates(TP,TN,FN,FP,**kwargs):
     else:
         TNR = float(TN/(TN + FP))
     return({'TPR': TPR,'TNR': TNR})
+    
+class ArrayEncoder(json.JSONEncoder):
+    def default(self, obj):
+        # if isinstance(obj,GraphicalIntervals):
+        #     return obj.toJSON()
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        if isinstance(obj, bool):
+            return str(int(obj))
+        return json.JSONEncoder.default(self, obj)

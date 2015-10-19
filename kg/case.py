@@ -32,19 +32,24 @@ class Case(object):
                 }
         self.case['caseID'] = str(self)
     
-    def compare(self, result, t , noiseType = 'Z', sum = True):
+    def compare(self, result, t , noiseType = 'Z', sum = True, full=False):
         """Compares the discretization of this case with the one of an algorithm whose results are given in otherdisc. timeparam variable contains the variables for the discretization. Returns a dictionnary with the number of True positives, True negatives, False positives and False negatives"""
         #restrict comparation between Tb and Te
-        mask = np.logical_and(t >= self.case['Tb'], t <= self.case['Te'])
-        otherdisc = result[mask]
-        t = t[mask]
+        
+        otherdisc=result
         try:
-            disc = self.case[noiseType].discretize(t)
-            assert( len(otherdisc) == len(disc) )
+            fulldisc=self.case[noiseType].discretize(t)
+            intdisc=[int(b) for b in fulldisc]
+            assert( len(otherdisc) == len(fulldisc) )
             #assert(not any([i==None for i in disc]))
         except AssertionError:
             print('something wrong in function of ', self)
-        
+        if full:
+            disc=fulldisc
+        else: 
+            mask = np.logical_and(t >= self.case['Tb'], t <= self.case['Te'])
+            otherdisc = result[mask]
+            disc = fulldisc[mask]
         retTF={}
         retTF['TP'] = np.logical_and(otherdisc,disc)
         retTF['TN'] = np.logical_and(np.logical_not(otherdisc), np.logical_not(disc))
@@ -56,7 +61,11 @@ class Case(object):
         else:
             retTF['t'] = t
             retTF['disc'] = disc
-        return(retTF)
+        return(retTF, intdisc)
+    
+    def discretize(self, noiseType, t):
+        """saves a discretization for t and the noiseType"""
+        self.case['disc'+noiseType+str(t)] = self.case[noiseType].discretize(t)
     
     def set_quality(self, quality):
         """
