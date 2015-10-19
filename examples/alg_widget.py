@@ -21,12 +21,12 @@ if __name__ == "__main__":
     
     app=QtGui.QApplication()
     CTW=QtGui.QWidget()
-    #algorithmclass, valid=QtGui.QInputDialog.getItem(CTW,"Algorithm","Please select an algorithm type", [str(cls.__name__) for cls in vars()['Algorithm'].__subclasses__()])
-    #if valid:
-    #    algorithm=eval(algorithmclass+".askforattributes(CTW)")
+    algorithmclass, valid=QtGui.QInputDialog.getItem(CTW,"Algorithm","Please select an algorithm type", [str(cls.__name__) for cls in vars()['Algorithm'].__subclasses__()])
+    if valid:
+        algorithm=eval(algorithmclass+".askforattributes(CTW)")
     # setup algorithms
     # todo: parametrize alg parameter in the best possible way 
-    algorithm = ZischenDetetkt2(3000,2,0.02)
+    # algorithm = ZischenDetetkt2(3000,2,0.02)
         
     ##load cases
     # load measured values
@@ -62,16 +62,18 @@ if __name__ == "__main__":
         case.plot_compare(ax,alg_res['result'], alg_res['t'])
         plt.show()
 
-    
+   
  ##   
     
-    #W = CompareCaseAlgWidget.from_measurement(mesVal, [algorithm], case)
+    W = CompareCaseAlgWidget.from_measurement(mesVal, [algorithm], case)
     #Q = CompareCaseAlgWidget.from_measurement(mesVal, [algorithm], ID='m_0100',mic=6)
-    wavPath = mesPath.joinpath('Measurements_example/various_passby/zischen.wav')
-    R=CompareCaseAlgWidget.from_wav(wavPath,[algorithm])
-    R.setPalette(palettesimple(True))
-    #W.show()
-    R.show()
-    
+    #Q.setPalette(palettesimple(True))
+    W.setPalette(palettesimple(True))
+    #wavPath = mesPath.joinpath('Measurements_example/various_passby/zischen.wav')
+    #R=CompareCaseAlgWidget.from_wav(wavPath,[algorithm])
+    #R.setPalette(palettesimple(True))
+    W.show()
+    #R.show()
+    #Q.show()
 
 

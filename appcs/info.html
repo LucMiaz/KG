@@ -23,9 +23,14 @@
     </ol>
     <li><a href="#changefolder">Saving folder</a></li>
     <li><a href="#summary">Summary of the keyboard shortcuts</a></li>
+    <li><a href='#typesofnoises'>Table of frequency ranges for diffent noise types</li>
+    <li><a href='#references'>References</a></li>
   </ol>
   </nav>
 <div class="wrapper">
+<h2> <font color=#e66101>Please use hearphones or a good audio system to analyze the signals</font></h2>
+<br/>
+<br/>
 <h1>Description of the software</h1>
 <hr></hr>
 <p>This program is one of the first steps in creating an efficient algorithm that can detect flanging and squealing noises produces by trains wheels. In this prospect, we would like put together a set of human selected intervals where noise is present. We have selected a hundred cases (i.e. mainly an audio file with a few characteristics). Each of these cases is denoted by a measure code <i>m_0***_#</i> (where <i>#</i> denotes the number of the microphone). You are kindly asked to analyse a few set of cases. To do so, please select the ranges where you hear a squealing noise or a flanging noise using both the audio - accessible with the media buttons and the associated plot - it is the sound level with fast time weighting. The following images illustrate these two tools.
@@ -73,12 +78,24 @@
     <ul>
     <li> <b>Warning</b>: This step require a silent environment and an quality audio system.</li>
     	<ul><li>Notebook speakers have poor quality. </li>
-    		<li> Use hearphones or a better audio system to analyze the signal.</li>
+    		<li> <h4>Use hearphones or a better audio system to analyze the signal.</h4></li>
         </ul>
-    	<li>We look at <b>two types</b> of noise:
+    	<li>We look at <b>two types</b> of noise (see also <a font-size='10pt' href=#typesofnoises>Table of
+frequency range for different types of railway noise</a>):
     	<ul>
-        	<li> <font color=#5ab4ac><b>Kreischen</b></font>: Squeal noise. It spans the harmonics.</li>
-    		<li> <font color=#d8b365><b>Zischen</b></font>: Flanging noise.</li>
+        	<li> <font color=#5ab4ac><b>Kreischen</b></font>: Squeal noise. <ul><li><q>It is a strongly tonal noise<sup id='note1t'><a href=#note1>[1]</a></sup> (i.e. dominated by a single
+frequency) occurring in sharp curves</q> <sup><a href='#bib1'>(Thompson 2009 : 315)</a></sup></li></ul></li>
+    		<li> <font color=#d8b365><b>Zischen</b></font>: Flanging noise.
+    		<ul>
+            <li><q>[...] flanging noise sounds to the human ear like a
+grinding or hissing noise [...]</q><sup><a href=#bib2>(Eadie 2005 : 1153)</a></sup></li>
+    		<li><q>Compared with squeal
+due to lateral slip, this has a considerably higher fundamental frequency, may have
+a lower level and is often more intermittent in nature. It may also be much more
+broad-band in nature.</q><sup> <a href=#bib1>(Thompson 2009 : 316)</a></sup></li>
+            
+</ul>
+    		</li>
     	</ul>
 		The following plot and audio illustrate the difference between these two types of noise:
 		<br/>
@@ -156,7 +173,7 @@
     	
 	</ol>
 <h2 id="summary">Keyboard Shortcuts</h2>
-<table id="hor-minimalist-b">
+<table class="hor-minimalist-b">
 	<tr>
         <th>KEY</th>
         <th>EFFECT</th>
@@ -221,5 +238,45 @@
     <img src="infoimg/savefolder.png"/>
     </h3>
 <h3>Make sure you have analyzed and <font color=#7b3294><b>saved</b></font> all the cases before quitting the application. A saved case has a <font color=#008837>green</font> state (on the combo list and on the <i>save</i> button).</h3></div>
+<br/>
+<h3 id='typesofnoises'>Table of
+frequency range for different types of railway noise</h3>
+<table class="hor-minimalist-b">
+    <tr>
+        <th> Noise type</th>
+        <th> Frequency range (Hz)</th>
+    </tr>
+    <tr>
+        <td>Rolling</td>
+        <td> 30&ndash;5000</td>
+    </tr>
+    <tr>
+        <td>Flat spots</td>
+        <td> 50&ndash;250 (speed dependant)</td>
+    </tr>
+    <tr>
+        <td>Ground borne vibrations</td>
+        <td> 4&ndash;80</td>
+    </tr>
+    <tr>
+        <td>Structure &ndash; borne noise</td>
+        <td> 30&ndash;200</td>
+    </tr>
+    <tr>
+        <td>Top of rail squeal</td>
+        <td> 1000&ndash;5000</td>
+    </tr>
+    <tr>
+        <td>Flanging noise</td>
+        <td> 5000&ndash;10000</td>
+    </tr>
+    <caption>Frequency range for different types of railway noise.<sup><a href='#bib2'>(Eadie 2005: 1149)</a></sup></caption>
+</table>
+<h3>Notes</h3>
+<p id='note1'><a href=#note1t>[1]</a> Noise can be described as tonal if it contains a noticeable or discrete, continuous note. This includes noises such as hums, hisses, screeches, drones, etc. and any such subjective description is open to discussion and contradiction when reported. <sup><a href=#bib3>(Br&uuml;el & Kj&#230;r 2007)</a></sup></p> 
+<h3 id="references">References</h3>
+<blockquote id='bib3'>Br&uuml;el & Kj&#230;r 2007 : <i>Investigation of Tonal Noise</i>. Press Release. <a href='http://www.bksv.com/NewsEvents/News/InvestigationOfTonalNoise'>bksv.com/NewsEvents/News/InvestigationOfTonalNoise</a>. (URL consulted on 15.10.2015)</blockquote>
+<blockquote id='bib2'>Eadie, D.T., Santoro, M. and Kalousek, J. 2004 : Railway noise and the effect of top rail liquid friction modifiers: changes in sound and vibration spectral distributions in curves. <i>Wear</i> 258, 1148-1155.<sup><a href="http://www.sciencedirect.com/science/article/pii/S0043164804002807">ext.</a></sup></blockquote>
+<blockquote id='bib1'>Thompson, D. 2009 : <i>Railway Noise and Vibration : Mechanisms, Modelling and Means of Control</i>. Oxford : Elsevier. 315-340.</blockquote>
 </body>
 </html>

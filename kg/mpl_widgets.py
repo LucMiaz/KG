@@ -104,8 +104,8 @@ class _SelectorWidget(AxesWidget):
                 self.canvas.restore_region(self.background)
             for artist in self.artists:
                 self.ax.draw_artist(artist)
-            self.canvas.update()
-
+            self.canvas.update()#use with PyQT
+            #self.canvas.blit(ax.bbox) #use with TkAgg
         else:
             self.canvas.draw_idle()
         return False
@@ -493,7 +493,8 @@ class Bar(AxesWidget):
             self.linev.set_visible(False)
 
     def set_bar_position(self, x):
-        self.clear()
+        #self.clear()
+        self.linev.set_visible(False)
         self.linev.set_xdata(x)
         self.linev.set_visible(True)
 

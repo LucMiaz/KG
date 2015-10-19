@@ -25,11 +25,11 @@ if __name__ == "__main__":
     # setup algorithms
     # todo: parametrize alg parameter in the best possible way 
     FC = [3000]
-    Treshold = [4]
+    Treshold = [2]
     DT = [0.02]
     algorithms = []
     for fc, threshold, dt in itertools.product(FC,Treshold,DT):
-        algorithms.append(ZischenDetetkt2(fc,threshold, dt))
+        algorithms.append(ZischenDetetkt2(fc, dt,threshold))
         
     #load cases
     # todo: if necessary serialize on mesVal

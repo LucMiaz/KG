@@ -116,10 +116,10 @@ class DetectControlWidget(QMainWindow):
         elif event.key()==QtCore.Qt.Key_Down or event.key()==QtCore.Qt.Key_Right:
             self.media.stop()
             self.case_down()
-        elif event.key()==QtCore.Qt.Key_Backspace:
+        elif event.key()==QtCore.Qt.Key_Enter:
             self.media.stop()
             if not self.get_quality:
-                self.change_quality(2)
+                self.change_quality(1)
             self.save_cases()
             self.case_down()
         elif event.key()==QtCore.Qt.Key_F:
@@ -167,20 +167,22 @@ class DetectControlWidget(QMainWindow):
         pass
     def chg_folder(self):
         pass
+    def change_quality(self):
+        pass
     def chg_type(self):
         pass
     def chg_typedisplay(self):
         pass
     def set_int(self, truth):
         pass
+    def set_quality(self, val):
+        pass
     def set_remove(self, truth):
         pass
     def save_cases(self):
         pass
-    def change_quality(self):
-        pass
-    def set_quality(self, val):
-        pass
+    
+    
     def set_media_source(self, wavPath, t0 = 0, **kwargs):
         self.tShift = t0
         self.t = self.tShift
@@ -248,10 +250,10 @@ class DetectControlWidget(QMainWindow):
         self.update_canvas()
 
     def update_canvas(self):
-        for handle in self.ca_update_handle:
-            handle.update()
         for handle in self.ca_set_bar_handle:
             handle.set_bar_position(self.t)
+        for handle in self.ca_update_handle:
+            handle.update()
             
     def show_info(self):
         pass
@@ -314,6 +316,7 @@ class CaseCreatorWidget(DetectControlWidget):
         self.casesKeys = sorted(list(self.casesToAnalyze.keys()))#list of name of cases
         #gets number of cases to analyse
         self.asks_for_ncases()
+        QtGui.QMessageBox.warning(self, 'Audio system', 'Please use hearphones or a good audio system to analyze the signals.')
         self.CaseCombo.addItems(self.casesKeys)
         #removing cases not displayed
         newdictionary={}
@@ -439,6 +442,7 @@ class CaseCreatorWidget(DetectControlWidget):
         for rb in self.Qradios:
             self.rbG.addButton(rb)
             hbox1.addWidget(rb) 
+        
         groupBox.setLayout(hbox1)
         hBox.addWidget(groupBox)
         # save button
@@ -493,6 +497,7 @@ class CaseCreatorWidget(DetectControlWidget):
         #start timer
         #self.timer.start()
         self.grabKeyboard()
+        self.set_quality()
         
     def plot(self):
         self.SelectAxis.cla()
@@ -553,12 +558,13 @@ class CaseCreatorWidget(DetectControlWidget):
     def case_up(self):
         """changes case to the previous one"""
         index=self.CaseCombo.currentIndex()
-        if index>0:
+        if index==0:
+            self.change_current_case(-1)
+            self.CaseCombo.setCurrentIndex(len(self.casesKeys)-1)   
+        else:
             self.change_current_case(index-1)
             self.CaseCombo.setCurrentIndex(index-1)
-        else:
-            self.change_current_case(len(self.casesKeys)-1)
-            self.Casecombo.setCurrentIndex(len(self.casesKeys)-1)
+
     def case_down(self):
         """changes case to the next one"""
         index=self.CaseCombo.currentIndex()
@@ -613,10 +619,10 @@ class CaseCreatorWidget(DetectControlWidget):
         return(self.currentCase['case'].get('quality',False))
         
     def check_rb(self, q):
-        self.rbG.setExclusive(False)#allows to choose multiple qualities
+        self.rbG.setExclusive(True)#allows to choose multiple qualities
         for rb, qb in  zip(self.Qradios, ['good', 'medium', 'bad']):
             rb.setChecked(q==qb)
-        self.rbG.setExclusive(False)
+        self.rbG.setExclusive(True)
         
     def add_int(self, xmin,xmax):
         self.unsave()
@@ -831,7 +837,7 @@ def matplotlibsimple():
     matplotlib.rcParams['grid.color']=bgcolor
     matplotlib.rcParams['ytick.color']=axescolor
     matplotlib.rcParams['figure.edgecolor']=textcolor
-    matplotlib.rcParams['figure.facecolor']='#eeee00'
+    matplotlib.rcParams['figure.facecolor']='#272822'
     matplotlib.rcParams['patch.linewidth']='0.25'
     matplotlib.rcParams['lines.color']=axbgcolor
     matplotlib.rcParams['lines.linewidth']='0.75'
@@ -846,7 +852,7 @@ def matplotlibsimple():
     matplotlib.rcParams['grid.linewidth']=0.2
     matplotlib.rcParams['grid.alpha']=0.5
     matplotlib.rcParams['legend.framealpha']=0.4
-    matplotlib.rcParams['figure.autolayout']=True
+    matplotlib.rcParams['figure.autolayout']=False
     font={'family':'sans-serif','weight':'regular','size':11}
     matplotlib.rc('font',**font)  
 
@@ -868,7 +874,7 @@ class CompareCaseAlgWidget(DetectControlWidget):
         self.add_widgets()
         self.connections()
         self.palette=True
-    
+        
     def add_widgets(self):
         """initialise the graphical output"""
         self.setWindowTitle('Compare Case and Algorithm ')
@@ -948,7 +954,7 @@ class CompareCaseAlgWidget(DetectControlWidget):
     #         self.micSn.plot_BPR(self.currentAlg, ax, color = '#272822', lw=1)
     #         self.case.plot_compare(ax,alg_res['result'], alg_res['t'])
     #         plt.show()
-    
+
     @classmethod
     def from_measurement(cls , mesVal, algorithms, case = None, ID = None, mic = None):
         """initiate from measurement"""

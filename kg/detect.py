@@ -114,7 +114,7 @@ class MicSignal(object):
             kwargs['t0'] = self.t.min()
         return(stft_PSD(STFT['X'], STFT['param'], scaling = 'density', **kwargs))
 
-    def calc_kg(self, algorithm):
+    def calc_kg(self, algorithm, complete = True):
         '''
         run algorithm on MicSignal object
         parameter
@@ -126,9 +126,11 @@ class MicSignal(object):
         results = algorithm.func(self)
         # calc kenngrössen
         mask = self.get_mask(results['t'])
-        results['tEval'] = np.sum(mask)*results['dt']
-        results['tNoise'] = np.sum(results['result'][mask]) * results['dt']
-        self.KG[algInfo['noiseType']][str(algorithm)] = results
+        if  complete:
+            self.KG[algInfo['noiseType']][str(algorithm)] = results
+        else:
+            results['tEval'] = np.sum(mask)*results['dt']
+            results['tNoise'] = np.sum(results['result'][mask]) * results['dt']
         #return(results)
         
     def calc_spectrum_welch(stftName = None, tint = None):
@@ -160,6 +162,7 @@ class MicSignal(object):
         ret = collections.OrderedDict()  
         ret['ID'] = self.ID
         ret['mic'] = self.mic
+        ret['t']=self.t
         ret['result'] = copy.deepcopy(self.KG[noiseType][str(algorithm)])
         return(ret)
         
