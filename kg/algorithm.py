@@ -25,8 +25,9 @@ class Algorithm(object):
         #structure of case_tests {mID:{mic:{author:TP,TN,FP,FN}}}
         self.case_tests = {}
         self.rates={}
-        self.disc=[]
-        self.testingvalues=[]
+        self.disc={}
+        self.testingvalues={}
+        self.currentauthor=None
         
     def get_info(self):
         return({'class': self.__class__.__name__ , 'noiseType': self.noiseType, \
@@ -47,7 +48,7 @@ class Algorithm(object):
                     
         mID = case.case['mID']
         mic = case.case['mic']
-        author = case.case['author']
+        self.currentauthor = case.case['author']
         quality = case.case['quality']
         if micSn == None:
             micSn = MicSignal.from_measurement(mesValues, mID, mic)
@@ -59,19 +60,20 @@ class Algorithm(object):
         output = micSn.get_KG_results(self)['result']
         # compare case and alg results
         comparation, disc = case.compare(output['result'], output['t'],sum =True)
-        self.disc.append(disc)
+        self.disc.setdefault(self.currentauthor,[]).append(disc)
         #fill test cases
         # todo: if ROC evaluation
         # todo: addr BPR vector to case_tests masked in Te Tb
         # todo: add TF vectors
         self.case_tests[str(case)] = {'mic':mic,'mID':mID,'location':loc,\
-                                    'measurement':mes,'author':author, \
+                                    'measurement':mes,'author':self.currentauthor, \
                                     'quality':quality}
         self.case_tests[str(case)].update(output)
         self.case_tests[str(case)].update(comparation)
         # add rates
         self.case_tests[str(case)].update(rates(**comparation))
         return(micSn)
+        
     def calc_rates(self):
         '''return a dict of the global rates
            {'TPR':,
@@ -114,6 +116,7 @@ class Algorithm(object):
         export['compare']={'test':self.testingvalues, 'disc': self.disc}
         with resultsPath.open('w+') as file:
             json.dump(export,file, cls=ArrayEncoder, allow_nan=False)
+        return resultsPath
         
     def __repr__(self):
         s = '{}\n'.format(self.__class__.__name__)
@@ -321,7 +324,7 @@ class ZischenDetetkt2(Algorithm):
             else:
                 BPRforR.append(el)
         output['BPR'] = list(BPRforR)
-        self.testingvalues.append(list(BPRforR))
+        self.testingvalues.setdefault(self.currentauthor,[]).append(list(BPRforR))
         return(output)
         
     def visualize(self,fig, MicSnObj, case = None):

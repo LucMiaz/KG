@@ -6,11 +6,13 @@ import numpy as np
 import pandas as pd
 import copy
 import json
-
+from PySide import QtGui, QtCore
+from PySide.QtGui import (QApplication, QMainWindow, QAction, QStyle,
+                          QFileDialog)
 import csv
 import struct
 import itertools
-
+import sys
 
 class measuredSignal():
     """
@@ -19,9 +21,10 @@ class measuredSignal():
     _PATH = ''
     _SIGNALS = {}
 
-    def __init__(self, ID, mics = None, prms=True):
+    def __init__(self, ID, mics = None, prms=True, multiplePaths=False):
         self.ID = ID
         self.path = measuredSignal.PATH
+        self.multiplePaths=multiplePaths#will tell if it is needed to search several paths
         self.signals = {}
         self.initialized=False
         if not mics == None:
@@ -68,12 +71,27 @@ class measuredSignal():
             #load y vector
             path = str(dataPath.joinpath(signal['fileName'])).replace('ID',self.ID)
             arrN = self.ID
-            try:
-                y = np.ravel(loadmat(path, variable_names = arrN)[arrN])
-            except FileNotFoundError as e:
-                #print(e)
-                #raise(Exception('Class instance is invalid: ID ' + self.ID + ' is missing'))
-                return False
+            if self.multiplePaths:
+                for mpath in self.multiplePaths:
+                    dataPath=mpath.joinpath('raw_signals')
+                    path = str(dataPath.joinpath(signal['fileName'])).replace('ID',self.ID)
+                    try:
+                        y = np.ravel(loadmat(path, variable_names = arrN)[arrN])
+                    except FileNotFoundError as e:
+                        #print(e)
+                        #raise(Exception('Class instance is invalid: ID ' + self.ID + ' is missing'))
+                        path=None
+                    else:
+                        break
+                if not path:
+                    return False
+            else:
+                try:
+                    y = np.ravel(loadmat(path, variable_names = arrN)[arrN])
+                except FileNotFoundError as e:
+                    return False
+                    
+                
             #load t vector
             path = str(dataPath.joinpath(time['fileName'])).replace('ID',self.ID)
             arrN = self.ID + '_X'
@@ -116,9 +134,17 @@ class measuredSignal():
     @classmethod
     def setup(cls, mesPath):
         #mesPath = pathlib.Path(mesPath)
+        if isinstance(mesPath, list):
+            otherpaths=mesPath
+            mesPath=mesPath[0]
+        else:
+            otherpaths=False
         with mesPath.joinpath('raw_signals_config.json').open('r+') as config:
             cls._SIGNALS = json.load(config)
         cls.PATH = mesPath
+        print(str(otherpaths))
+        cls.multiplePaths=otherpaths
+        print(str(cls.multiplePaths))
     
 ##tests 
 if __name__ == "__main__":

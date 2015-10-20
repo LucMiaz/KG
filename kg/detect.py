@@ -333,8 +333,8 @@ class MicSignal(object):
         return(path.relative_to(mesPath))
         
     @ classmethod
-    def from_measurement(cls, mesValues, ID, mic):
-        mS = measuredSignal(ID,mic)
+    def from_measurement(cls, mesValues, ID, mic, multiplePaths=False):
+        mS = measuredSignal(ID,mic, multiplePaths=multiplePaths)
         if mS.initialized:
             y,t,sR = mS.get_signal(mic)
             ch_info = mS.channel_info(mic)
