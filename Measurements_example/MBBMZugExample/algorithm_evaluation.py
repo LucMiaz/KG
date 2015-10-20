@@ -20,7 +20,27 @@ if __name__ == "__main__":
     measurement = mesVal.measurement
     
     # setup  measured signal 
-    measuredSignal.setup(mesPath)
+    ##Add other paths here if an other "raw_signal" folder is to be searched (use list). Be sure to put the path where raw_signals_config.json is located in the first index
+    Paths=[mesPath]
+    Paths.append(pathlib.Path('E:/ZugVormessung/raw_signals'))
+    Paths.append(pathlib.Path('E:/Biel1Vormessung/raw_signals'))
+    
+    #graphical selection
+    callGUI=False
+    if callGUI:
+        app=QtGui.QApplication(sys.argv)
+        W=QtGui.QMainWindow()
+        folderquest = QtGui.QMessageBox.question(W, 'Folder selection', "Would you like to select other pathes to search ?", QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
+        if folderquest==QtGui.QMessageBox.Yes:
+            numdir, ok=QtGui.QInputDialog.getInt(W, "Number of folders to add", ("Please insert the number of folders you would like to add"),  value=1, min=1, max=10, step=1)
+            if ok:
+                for i in range(0,numdir):
+                    newpath= QFileDialog.getExistingDirectory(W,"Please select path n°"+str(i+1)+" to search (should be named sth like raw_signal)")
+                    if newpath:
+                        newpath=pathlib.Path(newpath)
+                        Paths.append(newpath)
+    print(Paths)
+    measuredSignal.setup(mesPath)#add other paths here
     
     # setup algorithms
     # todo: parametrize alg parameter in the best possible way 
@@ -45,12 +65,12 @@ if __name__ == "__main__":
     notfound=[]
     print('Case cases:')
     print('----------------------')
-    for case in cases:
+    for case in cases[5:10]:
         print(str(case))
         mID = case.case['mID']
         mic = case.case['mic']
         # initaite mic signal
-        micSn = MicSignal.from_measurement(mesValues, mID, mic)
+        micSn = MicSignal.from_measurement(mesValues, mID, mic, multiplePaths=Paths)
         if micSn:
             for alg in algorithms:
                 print(str(alg),end = ', ')
@@ -59,7 +79,7 @@ if __name__ == "__main__":
         else:
             notfound.append(mID)
             print(mID+" not found. Pass.")
-        
+    
     #calc global Rates
     print('Calculate global Rates')
     for alg in algorithms:
@@ -67,7 +87,7 @@ if __name__ == "__main__":
     # save
     print('save to json')
     for n,alg in enumerate(algorithms):
-        alg.export_test_results(mesPath)
+        filepapth=alg.export_test_results(mesPath)
     print("List of cases not found :"+str(notfound))
 
 
