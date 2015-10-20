@@ -84,6 +84,7 @@ class measuredSignal():
                     else:
                         break
                 if not path:
+                    raise(Exception(Here))
                     return False
             else:
                 try:

@@ -22,8 +22,8 @@ if __name__ == "__main__":
     # setup  measured signal 
     ##Add other paths here if an other "raw_signal" folder is to be searched (use list). Be sure to put the path where raw_signals_config.json is located in the first index
     Paths=[mesPath]
-    Paths.append(pathlib.Path('E:/ZugVormessung/raw_signals'))
-    Paths.append(pathlib.Path('E:/Biel1Vormessung/raw_signals'))
+    Paths.append(pathlib.Path('E:/ZugVormessung'))
+    Paths.append(pathlib.Path('E:/Biel1Vormessung'))
     
     #graphical selection
     callGUI=False
@@ -35,7 +35,7 @@ if __name__ == "__main__":
             numdir, ok=QtGui.QInputDialog.getInt(W, "Number of folders to add", ("Please insert the number of folders you would like to add"),  value=1, min=1, max=10, step=1)
             if ok:
                 for i in range(0,numdir):
-                    newpath= QFileDialog.getExistingDirectory(W,"Please select path n°"+str(i+1)+" to search (should be named sth like raw_signal)")
+                    newpath= QFileDialog.getExistingDirectory(W,"Please select path n°"+str(i+1)+" to search (must contain a folder called raw_signal)")
                     if newpath:
                         newpath=pathlib.Path(newpath)
                         Paths.append(newpath)
