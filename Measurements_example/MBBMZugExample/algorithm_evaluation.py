@@ -9,7 +9,6 @@ from kg.algorithm import Case
 from kg.widgets import *
 from kg.measurement_values import measuredValues
 from kg.measurement_signal import measuredSignal
-
 #number o cases to prepare
 
 mesPath = pathlib.Path('').absolute()
@@ -21,7 +20,7 @@ if __name__ == "__main__":
     
     # setup  measured signal 
     ##Add other paths here if an other "raw_signal" folder is to be searched (use list). Be sure to put the path where raw_signals_config.json is located in the first index
-    Paths=[mesPath]
+    Paths=[]
     Paths.append(pathlib.Path('E:/ZugVormessung'))
     Paths.append(pathlib.Path('E:/Biel1Vormessung'))
     
@@ -35,21 +34,26 @@ if __name__ == "__main__":
             numdir, ok=QtGui.QInputDialog.getInt(W, "Number of folders to add", ("Please insert the number of folders you would like to add"),  value=1, min=1, max=10, step=1)
             if ok:
                 for i in range(0,numdir):
-                    newpath= QFileDialog.getExistingDirectory(W,"Please select path n°"+str(i+1)+" to search (must contain a folder called raw_signal)")
+                    newpath= QFileDialog.getExistingDirectory(W,"Please select path n°"+str(i+1)+" to search (must contain a folder called raw_signals)")
                     if newpath:
                         newpath=pathlib.Path(newpath)
                         Paths.append(newpath)
     print(Paths)
-    measuredSignal.setup(mesPath)#add other paths here
+    #measuredSignal.setup(Paths[0])#add other paths here
     
     # setup algorithms
     # todo: parametrize alg parameter in the best possible way 
-    FC = [3000]
-    Treshold = [2]
+    FC = [100]
+    Treshold = [0.2190388]
     DT = [0.02]
     algorithms = []
-    for fc, threshold, dt in itertools.product(FC,Treshold,DT):
-        algorithms.append(ZischenDetetkt2(fc, dt,threshold))
+    if len(Treshold)==1:
+        threshold=Treshold[0]
+        for fc, dt in itertools.product(FC,DT):
+            algorithms.append(ZischenDetetkt2(fc,threshold, dt))
+    else:
+        for fc, threshold, dt in itertools.product(FC,Treshold,DT):
+            algorithms.append(ZischenDetetkt2(fc, threshold,dt,Rexport=True))
         
     #load cases
     # todo: if necessary serialize on mesVal
@@ -65,12 +69,12 @@ if __name__ == "__main__":
     notfound=[]
     print('Case cases:')
     print('----------------------')
-    for case in cases[5:10]:
+    for case in cases:
         print(str(case))
         mID = case.case['mID']
         mic = case.case['mic']
         # initaite mic signal
-        micSn = MicSignal.from_measurement(mesValues, mID, mic, multiplePaths=Paths)
+        micSn, mesVal = MicSignal.from_measurement(mID, mic, Paths=Paths)
         if micSn:
             for alg in algorithms:
                 print(str(alg),end = ', ')
@@ -89,5 +93,7 @@ if __name__ == "__main__":
     for n,alg in enumerate(algorithms):
         filepapth=alg.export_test_results(mesPath)
     print("List of cases not found :"+str(notfound))
+    print("Number of analyzed cases : "+str(len(cases)-len(notfound)))
+    print(str(filepapth))
 
 

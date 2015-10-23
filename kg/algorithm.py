@@ -17,7 +17,7 @@ from kg.measurement_values import measuredValues
 import math
 
 class Algorithm(object):
-    def __init__(self, noiseType, parameter, description =''):
+    def __init__(self, noiseType, parameter, description ='', Rexport=False):
         self.description = description 
         self.param = parameter
         self.noiseType = noiseType
@@ -25,13 +25,13 @@ class Algorithm(object):
         #structure of case_tests {mID:{mic:{author:TP,TN,FP,FN}}}
         self.case_tests = {}
         self.rates={}
-        self.disc={}
-        self.testingvalues={}
+        self.Rexport=Rexport
+        self.forR=[]
         self.currentauthor=None
         
     def get_info(self):
         return({'class': self.__class__.__name__ , 'noiseType': self.noiseType, \
-        'description':self.description, 'param': self.param})
+        'description':self.description, 'param': self.param, 'id':self.get_id(),'prop':self.stringsummary()})
     
     def func(self):
         '''function which implement algorithm'''
@@ -45,7 +45,6 @@ class Algorithm(object):
         mes = mesValues.measurement
         assert((case.case['location'] == loc and\
                     case.case['measurement'] == mes))
-                    
         mID = case.case['mID']
         mic = case.case['mic']
         self.currentauthor = case.case['author']
@@ -57,17 +56,22 @@ class Algorithm(object):
                     case.case['mic'] == micSn.mic))
         #output = self.func(micSn)
         micSn.calc_kg(self)
-        output = micSn.get_KG_results(self)['result']
+        output= micSn.get_KG_results(self)['result']
         # compare case and alg results
         comparation, disc = case.compare(output['result'], output['t'],sum =True)
-        self.disc.setdefault(self.currentauthor,[]).append(disc)
+
         #fill test cases
         # todo: if ROC evaluation
         # todo: addr BPR vector to case_tests masked in Te Tb
         # todo: add TF vectors
         self.case_tests[str(case)] = {'mic':mic,'mID':mID,'location':loc,\
                                     'measurement':mes,'author':self.currentauthor, \
-                                    'quality':quality}
+                                    'quality':quality, 'disc':disc, 'te':case.get_bounds()[1], 'tb':case.get_bounds()[0]}
+        #export for R
+        if self.Rexport:
+            for i in range(0,len(disc)):
+                self.forR.append({'mic':mic, 'mID':mID, 'location':loc, 'author':self.currentauthor,'quality':quality, 'BPR':output['BPR'][i], 'time':output['t'][i], 'disc':disc[i], 'NoiseT':self.noiseType, 'Alg':"Z2", 'AlgProp': self.stringsummary()})
+            
         self.case_tests[str(case)].update(output)
         self.case_tests[str(case)].update(comparation)
         # add rates
@@ -97,23 +101,24 @@ class Algorithm(object):
             self.rates[auth] = rates(**v)  
         # global
         self.rates.update(rates(**df[col].sum().to_dict()))
-    
+    def stringsummary(self):
+        return "A"
     def export_test_results(self, mesPath):
         '''
         export tests results to json
         '''
         dateTime = datetime.datetime.now()
-        fileName = 'test_'+ str(self) +'_'+ dateTime.strftime( "%d-%m-%Y_%H-%M-%S")
+        fileName = 'test_'+ str(self) +'_'+ dateTime.strftime( "%d-%m-%Y_%H")
         resultsPath = mesPath.joinpath('results').joinpath(fileName + '.json')
         export = collections.OrderedDict()
         export['Description']= '''
                     This file contains the Results of algorithm tests on cases'''
         export.update({'date': dateTime.strftime( "%d-%m-%Y"),
-                       'time':dateTime.strftime( "%H:%M:%S")})
+                       'time':dateTime.strftime( "%H-%M-%S")})
         export['algorithm'] = self.get_info()
         export['rates'] = self.rates
         export['case_tests'] = self.case_tests
-        export['compare']={'test':self.testingvalues, 'disc': self.disc}
+        export['R']=self.forR
         with resultsPath.open('w+') as file:
             json.dump(export,file, cls=ArrayEncoder, allow_nan=False)
         return resultsPath
@@ -123,7 +128,9 @@ class Algorithm(object):
         s += 'description: {}\n'.format(self.description)
         s += 'parameter:\n{}'.format(self.param)
         return(s)
-    
+    def get_id(self):
+        """return a short version of class name"""
+        return("A")
     @classmethod
     def askforattributes(cls, window):
         """asks for the attributes of the class and return a object with these properties"""
@@ -258,7 +265,7 @@ class ZischenDetetkt2(Algorithm):
         cutoff frequency
         threshold
     '''
-    def __init__(self, fc, threshold, dt):
+    def __init__(self, fc, threshold, dt, Rexport=False):
         #
         param = {'fmin': 100,'fmax': 15000, 'overlap': 6} 
         param['threshold'] = int(threshold)
@@ -272,7 +279,7 @@ class ZischenDetetkt2(Algorithm):
         5: compare  log10(1+BPR) to threshold for every t_i
         """
         #
-        super(ZischenDetetkt2, self).__init__( 'Z', param, description)
+        super(ZischenDetetkt2, self).__init__( 'Z', param, description, Rexport)
         self.output = {'t':None, 'result':None,'BPR': None, 'dt': self.param['dt']}
         
     def get_stft_param(self,sR):
@@ -305,7 +312,7 @@ class ZischenDetetkt2(Algorithm):
             # sum on frequency axis
             bandPower[k]= PSD_i.sum(axis = 1)
         # 3:build ratio and compare to threshold
-        avBPR = moving_average(bandPower['high']/bandPower['low'])
+        avBPR = moving_average(bandPower['high']/(1+bandPower['low']))
         if 2<3:
             pass
         decision = 10 * np.log10(1 + avBPR) > par['threshold']
@@ -322,11 +329,11 @@ class ZischenDetetkt2(Algorithm):
             if math.isnan(el):
                 BPRforR.append(str("NaN"))
             else:
-                BPRforR.append(el)
+                BPRforR.append( 10 * np.log10(1 + el))
         output['BPR'] = list(BPRforR)
-        self.testingvalues.setdefault(self.currentauthor,[]).append(list(BPRforR))
         return(output)
-        
+    def stringsummary(self):
+        return str(self.param['fc'])+"_"+str(self.param['dt'])
     def visualize(self,fig, MicSnObj, case = None):
         # todo: improve visualization
         # todo: case.plot() is not shown with spectrogram
@@ -361,7 +368,9 @@ class ZischenDetetkt2(Algorithm):
         s = '{}_{}s'.format( self.__class__.__name__, self.param['dt'])
         s += '_{}Hz_{}dB'.format(self.param['fc'],self.param['threshold'])
         return(s)
-        
+    def get_id(self):
+        """return a short version of class name"""
+        return("Z2")
     @classmethod
     def from_info(cls):
         pass

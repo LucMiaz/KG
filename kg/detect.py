@@ -1,6 +1,6 @@
 # import sys
 # sys.path.append('D:\GitHub\myKG')
-
+import sys
 import os,pathlib
 import numpy as np
 import scipy as sp
@@ -14,6 +14,8 @@ import time#to set the ID of MicSignal if created from wav only.
 from kg.measurement_signal import measuredSignal
 from  mySTFT.stft import stft, stft_PSD
 from mySTFT.stft_plot import plot_spectrogram
+from kg.measurement_signal import measuredSignal
+from kg.measurement_values import measuredValues
 
 class MicSignal(object):
     
@@ -333,15 +335,30 @@ class MicSignal(object):
         return(path.relative_to(mesPath))
         
     @ classmethod
-    def from_measurement(cls, mesValues, ID, mic, multiplePaths=False):
-        mS = measuredSignal(ID,mic, multiplePaths=multiplePaths)
+    def from_measurement(cls, ID, mic, Paths):
+        found=False
+        if Paths:
+            for p in Paths:
+                presults=p.joinpath('raw_signals')
+                listfiles= os.listdir(presults.as_posix())
+                if listfiles.count(str(ID)+"_"+str(mic)+".mat")>0:
+                    measuredSignal.setup(p)
+                    pathmes=p
+                    found=True
+                    print(str(p))
+                    break
+                
+        if not found:
+            return None
+        mS = measuredSignal(ID,mic)
         if mS.initialized:
             y,t,sR = mS.get_signal(mic)
             ch_info = mS.channel_info(mic)
             var = ['Tb','Te','Tp_b','Tp_e','LAEQ']
+            mesValues= measuredValues.from_json(pathmes)
             micValues = mesValues.get_variables_values(ID, mic, var)
             micValues.update(ch_info)
-            return(cls(ID,mic,y,t,sR, micValues ))
+            return(cls(ID,mic,y,t,sR, micValues), mesValues)
         else:#if the signal could not be found return None
             return None
     @classmethod

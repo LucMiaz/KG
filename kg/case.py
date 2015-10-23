@@ -101,6 +101,9 @@ class Case(object):
         if isinstance(listofSOI, SetOfIntervals):
             self.case[noiseType]=SetOfIntervals()
             self.case[noiseType].copySOI(listofSOI)
+    def get_bounds(self):
+        """returns tb and te"""
+        return(self.case['Tb'],self.case['Te'])
     def get_mIDmic(self):
         """returns the mID and mic"""
         return(self.case['mID']+"_"+str(self.case['mic']))
