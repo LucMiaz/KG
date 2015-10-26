@@ -118,6 +118,7 @@ class measuredSignal():
         with mesPath.joinpath('raw_signals_config.json').open('r+') as config:
             cls._SIGNALS = json.load(config)
         cls.PATH = mesPath
+
     
 ##tests 
 if __name__ == "__main__":

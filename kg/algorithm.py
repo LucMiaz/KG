@@ -101,6 +101,7 @@ class Algorithm(object):
             self.rates[auth] = rates(**v)  
         # global
         self.rates.update(rates(**df[col].sum().to_dict()))
+    
     def stringsummary(self):
         return "A"
     def export_test_results(self, mesPath):
@@ -331,6 +332,7 @@ class ZischenDetetkt2(Algorithm):
             else:
                 BPRforR.append( 10 * np.log10(1 + el))
         output['BPR'] = list(BPRforR)
+        output['avBPR']=avBPR
         return(output)
     def stringsummary(self):
         return str(self.param['fc'])+"_"+str(self.param['dt'])
@@ -377,9 +379,9 @@ class ZischenDetetkt2(Algorithm):
     @classmethod
     def askforattributes(cls, window):
         """asks for the attributes of the class and return a object with these properties"""
-        threshold,validt=QtGui.QInputDialog.getInt(window,"ZischenDetetkt2","Please select threshold",value=3000, min=1, max=10000, step=1)
+        threshold,validt=QtGui.QInputDialog.getDouble(window,"ZischenDetetkt2","Please select threshold",value=3000, min=1, max=10000, step=0.1)
         fc,validfc=QtGui.QInputDialog.getInt(window,"ZischenDetetkt2", "Please select fc",  value=2, min=0, max=10000, step=1)
-        dt,validdt=QtGui.QInputDialog.getDouble(window,"ZischenDetetkt2", "Please select dt",  value=0.02, min=1, max=1, decimals=2)
+        dt,validdt=QtGui.QInputDialog.getDouble(window,"ZischenDetetkt2", "Please select dt",  value=0.02, min=1, max=1, decimals=2, step=0.1)
         if validt and validfc and validdt:
             return cls(fc,threshold, dt)
         else:
@@ -397,12 +399,14 @@ def rates(TP,TN,FN,FP,**kwargs):
         TPR = None
     else:
         TPR = float(TP/(TP + FN))
+        FNR = float(FN/(TP+FN))
     #    
     if (TN + FP) == 0:
         TNR = None
     else:
         TNR = float(TN/(TN + FP))
-    return({'TPR': TPR,'TNR': TNR})
+        FPR = float(FP/(TN+FP))
+    return({'TPR': TPR,'TNR': TNR, 'FPR': FPR, 'FNR':FNR})
     
 class ArrayEncoder(json.JSONEncoder):
     def default(self, obj):

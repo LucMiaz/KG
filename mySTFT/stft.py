@@ -261,7 +261,7 @@ def stft_PSD(X, param, scaling = 'density', **kwargs):
         # Last point is unpaired Nyquist freq point, don't double
         PS_i[:,1:-1] *= 2
     t_i = f_i / sR
-    if kwargs:
+    if kwargs and param.get('hoop_added',False):
         t_i = (f_i - param['hoop_added'][0]*R)/sR
         PS_i, t_i = _adjust_time(PS_i, t_i, **kwargs)
         PS_i, freq = _adjust_freq(PS_i, freq, **kwargs)

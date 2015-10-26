@@ -1,0 +1,277 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <link rel="icon" href="infoimg/icon3.ico"/>
+    <link rel="stylesheet" type="text/css" href="info.css"/>
+    <title>Information sur le logiciel de sélection KG</title>
+</head>
+<body>
+  <nav>
+<a href="info_d.html">D  </a>
+F
+<a href="info.html">E</a>
+  <ol>
+   <li><a href="#startup">Mise en place</a></li>
+   <ol>
+   	<li><a href="#username">Sélection du nom d'utilisateur</a></li>
+    <li><a href="#ncases">Sélection du nombre de cas à analyser</a></li>
+   </ol>
+    <li><a href="#analysis">Analyse des cas</a></li>
+    <ol>
+    	<li><a href="#listen">Écoute</a></li>
+        <li><a href="#selecting">Sélection des intervalles</a></li>
+    	<li><a href="#quality">Qualité</a></li>
+    	<li><a href="#save">Sauvegarder les échantillons</a></li>
+        <li><a href="#newcase">Nouveau cas</a></li>
+    </ol>
+    <li><a href="#changefolder">Dossier de sauvegarde</a></li>
+    <li><a href="#summary">Résumé des raccourcis clavier</a></li>
+    <li><a href='#typesofnoises'>Tableau du domaine des fréquences pour divers types de bruit de train</li>
+    <li><a href='#references'>Références</a></li>
+  </ol>
+  </nav>
+<div class="wrapper">
+<h2> <font color=#e66101>Préférez l'utilisation d'écouteurs ou de bons hauts-parleurs pour l'analyse des signaux</font></h2>
+<br/>
+<br/>
+<h1>Description du programme</h1>
+<hr></hr>
+<p>Ce programme est le premier pas dans l'élaboration d'un algorithme efficiant capable de détecter les bruits de flanc et de crissement produits par les roues des trains. Dans cette perspective, nous souhaitons rassembler un ensemble de séquences sélectionnées manuellement pendant lesquelles on entend un des deux bruit est présent. Nous avons sélectionné cent cas (i.e. un fichier audio avec quelques charactéristiques). Tous ces cas possèdent un code de mesure de la forme <i>m_0***_#</i> (où <i>#</i> désigne le numéro du microphone). Nous vous demandons d'effectuer une analyse de quelques un de ces cas. Vous êtes priés de sélectionner le domaine (les intervalles) où vous entendez un des deux bruits. Pour ce faire, il faudra utiliser les boutons play/pause/stop pour activer le fichier audio et s'aider du graphique associé (il représente le niveau sonore avec un filtre <i>fast time weighting</i>). Les images suivantes illustrent ces deux outils:
+<br/>
+<br/>
+<img src="infoimg/media.png"/>
+<br/>
+<img src="infoimg/main.png"/>
+<br/>
+<br/>
+<hr/>
+<br/>
+<br/>
+<h2 id="startup"> Startup</h2>
+<ul>
+<li><h4>Questions de départ : </h4>
+<ul>
+   <li><h4 id="username"> Sélectionnez d'un nom d'utilisateur (par exemple vos initiales)</h4></li>
+      <br/>
+   <img src="infoimg/name.png"/>
+   <br/>
+   <li><h4 id="ncases"> Sélectionnez ensuite le nombre de cas que vous souhaitez étudier.<h4></li>
+      <ul><li><p>Chaque cas nécessite entre 5 et 10 minutes. Vous n'avez pas besoin d'analyser tous les cas qui vous seront proposés, ni de les analyser dans l'ordre.</p></li> </ul>
+<br/>
+<img src="infoimg/numbercases.png"/>
+<br/>
+   </ul>  
+</li>
+<li><h4>Après avoir répondu à ces deux questions vous pourrez commencer l'analyse.</h4></li>
+
+<li><h4>Vous pouvez retourner à cette page d'aide quand vous le souhaitez. Elle est ouverte dans votre navigateur web.</h4>
+<ul><li><p>Si vous avez fermé l'onglet de la page d'aide, il vous suffit de cliquer le bouton INFO du programme pour que cette page s'ouvre à nouveau sur votre navigateur.<p></li>
+<br/>
+<img src="infoimg/info.png"/>
+<br/>
+</ul></li>
+</ul>
+
+<br/>
+<hr/>
+<br/>
+<h2 id="analysis">Veuillez procédez comme suit pour analyser les cas:</h2>
+<ol>
+	<li><h3 id="listen">Écoutez l'enregistement du signal sonore en utilisant les boutons Play/pause/stop dans la barre de menu ou en pressant sur la touche <a href='#summary'>espace</a>.</h3></li>
+    <ul>
+    <li> <font color=#ff0000><b>Attention</b></font> : Il vous faut réaliser cette analyse dans un environnement calme et avec un système d'écoute de bonne qualité.</li>
+    	<ul><li>En effet, les hauts-parleurs des ordinateurs portables sont généralement de qualité trop faible pour bien différentier les bruits.</li>
+    		<li> <h4>Préférez l'utilisation d'écouteurs ou de bons hauts-parleurs.</h4></li>
+        </ul>
+    	<li>Nous différentions <b>deux types</b> de bruit (voir <a font-size='10pt' href=#typesofnoises>Tableau des différentes fréquences</a>):
+    	<ul>
+        	<li> <font color=#5ab4ac><b>Kreischen</b></font>: Crissement. <ul><li><q>C'est un bruit fortement tonal<sup id='note1t'><a href=#note1>[1]</a></sup> (c'est-à-dire dominé par une seule fréquence et survenant dans les courbes serrées).</q> <sup><a href='#bib1'>(Thompson 2009 : 315)</a></sup></li></ul></li>
+    		<li> <font color=#d8b365><b>Zischen</b></font>: bruit de flanc/grincement.
+    		<ul>
+            <li><q>[...] les bruits de flanc sonnent à l'oreille humaine comme un grincement ou un sifflement [...]</q><sup><a href=#bib2>(Eadie 2005 : 1153)</a></sup></li>
+    		<li><q>En comparaison avec le crissement dû à un glissement latéral, les bruits de flanc ont une fréquence fondamentale beaucoup plus élevée, peuvent avoir un niveau plus bas et sont souvent intermittants. Ils peuvent également avoir une bande plus large.</q><sup> <a href=#bib1>(Thompson 2009 : 316)</a></sup></li>
+            
+</ul>
+    		</li>
+    	</ul>Le graphique et l'audio suivants illustrent la différence entre ces deux types de sons:
+		<br/>
+		<br/>
+		<audio id="kz-player" controls><source src="infoimg/m_00198_mic_1.wav" type="audio/wav"></audio>
+		<img src="infoimg/KGinterval.png" width=800px height=auto/>
+    </ul>
+    
+	<li><h3 id="selecting">Sélection des intervalles (domaines) où vous entendez un crissement/grincement</h3>
+    <ol>
+    	<li>Vérifiez que vous avez sélectionné le bon type de bruit dans la case <i>Noise Type to select</i> (Passez d'un type à l'autre avec la touche T).
+         <ul>
+            <li>Vous pouvez cliquer sur <i>both visible</i> si vous souhaitez afficher les intervalles que vous avez sélectionnés pour les deux types de bruits.</li>
+            <li>Désélectionner la même case pour n'afficher que le bruit courant.</li>
+            <li>La touche B vous permet de passer d'un affichage à l'autre.</li>
+            </ul>
+        <br/>
+    	<img src="infoimg/Noisetypetoselect.png"/>
+    	<br/>
+      </li>
+      <br/>
+    	<li>Pour sélectionner les intervalles vous avez les possibilités suivantes :
+    	<ul>
+        	<li> Maintenez le bouton gauche de la souris pour couvrir l'étendue de l'intervalle (fonctionne avec ou sans l'audio)</li>
+         <li> Maintenir la touche <i><b>S</b></i> lorsque l'audio est joué. Cela sélectionnera l'intervalle couvert par la barre <font color=#e66101>orange</font>.</li>
+        </ul>
+    	<br/>
+    	<img src="infoimg/full.png"/>
+    	<br/>
+    	</li>
+    	<li>Si nécessaire, vous pouvez supprimer un intervalle ou un sous-intervalle :
+    	<ul>
+        	<li>Un <b>intervalle entier</b>, en cliquant l'intervalle voulu avec le bouton droit de la souris;</li>
+    		<li>Un <b>sous-intervalle quelconque</b>, en couvrant la bande à supprimer avec le bouton droit de la souris maintenu;</li>
+    		<li>Un intervalle couvert par la barre audio en maintenant la touche <i><b>D</b></i> lorsque l'audio est joué.</li>
+    	</ul>
+    	</li>
+    </ol>
+		<li><h3 id="quality">Choisissez la qualité de l'audio que vous venez d'écouter au moyen des trois boutons radio :</h3></li>
+    	<ul>
+        	<li> <b>good</b>: les bruits sont facilement reconnaissables; (TOUCHE 3)</li>
+    		<li> <b>medium</b>: il est possible de différencier les bruits; (TOUCHE 2)</li>
+    		<li> <b>bad</b>: les bruits ne sont pas discernables. (TOUCHE 1)</li>
+    	<br/>
+    	<img src="infoimg/selectquality.png"/>
+        </ul>
+
+		<li><h3>Si vous n'avez <font color=#7b3294>pas</font> complété la sélection pour les deux types de bruits, retournez au point 1 et effectuez les mêmes opérations pour le deuxième bruit.</h3>
+
+		<li><h3 id="save">Sauvegardez les intervalles que vous avez choisis</h3></li>
+		<ul>
+        	<li>Pour cela, vérifiez que le chemin de sauvegarde est approprié :</li>
+			<br/>
+    		<img src="infoimg/savefolder.png"/>
+			<li>Cliquez sur le bouton <i>Save</i> (sa couleur passera au vert);</li>
+			<li>Alternativement pressez simultanément les touches <i><b>CTRL + S</b></i>.</li>
+			<br/>
+			<img src="infoimg/save.png"/><img src="infoimg/noun_arrow.png"/><img src="infoimg/saved.png"/>
+			<br/>
+		</ul>
+	<li><h3 id="newcase">Passer à un nouveau cas</h3></li>
+		<ul>
+    	<li>Après avoir sauvegardé vos intervalles, vous pouvez passer à l'analyse d'un autre cas en cliquant sur la boîte de choix <i>Select case to analyze</i>.</li>
+    	<li>Alternativement les touches gauche ou haut (ARROW UP/LEFT) de votre clavier vous amènereont au cas précédent et les touches droite ou bas (ARROW RIGTH/DOWN) au cas suivant.</li>
+		<br/>
+		<img src="infoimg/selectcase.png"/>
+		<br/>
+		<ul>
+		<li> Notez que les cas que vous avez sauvegarder seront souslignés en <font color=#008837>verts</font> dans la boîte de choix:</li>
+    	<br/>
+		<img src="infoimg/savedcases.png"/>
+		<br/>
+		</ul>
+    	</ul>
+    	
+	</ol>
+<h2 id="summary">Raccourcis clavier</h2>
+<table class="hor-minimalist-b">
+	<tr>
+        <th>TOUCHE</th>
+        <th>EFFET</th>
+    </tr>
+    <tr>
+        <td>CTRL+S</td>
+        <td>Sauvegarde le cas</td>
+    </tr>
+    <tr>
+        <td>CTRL+SPACE</td>
+        <td>Arrête l'audio</td>
+    </tr>
+    <tr>
+        <td>SPACE</td>
+        <td>Play/Pause</td>
+    </tr>
+    <tr>
+        <td>S (avec l'audio joué)</td>
+        <td>Sélectionne la bande couverte par la barre</td>
+    </tr>
+    <tr>
+        <td>D (avec l'audio joué)</td>
+        <td>Supprime la bande couverte par la barre</td>
+    </tr>
+    <tr>
+        <td>B</td>
+        <td>Passe d'un affichage à l'autre (deux types ou un seul)</td>
+    </tr>
+    <tr>
+        <td>1, 2, 3</td>
+        <td>Change la qualité audio ('bad', 'medium', 'good')</td>
+    </tr>
+    <tr>
+        <td>Flèche haut ou gauche</td>
+        <td>Passe au cas précédent de la liste</td>
+    </tr>
+    <tr>
+        <td>Flèche bas ou droite</td>
+        <td>Passe au cas suivant de la liste</td>
+    </tr>
+    <tr>
+        <td>Z, K, T</td>
+        <td>Passe à la sélection du type de bruit suivant</td>
+    </tr>
+    <tr>
+        <td>F</td>
+        <td>Change le chemin de sauvegarde</td>
+    </tr>
+    <tr>
+        <td>CTRL + R</td>
+        <td>Change la résolution (dialogMenu)</td>
+    </tr>
+    <tr>
+        <td>CTRL + U</td>
+        <td>Met à jour le canvas</td>
+    </tr>
+</table>
+<br/>
+<br/>
+<h3 id="changefolder">Si vous devez changer le chemin de sauvegarde, cliquer sur le bouton <i>Change folder</i> sous <i>Saved data directory</i> :
+    <br/>
+    <img src="infoimg/savefolder.png"/>
+    </h3>
+<h3>Soyez certains d'avoir sauvegardé tous les cas que vous avez analysés (ils ont un fond <font color=#008837>vert</font> dans la boîte de choix).</h3></div>
+<br/>
+<h3 id='typesofnoises'>Tableau des divers domaines de fréquence pour les différents types de bruits de train.</h3>
+<table class="hor-minimalist-b">
+    <tr>
+        <th> Noise type</th>
+        <th> Frequency range (Hz)</th>
+    </tr>
+    <tr>
+        <td>Rolling</td>
+        <td> 30&ndash;5000</td>
+    </tr>
+    <tr>
+        <td>Flat spots</td>
+        <td> 50&ndash;250 (speed dependant)</td>
+    </tr>
+    <tr>
+        <td>Ground borne vibrations</td>
+        <td> 4&ndash;80</td>
+    </tr>
+    <tr>
+        <td>Structure &ndash; borne noise</td>
+        <td> 30&ndash;200</td>
+    </tr>
+    <tr>
+        <td>Top of rail squeal</td>
+        <td> 1000&ndash;5000</td>
+    </tr>
+    <tr>
+        <td>Flanging noise</td>
+        <td> 5000&ndash;10000</td>
+    </tr>
+    <caption>Domaines de fréquence pour les différents types de bruits de train..<sup><a href='#bib2'>(Eadie 2005: 1149)</a></sup></caption>
+</table>
+<h3>Note</h3>
+<p id='note1'><a href=#note1t>[1]</a> Noise can be described as tonal if it contains a noticeable or discrete, continuous note. This includes noises such as hums, hisses, screeches, drones, etc. and any such subjective description is open to discussion and contradiction when reported. <sup><a href=#bib3>(Br&uuml;el & Kj&#230;r 2007)</a></sup></p> 
+<h3 id="references">References</h3>
+<blockquote id='bib3'>Br&uuml;el & Kj&#230;r 2007 : <i>Investigation of Tonal Noise</i>. Press Release. <a href='http://www.bksv.com/NewsEvents/News/InvestigationOfTonalNoise'>bksv.com/NewsEvents/News/InvestigationOfTonalNoise</a>. (URL consulted on 15.10.2015)</blockquote>
+<blockquote id='bib2'>Eadie, D.T., Santoro, M. and Kalousek, J. 2004 : Railway noise and the effect of top rail liquid friction modifiers: changes in sound and vibration spectral distributions in curves. <i>Wear</i> 258, 1148-1155.<sup><a href="http://www.sciencedirect.com/science/article/pii/S0043164804002807">ext.</a></sup></blockquote>
+<blockquote id='bib1'>Thompson, D. 2009 : <i>Railway Noise and Vibration : Mechanisms, Modelling and Means of Control</i>. Oxford : Elsevier. 315-340.</blockquote>
+</body>
+</html>

@@ -21,6 +21,7 @@ from kg.case import Case
 from kg.case import Interval
 from kg.measurement_values import measuredValues
 from kg.measurement_signal import measuredSignal
+
 from scipy.io import wavfile
 import random
 import json
@@ -137,6 +138,9 @@ class DetectControlWidget(QMainWindow):
         elif event.key()==QtCore.Qt.Key_B:
             self.media.pause()
             self.chg_typedisplay()
+        elif event.key()==QtCore.Qt.Key_P:
+            self.media.stop()
+            self.change_plot()
         elif event.key()==QtCore.Qt.Key_1:
             self.change_quality('bad')
         elif event.key()==QtCore.Qt.Key_2:
@@ -181,7 +185,8 @@ class DetectControlWidget(QMainWindow):
         pass
     def save_cases(self):
         pass
-    
+    def change_plot(self):
+        pass
     
     def set_media_source(self, wavPath, t0 = 0, **kwargs):
         self.tShift = t0
@@ -290,15 +295,22 @@ class CaseCreatorWidget(DetectControlWidget):
     tmax: flt
     wavPath: str
     '''
-    def __init__(self, mesPath):
+    def __init__(self, mesPath, Paths=None):
         #init super
         super(CaseCreatorWidget, self).__init__()
         self.setWindowTitle('Create Case')
-        
+        if not Paths:
+            self.Paths=[mesPath.joinpath('')]
+            self.Paths.append(pathlib.Path('E:/ZugVormessung'))
+            self.Paths.append(pathlib.Path('E:/Biel1Vormessung'))
+        else:
+            self.Paths=Paths
         # set the author        
         self.mesPath = mesPath
         self.infofolder=pathlib.Path("").absolute()
         self.minspan = 0.05
+        self.PlotTypes=['LAfast', 'Spectogram']
+        self.currentplottype=self.PlotTypes[0]
         self.add_widgets()
         self.set_centralWidget()
         self.author=None
@@ -332,6 +344,7 @@ class CaseCreatorWidget(DetectControlWidget):
         self.TurnTheSavedGreen()#set caseCombo
         #add connections
         self.connections()
+        self.micSignals={}
         
     def _barplay(self, truth):
         """tells what to do if audio is playing or not"""
@@ -455,12 +468,23 @@ class CaseCreatorWidget(DetectControlWidget):
         self.hlab=QtGui.QLabel("Selected directory : "+fm.elidedText(str(self.savefolder),QtCore.Qt.ElideLeft, 250))#crop the displayed path if too long (ElideLeft -> add ... left of the path
         
         
+        
         self.buttonChgSave = QtGui.QPushButton("Change folder",self)
         hBox2=QtGui.QHBoxLayout()
         hBox2.addWidget(self.hlab)
         hBox2.addWidget(self.buttonChgSave)
         groupBox2.setLayout(hBox2)
         hBox.addWidget(groupBox2)
+        #self.vBox.addLayout(hBox)
+        
+        groupBox3=QtGui.QGroupBox("Plot selection")
+        self.plotselect=QtGui.QComboBox()
+        for type in self.PlotTypes:
+            self.plotselect.addItem(type)
+        hBox3=QtGui.QHBoxLayout()
+        hBox3.addWidget(self.plotselect)
+        groupBox3.setLayout(hBox3)
+        hBox.addWidget(groupBox3)
         self.vBox.addLayout(hBox)
         #select color of chg saving folder.
         if not self.savefolder:
@@ -502,15 +526,25 @@ class CaseCreatorWidget(DetectControlWidget):
     def plot(self):
         self.SelectAxis.cla()
         self.case.plot_triggers(self.SelectAxis)
-        for key, pData in self.currentCase['plotData'].items():
-            t,y = pData
-            self.SelectAxis.plot(t, y , label = key, color='#272822', linewidth=1.)#plot display
-        tmin = self.currentCase['tmin']
-        tmax = self.currentCase['tmax']
-        self.SelectAxis.set_xlim(tmin,tmax)
-        self.SelectAxis.set_ylabel('LA dB')
-        self.SelectAxis.set_xlabel('t (s)')
-        self.SelectAxis.legend()
+        if self.currentplottype=='LAfast':
+            for key, pData in self.currentCase['plotData'].items():
+                t,y = pData
+                self.SelectAxis.plot(t, y , label = key, color='#272822', linewidth=1.)#plot display
+            tmin = self.currentCase['tmin']
+            tmax = self.currentCase['tmax']
+            self.SelectAxis.set_xlim(tmin,tmax)
+            self.SelectAxis.set_ylabel('LA dB')
+            self.SelectAxis.set_xlabel('t (s)')
+            self.SelectAxis.legend()
+        elif self.currentplottype=='Spectogram':
+            if not self.currentCase['case'].get_mIDmic() in self.micSignals.keys():
+                micSn=MicSignal.from_wavfolder(self.currentCase['case'].get_mID(), self.currentCase['case'].get_mic(), self.Paths)
+                if micSn:
+                    self.micSignals[self.currentCase['case'].get_mIDmic()]=micSn
+                else:
+                    print("wav file not found")
+                    pass
+            self.micSignals[self.currentCase['case'].get_mIDmic()].plot_spectrogram('3930_4096_6',self.SelectAxis)
         for ca in self.canvas:
             ca.draw()
         #update canvas
@@ -525,6 +559,19 @@ class CaseCreatorWidget(DetectControlWidget):
             rb.clicked.connect(self.set_quality)
         self.buttonSave.clicked.connect(self.save_case)
         self.buttonChgSave.clicked.connect(self.chg_folder)
+        self.plotselect.currentIndexChanged.connect(self.plotchange)
+    
+    def plotchange(self,index):
+        """update the plot"""
+        self.currentplottype=self.PlotTypes[index]
+        self.plot()
+    def changeplot(self):
+        index=self.plotselect.index(self.currentplottype)
+        if index+1==len(self.PlotTypes):
+            index=0
+        else:
+            index+=1
+        self.plotselect.setCurrentIndex(index)
         
     def chg_folder(self):
         """change the directory where to save the data"""
@@ -590,6 +637,7 @@ class CaseCreatorWidget(DetectControlWidget):
         self.cb.setChecked(self.both_visible)
         self.update_stay_rect
         self.update_canvas()
+        
     def change_current_case(self, index):
         key = self.casesKeys[index]
         #self.currentCase.get('saved',False):
@@ -916,7 +964,8 @@ class CompareCaseAlgWidget(DetectControlWidget):
         #todo: add case Info, add alg Info, add test_on_case results
         self.edit = QtGui.QTextBrowser()
         self.vBox.addWidget(self.edit)
-        self.edit.setHtml(md.markdown('###This is title'))
+        self.currentAlg.calc_rates()
+        self.edit.setHtml(md.markdown('###TPR :'+str(self.currentAlg.rates['TPR'])+' FPR : '+str(self.currentAlg.rates['FPR'])+ 'TPR-FPR : '+str(self.currentAlg.rates['TPR']-self.currentAlg.rates['FPR'])))
         #set central widget
         self.set_centralWidget()
         
@@ -927,6 +976,8 @@ class CompareCaseAlgWidget(DetectControlWidget):
         self.plot()
         #start timer
         #self.timer.start()
+        self.currentAlg.calc_rates()
+        self.edit.setHtml(md.markdown('###TPR :'+str(self.currentAlg.rates['TPR'])+' FPR : '+str(self.currentAlg.rates['FPR'])+ 'TPR-FPR : '+str(self.currentAlg.rates['TPR']-self.currentAlg.rates['FPR'])))
         
     def plot(self):
         self.axes = self.currentAlg.visualize(self.fig, self.micSn, self.case)

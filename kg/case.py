@@ -50,6 +50,7 @@ class Case(object):
             mask = np.logical_and(t >= self.case['Tb'], t <= self.case['Te'])
             otherdisc = result[mask]
             disc = fulldisc[mask]
+            t=t[mask]
         retTF={}
         retTF['TP'] = np.logical_and(otherdisc,disc)
         retTF['TN'] = np.logical_and(np.logical_not(otherdisc), np.logical_not(disc))
@@ -61,11 +62,12 @@ class Case(object):
         else:
             retTF['t'] = t
             retTF['disc'] = disc
-        return(retTF, intdisc)
+        return retTF, intdisc
     
     def discretize(self, noiseType, t):
         """saves a discretization for t and the noiseType"""
         self.case['disc'+noiseType+str(t)] = self.case[noiseType].discretize(t)
+        return self.case['disc'+noiseType+str(t)]
     
     def set_quality(self, quality):
         """
@@ -139,7 +141,7 @@ class Case(object):
             
     def plot_compare(self, ax, result , t , noiseType = 'Z',** kwargs):
         
-        resTF = self.compare(result , t , noiseType, False)
+        resTF,disc = self.compare(result , t , noiseType, False)
         
         def inter(t,TF):
             x=TF.astype(float)

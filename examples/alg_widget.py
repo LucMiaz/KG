@@ -18,16 +18,20 @@ except:
     mesPath = pathlib.Path('d:\github\mykg')
 if __name__ == "__main__":  
     
-    
+    Paths=[]
+    Paths.append(pathlib.Path('E:/ZugVormessung'))
+    Paths.append(pathlib.Path('E:/Biel1Vormessung'))
     app=QtGui.QApplication()
     CTW=QtGui.QWidget()
-    algorithmclass, valid=QtGui.QInputDialog.getItem(CTW,"Algorithm","Please select an algorithm type", [str(cls.__name__) for cls in vars()['Algorithm'].__subclasses__()])
-    if valid:
-        algorithm=eval(algorithmclass+".askforattributes(CTW)")
+    graphical=False
+    if graphical:
+        algorithmclass, valid=QtGui.QInputDialog.getItem(CTW,"Algorithm","Please select an algorithm type", [str(cls.__name__) for cls in vars()['Algorithm'].__subclasses__()])
+        if valid:
+            algorithm=eval(algorithmclass+".askforattributes(CTW)")
     # setup algorithms
     # todo: parametrize alg parameter in the best possible way 
-    # algorithm = ZischenDetetkt2(3000,2,0.02)
-        
+    algorithms = [ZischenDetetkt2(100,13.0,0.02), ZischenDetetkt2(4000,0.79,0.1)]
+    
     ##load cases
     # load measured values
     jsonpath=mesPath.joinpath(pathlib.Path('measurements_example/MBBMZugExample'))
@@ -39,14 +43,14 @@ if __name__ == "__main__":
     measuredSignal.setup(jsonpath)
     # todo: if necessary serialize on mesVal
     mesValues = measuredValues.from_json(jsonpath)
-    casePath1 = mesValues.path.joinpath('test_cases/esr/case_m_0101_4_esr.json')
+    casePath1 = mesValues.path.joinpath('test_cases/luc/case_m_1656_4_luc.json')
     case1 = Case.from_JSON(casePath1)
-    casePath2 = mesValues.path.joinpath('test_cases/esr/case_m_0100_6_esr.json')
+    casePath2 = mesValues.path.joinpath('test_cases/luc/case_m_2791_1_luc.json')
     case2 = Case.from_JSON(casePath2)
     ##
     case = case2
-    micSn = MicSignal.from_measurement(mesVal,case.case['mID'],case.case['mic'])
-    micSn.calc_kg(algorithm)
+    micSn, mesVal = MicSignal.from_measurement(case.case['mID'],case.case['mic'], Paths)
+    micSn.calc_kg(algorithms[0])
     ##
     if 2<1:
         f,axes = plt.subplots(2,sharex = True)
@@ -58,14 +62,14 @@ if __name__ == "__main__":
         ymin,ymax = ax.get_ylim()
         ax=axes[1]
         alg_res = micSn.get_KG_results(algorithm)['result']
-        micSn.plot_BPR(algorithm, ax, color = '#272822', lw=1)
+        micSn.plot_BPR(algorithms[0], ax, color = '#272822', lw=1)
         case.plot_compare(ax,alg_res['result'], alg_res['t'])
         plt.show()
 
    
  ##   
     
-    W = CompareCaseAlgWidget.from_measurement(mesVal, [algorithm], case)
+    W = CompareCaseAlgWidget.from_measurement(mesVal, algorithms, case)
     #Q = CompareCaseAlgWidget.from_measurement(mesVal, [algorithm], ID='m_0100',mic=6)
     #Q.setPalette(palettesimple(True))
     W.setPalette(palettesimple(True))

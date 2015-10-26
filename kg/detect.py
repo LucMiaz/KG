@@ -187,12 +187,13 @@ class MicSignal(object):
         plot spectrogram
         '''
         # datenvorbereitung
+        print('name in detect' +str(name))
         kwargs = {
         'fmin': 200,
         'fmax':10000,
         't0': min(self.t),
         'tmin': min(self.t),
-        'tmax': max(self.t)
+        'tmax': max(self.t),
         }
         try:
             STFT = self.STFT[name]
@@ -246,7 +247,7 @@ class MicSignal(object):
             print('No calculation for', algorithm)
             raise(e)
         else:
-            l, = ax.plot(detection['t'], 10*np.log10(1+detection['BPR']),\
+            l, = ax.plot(detection['t'], 10*np.log10(1+detection['avBPR']),\
                         label=label,**kwarks)
             ax.axhline(algorithm.param['threshold'],lw=1,\
                         color = plt.getp(l,'color'))
@@ -377,7 +378,33 @@ class MicSignal(object):
         micValues={'Tb':0,'Te':len(data)/sR,'Tp_b':0,'Tp_e':0,'LAEQ':0,'description':0,'gleis':0,'sec':0}
         t = np.linspace(micValues['Tb'],micValues['Te'], len(data))
         return(cls(ID, '' , data, t, sR, micValues))
-        
+    
+    @classmethod
+    def from_wavfolder(cls, ID, mic, Paths):
+        found=False
+        if Paths:
+            for p in Paths:
+                if not isinstance(p,pathlib.Path):
+                    presults=pathlib.Path(p)
+                else:
+                    presults=p
+                presults=presults.joinpath('wav')
+                listfiles= os.listdir(presults.as_posix())
+                if listfiles.count(str(ID)+"_mic_"+str(mic)+".wav")>0:
+                    try : 
+                        measuredSignal.setup(p)
+                    except:
+                        pass
+                    else:
+                        pathmes=p
+                        found=True
+                        print(str(p))
+                        break
+        if found:
+            return cls.from_wav(pathmes.joinpath('wav/'+str(ID)+'_mic_'+str(mic)+'.wav'))
+        else:
+            return None
+        """does the same as from_measurement but calls from_wav to initialise"""
 ##functions
 def isclipped(xn, K=301, threshold=0.55, axdisplay=None, normalizehist=False):
     """

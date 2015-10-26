@@ -18,7 +18,8 @@ def sinedistance(X,w,M=3):
     """
     S=abs(X.T)
     sd=[]
-    for k in range(min(S),max(S)):
+    ##todo : S is a list of lists...
+    for k in range(0,len(S[0])):
         sdk=0
         for m in range(-M,M):
             sdk+=(abs(nmS[k+m]/nmS[k])-abs(nw[m]/nw[0]))**2
@@ -43,10 +44,10 @@ def tonaldetection(x,fs,framesz=0.05, hopsz=0.025,threshold=0.25, M=3):
 
 if __name__ == '__main__':
     from scipy.io import wavfile # get the api
-    fs, data = wavfile.read('C:/lucmiaz/KG_dev_branch/KG/Clipping/n-05-15-src2.wav') # load the data
-    a = data.T[0] # this is a two channel soundtrack, I get the first track 
+    fs, data = wavfile.read('E:/Biel1Vormessung/wav/m_00198_mic_1.wav') # load the data
+    a = data.T # this is a two channel soundtrack, I get the first track 
 #remove [0] if mono file
     b=[(ele/2**8.)*2-1 for ele in a]
-    TF=stft(b,fs,0.05,0.025)
+    TF,w=stft(b,fs,0.05,0.025)
+
     #TF=tonaldetection(b,fs)
-    print(TF)
