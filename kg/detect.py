@@ -149,7 +149,32 @@ class MicSignal(object):
             else:
                 kwargs['tmax'],kwargs['tmin'] = tlim
             sectrum ,freq = stft_welch(STFT['X_i'], STFT['param'],'density', **kwargs)
-                
+    
+    def export_to_Wav(self, mesPath, relative=True):
+        """
+        Export a .wav file of the signal in mesPath\wav
+        
+        param
+        ------
+        mesPath: main measurement path
+        
+        return
+        ------
+        libpath Obj: path of wavfile
+        """
+        wavPath = mesPath.joinpath('wav')
+        os.makedirs(wavPath.as_posix(), exist_ok = True)
+        filename = str(self) + '.wav'
+        filePath = wavPath.joinpath(filename)
+        if not filename in [p.name for p in wavPath.glob('*.wav')]:
+            scaled = np.int16(self.y/ np.abs(self.y).max() * 32767)
+            wavfile.write(filePath.as_posix(), self.sR , scaled)
+        path = filePath.absolute()
+        if relative:
+            return(path.relative_to(mesPath))
+        else:
+            return(path)
+    
     def get_stft_name(self,algorithm):
         par = algorithm.get_stft_param(self.sR)
         return(str(par['M']) +'_'+ str(par['N']) +'_'+ str(par['overlap']))
@@ -181,7 +206,61 @@ class MicSignal(object):
         else:
             tb,te = tlim
         return(np.logical_and(t >= tb,t <= te))
-        
+  
+    def plot_BPR(self, algorithm, ax, label = None,**kwarks):
+        '''
+        plot detection results for a given algorithm
+        '''
+
+        if label==None:
+            label = str(algorithm)
+        KG = self.KG[algorithm.noiseType]
+        try:
+            detection = KG[str(algorithm)]
+        except KeyError as e:
+            print('No calculation for', algorithm)
+            raise(e)
+        else:
+            l, = ax.plot(detection['t'], 10*np.log10(1+detection['avBPR']),\
+                        label=label,**kwarks)
+            ax.axhline(algorithm.param['threshold'],lw=1,\
+                        color = plt.getp(l,'color'))
+    
+    def plot_KG(self, algorithm, ax, **kwargs):
+        '''
+        plot detection results for a given algorithm
+        '''
+        KG = self.KG[algorithm.noiseType]
+        try:
+            detection = KG[str(algorithm)]
+        except KeyError as e:
+            print('No calculation for', algorithm)
+            raise(e)
+        else:
+            ymin, ymax = ax.get_ylim()
+            ax.fill_between(detection['t'], where = detection['result'] ,\
+            y1 = ymin, y2 = ymax, alpha = 0.4, **kwargs)
+            #ax.set_ybound(ymin, ymax)
+    
+    def plot_prms(self, ax ,label = None):
+        # todo:
+        pass
+        # ax.plot(sn['t'], np.abs(20*np.log10(sn['y']/(2e-5))), label= label)
+    
+    def plot_PS(self, ax, label = None):
+        '''
+        plot power spectra from FFT
+        '''
+        pass
+    
+    def plot_signal(self, ax , label = None,**kwargs):
+        """
+        plot signal
+        """
+        if label == None:
+            label = str(self)
+        ax.plot(self.t, self.y, label = label, **kwargs)
+            
     def plot_spectrogram(self, name, ax, freqscale = 'lin', **kwargs):
         '''
         plot spectrogram
@@ -204,67 +283,7 @@ class MicSignal(object):
             name = self.calc_stft(M, N, overlap)
             STFT=self.STFT[name]
         plot_spectrogram(STFT['X'], STFT['param'], ax, zorder = 1,**kwargs )
-            
-                
-    def plot_triggers(self, ax, type ='eval', **kwargs):
-        """
-        type: eval for MBBM evaluations bounds
-        type passby passby times
-        """
-        if type == 'eval':
-            bounds = ['Tb', 'Te']
-        elif type == 'passby':
-            bounds = ['Tp_b', 'Tp_e']
-        [ax.axvline(self.micValues[b], **kwargs) for b in bounds]
-            
-    def plot_KG(self, algorithm, ax, **kwargs):
-        '''
-        plot detection results for a given algorithm
-        '''
-        KG = self.KG[algorithm.noiseType]
-        try:
-            detection = KG[str(algorithm)]
-        except KeyError as e:
-            print('No calculation for', algorithm)
-            raise(e)
-        else:
-            ymin, ymax = ax.get_ylim()
-            ax.fill_between(detection['t'], where = detection['result'] ,\
-            y1 = ymin, y2 = ymax, alpha = 0.4, **kwargs)
-            #ax.set_ybound(ymin, ymax)
-            
-    def plot_BPR(self, algorithm, ax, label = None,**kwarks):
-        '''
-        plot detection results for a given algorithm
-        '''
-
-        if label==None:
-            label = str(algorithm)
-        KG = self.KG[algorithm.noiseType]
-        try:
-            detection = KG[str(algorithm)]
-        except KeyError as e:
-            print('No calculation for', algorithm)
-            raise(e)
-        else:
-            l, = ax.plot(detection['t'], 10*np.log10(1+detection['avBPR']),\
-                        label=label,**kwarks)
-            ax.axhline(algorithm.param['threshold'],lw=1,\
-                        color = plt.getp(l,'color'))
-            
-    def plot_signal(self, ax , label = None,**kwargs):
-        """
-        plot signal
-        """
-        if label == None:
-            label = str(self)
-        ax.plot(self.t, self.y, label = label, **kwargs)
-            
-    def plot_PS(self, ax, label = None):
-        '''
-        plot power spectra from FFT
-        '''
-        pass
+           
     def plot_spectrum(self, ID, mic, ax, label=None):
         pass
         # Todo:
@@ -283,12 +302,18 @@ class MicSignal(object):
     #     ax.set_xlabel('f (Hz)', fontsize=10)
     #     ax.set_ylabel(' (dBA)', fontsize=10)
         
-                
-    def plot_prms(self, ax ,label = None):
-        # todo:
-        pass
-        # ax.plot(sn['t'], np.abs(20*np.log10(sn['y']/(2e-5))), label= label)
-        
+    def plot_triggers(self, ax, type ='eval', **kwargs):
+        """
+        type: eval for MBBM evaluations bounds
+        type passby passby times
+        """
+        if type == 'eval':
+            bounds = ['Tb', 'Te']
+        elif type == 'passby':
+            bounds = ['Tp_b', 'Tp_e']
+        [ax.axvline(self.micValues[b], **kwargs) for b in bounds]
+            
+     
     def visualize_results_widget(self,algorithm):
         pass
         # Todo:
@@ -308,32 +333,9 @@ class MicSignal(object):
     #     ax.set_ylabel(' (dBA)', fontsize=10)
         
                 
-    def plot_prms(self, ax ,label = None):
-        # todo:
-        pass
-        # ax.plot(sn['t'], np.abs(20*np.log10(sn['y']/(2e-5))), label= label)
+    
         
-    def export_to_Wav(self, mesPath):
-        """
-        Export a .wav file of the signal in mesPath\wav
-        
-        param
-        ------
-        mesPath: main measurement path
-        
-        return
-        ------
-        libpath Obj: path of wavfile
-        """
-        wavPath = mesPath.joinpath('wav')
-        os.makedirs(wavPath.as_posix(), exist_ok = True)
-        filename = str(self) + '.wav'
-        filePath = wavPath.joinpath(filename)
-        if not filename in [p.name for p in wavPath.glob('*.wav')]:
-            scaled = np.int16(self.y/ np.abs(self.y).max() * 32767)
-            wavfile.write(filePath.as_posix(), self.sR , scaled)
-        path = filePath.absolute()
-        return(path.relative_to(mesPath))
+    
         
     @ classmethod
     def from_measurement(cls, ID, mic, Paths):
@@ -405,6 +407,8 @@ class MicSignal(object):
         else:
             return None
         """does the same as from_measurement but calls from_wav to initialise"""
+    
+        
 ##functions
 def isclipped(xn, K=301, threshold=0.55, axdisplay=None, normalizehist=False):
     """

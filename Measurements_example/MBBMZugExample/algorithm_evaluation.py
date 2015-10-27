@@ -43,9 +43,9 @@ if __name__ == "__main__":
     
     # setup algorithms
     # todo: parametrize alg parameter in the best possible way 
-    FC = [100]
-    Treshold = [0.2190388]
-    DT = [0.02]
+    FC = [100,4000]
+    Treshold = [13.0]
+    DT = [0.02,0.1]
     algorithms = []
     if len(Treshold)==1:
         threshold=Treshold[0]

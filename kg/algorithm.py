@@ -101,7 +101,8 @@ class Algorithm(object):
             self.rates[auth] = rates(**v)  
         # global
         self.rates.update(rates(**df[col].sum().to_dict()))
-    
+    def stringdefinition(self):
+        pass
     def stringsummary(self):
         return "A"
     def export_test_results(self, mesPath):
@@ -132,6 +133,11 @@ class Algorithm(object):
     def get_id(self):
         """return a short version of class name"""
         return("A")
+    @classmethod
+    def phony(cls):
+        """doesn't create a real algorithm but returns the attributes of the subclass"""
+        phony=cls('Z','')
+        return (cls.get_id(),cls.stringdefinition())
     @classmethod
     def askforattributes(cls, window):
         """asks for the attributes of the class and return a object with these properties"""
@@ -203,7 +209,8 @@ class ZischenDetetkt1(Algorithm):
         output['dt'] = self.param['dt']
         output['BPR'] = BPR
         return(output)
-        
+    def stringdefinition(self):
+        return 'Z1_fc_threshold_dt'
     def visualize(self,fig, MicSnObj, case = None):
         # todo: improve visualization
         # todo: case.plot() is not shown with spectrogram
@@ -243,6 +250,11 @@ class ZischenDetetkt1(Algorithm):
     @classmethod
     def from_info(cls):
         pass
+    @classmethod
+    def phony(cls):
+        """doesn't create a real algorithm but returns the attributes of the subclass"""
+        phony=cls(10,10,10)
+        return (cls.get_id(),cls.stringdefinition())
     @classmethod
     def askforattributes(cls, window):
         """asks for the attributes of the class and return a object with these properties"""
@@ -336,6 +348,8 @@ class ZischenDetetkt2(Algorithm):
         return(output)
     def stringsummary(self):
         return str(self.param['fc'])+"_"+str(self.param['dt'])
+    def stringdefinition(self):
+        return 'Z2_fc_threshold_dt'
     def visualize(self,fig, MicSnObj, case = None):
         # todo: improve visualization
         # todo: case.plot() is not shown with spectrogram
@@ -376,6 +390,11 @@ class ZischenDetetkt2(Algorithm):
     @classmethod
     def from_info(cls):
         pass
+    @classmethod
+    def phony(cls):
+        """doesn't create a real algorithm but returns the attributes of the subclass"""
+        phony=cls(10,10,10)
+        return (cls.get_id(),cls.stringdefinition())
     @classmethod
     def askforattributes(cls, window):
         """asks for the attributes of the class and return a object with these properties"""

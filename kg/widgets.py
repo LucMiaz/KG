@@ -21,7 +21,7 @@ from kg.case import Case
 from kg.case import Interval
 from kg.measurement_values import measuredValues
 from kg.measurement_signal import measuredSignal
-
+from kg.algorithm import *
 from scipy.io import wavfile
 import random
 import json
@@ -34,6 +34,7 @@ class DetectControlWidget(QMainWindow):
         QMainWindow.__init__(self)
         self.setWindowTitle('listen and detect ;-)')
         #time to syncronize plot and media object
+        self.adminsession=False
         self.tShift = None
         self.t = None
         self.mpl = {}
@@ -73,9 +74,11 @@ class DetectControlWidget(QMainWindow):
             action.triggered.connect(getattr(self.media, name))
         self.actions.addSeparator()
         self.actions.addSeparator()
-        info = QtGui.QAction( "Info", self)
-        self.actions.addAction(info)
-        info.triggered.connect(self.show_info)
+        
+        self.menu_bar()
+        
+        
+        
         #layout
         self.vBox = QtGui.QVBoxLayout()
         self.vBox.addWidget(self.seeker)
@@ -90,6 +93,89 @@ class DetectControlWidget(QMainWindow):
             self.set_centralWidget()
             #add connections
             self.connections()
+        
+    
+        
+    def _barplay(self, truth):
+        """define what to do when audio is playing/not playing"""
+        self.barplay=truth
+    def case_down(self):
+        pass
+    def case_up(self):
+        pass
+    def chg_folder(self):
+        pass
+    def change_plot(self):
+        pass
+    def change_quality(self):
+        pass
+    def chg_type(self):
+        pass
+    def chg_typedisplay(self):
+        pass
+    
+    def connections(self):
+        # connections
+        #self.timer.timeout.connect(self.update_canvas)
+        self.media.tick.connect(self.update_time)
+        self.media.finished.connect(self.media_finish)
+        self.media.stateChanged.connect(self.timer_status)#update timer status on media Statechange
+        self._connections()
+        #start refresh
+        #self.timer.start()
+        
+    def _connections(self):
+        pass
+        
+    def define_actions(self):
+        """define actions for the menu"""
+        #exit
+        self.exitAction = QtGui.QAction(QtGui.QIcon('exit.png'), '&Exit', self)        
+        self.exitAction.setShortcut('Ctrl+Q')
+        self.exitAction.setStatusTip('Exit application')
+        self.exitAction.triggered.connect(QtGui.qApp.quit)
+        #show info
+        self.showinfoAction=QtGui.QAction('&Info',self)
+        self.showinfoAction.setShortcut('Ctrl+I')
+        self.showinfoAction.setStatusTip('Show info')
+        self.showinfoAction.triggered.connect(self.show_info)
+        #save
+        self.saveAction=QtGui.QAction('&Save',self)
+        self.saveAction.setShortcut('Ctrl+S')
+        self.saveAction.setStatusTip('Save case')
+        self.saveAction.triggered.connect(self.save_case)
+        #saving folder
+        self.changesavingfolderAction=QtGui.QAction('&ChgSFolder',self)
+        self.changesavingfolderAction.setShortcut('Ctrl+F')
+        self.changesavingfolderAction.setStatusTip('Change saving folder')
+        self.changesavingfolderAction.triggered.connect(self.chg_folder)
+        #media
+        self.playAction = QtGui.QAction('&Play', self)        
+        self.playAction.setShortcut('SPACE')
+        self.playAction.setStatusTip('Play the audio')
+        self.playAction.triggered.connect(self.media.play)
+        
+        self.stopAction = QtGui.QAction('&Stop', self)        
+        self.stopAction.setShortcut('SPACE')
+        self.stopAction.setStatusTip('Stop the audio')
+        self.stopAction.triggered.connect(self.media.stop)
+        
+        self.pauseAction = QtGui.QAction('&Pause', self)        
+        self.pauseAction.setShortcut('SPACE')
+        self.pauseAction.setStatusTip('Pause the audio')
+        self.pauseAction.triggered.connect(self.media.pause)
+        
+        #change cases
+        self.nextcaseAction= QtGui.QAction('&Next case', self)        
+        self.nextcaseAction.setShortcut('DOWN ARROW')
+        self.nextcaseAction.setStatusTip('Move to next case')
+        self.nextcaseAction.triggered.connect(self.case_down)
+        
+        self.prevcaseAction= QtGui.QAction('&Prev case', self)        
+        self.prevcaseAction.setShortcut('UP ARROW')
+        self.prevcaseAction.setStatusTip('Move to previous case')
+        self.prevcaseAction.triggered.connect(self.case_up)
+        
     def keyPressEvent(self, event):
         self.modifiers = QtGui.QApplication.keyboardModifiers()#checks on keypress what modifyers there is
         if event.isAutoRepeat():
@@ -164,39 +250,51 @@ class DetectControlWidget(QMainWindow):
         elif event.key() == QtCore.Qt.Key_S and not self.modifiers==QtCore.Qt.ControlModifier:
             self.set_int(False)
         event.accept()
+    
+    def media_finish(self):
+        #self.timer.stop()
+        self.media.stop()
+        self.media.pause()
+    
+    def menu_bar(self):
+        """adds a menu bar"""
+        self.define_actions()
+        self.statusBar()
+        self.Menu = self.menuBar()
+        self.fileMenu = self.Menu.addMenu('&File')
+        self.fileMenu.addAction(self.showinfoAction)
+        self.fileMenu.addAction(self.changesavingfolderAction)
+        self.fileMenu.addAction(self.saveAction)
+        self.fileMenu.addAction(self.exitAction)
         
-    def case_up(self):
-        pass
-    def case_down(self):
-        pass
-    def chg_folder(self):
-        pass
-    def change_quality(self):
-        pass
-    def chg_type(self):
-        pass
-    def chg_typedisplay(self):
-        pass
+        self.mediaMenu=self.Menu.addMenu('&Media')
+        self.mediaMenu.addAction(self.playAction)
+        self.mediaMenu.addAction(self.pauseAction)
+        self.mediaMenu.addAction(self.stopAction)
+        
+        self.caseMenu=self.Menu.addMenu('&Cases')
+        self.caseMenu.addAction(self.nextcaseAction)
+        self.caseMenu.addAction(self.prevcaseAction)
+        
     def set_int(self, truth):
         pass
     def set_quality(self, val):
         pass
     def set_remove(self, truth):
         pass
-    def save_cases(self):
+    def save_case(self):
         pass
-    def change_plot(self):
-        pass
+    
+    def set_centralWidget(self):
+        #centralwidget
+        centralWidget = QtGui.QWidget()
+        centralWidget.setLayout(self.vBox)
+        self.setCentralWidget(centralWidget)
     
     def set_media_source(self, wavPath, t0 = 0, **kwargs):
         self.tShift = t0
         self.t = self.tShift
         self.media.setCurrentSource(Phonon.MediaSource(wavPath))
-        self.media.pause()
-        
-    def media_finish(self):
-        #self.timer.stop()
-        self.media.stop()
         self.media.pause()
         
     def set_mpl(self, mpl = {}, **kwargs):
@@ -215,25 +313,9 @@ class DetectControlWidget(QMainWindow):
             if ca['bar']:
                 self.ca_set_bar_handle.extend(handle)
                 
-    def set_centralWidget(self):
-        #centralwidget
-        centralWidget = QtGui.QWidget()
-        centralWidget.setLayout(self.vBox)
-        self.setCentralWidget(centralWidget)
-            
-    def connections(self):
-        # connections
-        #self.timer.timeout.connect(self.update_canvas)
-        self.media.tick.connect(self.update_time)
-        self.media.finished.connect(self.media_finish)
-        self.media.stateChanged.connect(self.timer_status)#update timer status on media Statechange
-        self._connections()
-        #start refresh
-        #self.timer.start()
-        
-    def _connections(self):
+    def show_info(self):
         pass
-    
+        
     def timer_status(self,newstate, oldstate):
         """changes the timer status according to played audio"""
         if newstate==2:
@@ -246,10 +328,6 @@ class DetectControlWidget(QMainWindow):
             #self.timer.stop()
             self._barplay(False)
     
-    def _barplay(self, truth):
-        """define what to do when audio is playing/not playing"""
-        self.barplay=truth
-    
     def update_time(self,t):
         self.t = t/1000 + self.tShift
         self.update_canvas()
@@ -260,8 +338,6 @@ class DetectControlWidget(QMainWindow):
         for handle in self.ca_update_handle:
             handle.update()
             
-    def show_info(self):
-        pass
         
     @classmethod
     def alg_results(cls, micSn, algorithm):
@@ -300,7 +376,7 @@ class CaseCreatorWidget(DetectControlWidget):
         super(CaseCreatorWidget, self).__init__()
         self.setWindowTitle('Create Case')
         if not Paths:
-            self.Paths=[mesPath.joinpath('')]
+            self.Paths=[mesPath]
             self.Paths.append(pathlib.Path('E:/ZugVormessung'))
             self.Paths.append(pathlib.Path('E:/Biel1Vormessung'))
         else:
@@ -311,7 +387,7 @@ class CaseCreatorWidget(DetectControlWidget):
         self.minspan = 0.05
         self.PlotTypes=['LAfast', 'Spectogram']
         self.currentplottype=self.PlotTypes[0]
-        self.add_widgets()
+        hBox=self.add_widgets_basic()
         self.set_centralWidget()
         self.author=None
         self.both_visible=True
@@ -319,16 +395,19 @@ class CaseCreatorWidget(DetectControlWidget):
         self.NoiseTypes = ['Z','KG']
         self.asks_for_info()
         self.asks_for_author()
+        if self.author in ['admin','Admin','ADMIN']:
+            hBox.addWidget(self.add_widgets_admin())
+            self.adminsession=True
+        else:
+            self.authors=[self.author]
+            hBox.addWidget(self.add_widget_extended())
+        self.vBox.addLayout(hBox)
         #import cases
-        with mesPath.joinpath('caseToAnalyze.json').open('r+') as input:
-            self.casesToAnalyze = json.load(input)
-        for k,v in self.casesToAnalyze.items():
-            v['case']['author']=self.author
-            v['case']= Case(**v['case'])
-        self.casesKeys = sorted(list(self.casesToAnalyze.keys()))#list of name of cases
+        
         #gets number of cases to analyse
         self.asks_for_ncases()
-        QtGui.QMessageBox.warning(self, 'Audio system', 'Please use hearphones or a good audio system to analyze the signals.')
+        if not self.adminsession:
+            QtGui.QMessageBox.warning(self, 'Audio system', 'Please use hearphones or a good audio system to analyze the signals.')
         self.CaseCombo.addItems(self.casesKeys)
         #removing cases not displayed
         newdictionary={}
@@ -345,58 +424,80 @@ class CaseCreatorWidget(DetectControlWidget):
         #add connections
         self.connections()
         self.micSignals={}
-        
-    def _barplay(self, truth):
-        """tells what to do if audio is playing or not"""
-        super(CaseCreatorWidget, self)._barplay(truth)
-        self.CS.setUpdateOnExtEvent(truth)
     
-    def asks_for_info(self):
-        result = QtGui.QMessageBox.question(self, 'Information', "Would you like to see the information page ?", QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
-        if result==QtGui.QMessageBox.Yes:
-            self.extbrowsercall()
-            QtGui.QMessageBox.information(self, 'Proceeding', "Tell me when you are ready to proceed.")
-    
-    def asks_for_author(self):
-        author, ok = QtGui.QInputDialog.getText(self, "Set author", "Please your name : ")
+    def add_new_cases(self):
+        """ask for adding a new case"""
+        retour,ok=(QtGui.QFileDialog.getOpenFileNames(self, 'Select cases'))
         if ok:
-            author = author.replace(' ','_')
-            if author=="":
-                author='anonymus'
-        else:
-            author =  'anonymus'
-        self.author = author
+            for file in retour[0]:
+                listofpaths.append(pathlib.Path(file))
+            if len(listofpaths)>0:
+                self.load_cases(listofpaths)
     
-    def asks_for_ncases(self):
-        self.ncases=len(self.casesKeys)
-        #asking for number of cases to treat
-        ncases, ok = QtGui.QInputDialog.getInt(self,"Number of cases to analyse", ("Please insert the number of cases \n you would like to analyse.\n \n (You are not forced to do all \n of the proposed cases). \n \n \n Maximum : "+str(self.ncases)+" : "),  value=min(20, self.ncases), min=1, max=self.ncases, step=1)
-        if ok and ncases <= self.ncases:
-            self.ncases = ncases
-            print("Thank you. Preparing "+str(self.ncases)+" cases.")
-        else:
-            print("Default value, set to maximum : " + str(self.ncases))
-            self.ncases=20
-        try:
-            with open("firstcases.json",'r') as l:
-                firstcaseslist=json.load(l)
-        except:
-            self.casesKeys=[self.casesKeys[i] for i in range(0,self.ncases)]
-        else:
-            firstcaseskeys=[('m_'+i[0]+'_'+str(i[1])) for i in firstcaseslist]
-            print("first: "+str(firstcaseskeys))
-            if self.ncases <len(firstcaseslist)+1:
-                self.casesKeys=[firstcaseskeys[i] for i in range(0,self.ncases)]
-            else:
-                self.casesKeys=firstcaseskeys
-                keys=list(self.casesToAnalyze.keys())
-                ncmax=len(keys)
-                while len(self.casesKeys) < min(ncases, ncmax):
-                    cas=keys[random.randint(0,ncmax)]
-                    if cas not in self.casesKeys:
-                        self.casesKeys.append(cas)
+    def add_int(self, xmin,xmax):
+        self.unsave()
+        Int = Interval(xmin,xmax)
+        self.SOI.append(Int)
+        #print('Add '+ repr(Int))
+        self.update_stay_rect()
+        if self.barplay==False:
+            self.update_canvas()
+    
+    
+    
+    def add_widgets_admin(self):
+        """add admin tools such as different types of plot, algorithm test and authors browser"""
+        #Plots
+        groupBox=QtGui.QGroupBox("Admin options")
+        self.plotselect=QtGui.QComboBox()
+        for type in self.PlotTypes:
+            self.plotselect.addItem(type)
+        hBox=QtGui.QHBoxLayout()
+        labelAuthor=QtGui.QLabel("Plot type")
+        hBox.addWidget(labelAuthor)
+        hBox.addWidget(self.plotselect)
         
-    def add_widgets(self):
+        #Authors
+        try:
+            authorspath=self.mesPath.joinpath('test_cases')
+        except:
+            self.authors=['admin']
+        else:
+            self.authors=os.listdir(authorspath.as_posix())
+        
+        self.ComboAuthors=QtGui.QComboBox()
+        for auth in self.authors:
+            self.ComboAuthors.addItem(auth)
+        labelAuthor=QtGui.QLabel("Authors")
+        hBox.addWidget(labelAuthor)
+        hBox.addWidget(self.ComboAuthors)
+        
+        #algorithms
+        self.algorithmsTypes={'Z2':{'classname':'ZischenDetetkt2','attributes':'Z2_fc_threshold_dt'}}
+        #for cls in vars()['Algorithm'].__subclasses__():
+        #    algid, algdescription=eval(cls.__name__()+".phony()")
+        #    self.algorithmsTypes[algid]={'classname':cls.__name__(), 'attributes': algdescription}
+        self.Algorithms={}
+        self.ComboAlgorithms=QtGui.QComboBox()
+        self.asks_for_algorithm()
+        self.currentAlgorithm=self.Algorithms[self.ComboAlgorithms.currentText()]
+        hBox.addWidget(self.ComboAlgorithms)
+        self.buttonCompare=QtGui.QCheckBox('Show algorithm result',self)
+        hBox.addWidget(self.buttonCompare)
+        groupBox.setLayout(hBox)
+        self.author=self.authors[0]
+        
+        #disable some menu actions
+        self.saveAction.setEnabled(False)
+        self.changesavingfolderAction.setEnabled(False)
+        #add some items to menu
+        self.admin_actions()
+        self.caseMenu.addAction(self.addcaseAction)
+        self.algMenu=self.Menu.addMenu('&Algorithms')
+        self.algMenu.addAction(self.addalgAction)
+        return groupBox
+    
+    def add_widgets_basic(self):
         #Figure Canvas
         canvas={}
         plt.ioff()
@@ -412,6 +513,7 @@ class CaseCreatorWidget(DetectControlWidget):
                                 nrect = [50,50], update_on_ext_event = True , 
                                 minspan = self.minspan )
         canvas['selector'] = {'animate':True,'bar':True, 'canvas':ca , 'axHandle': self.CS}
+        
         #set canvas
         self.set_mpl(canvas)
         
@@ -445,7 +547,7 @@ class CaseCreatorWidget(DetectControlWidget):
         hBox.addStretch(1)
         self.vBox.addLayout(hBox)
         # add second row of buttons
-        hBox = QtGui.QHBoxLayout()
+        
         # quality radios
         hBox = QtGui.QHBoxLayout()
         groupBox = QtGui.QGroupBox("Select quality: are noise events detectable?")
@@ -458,34 +560,25 @@ class CaseCreatorWidget(DetectControlWidget):
         
         groupBox.setLayout(hbox1)
         hBox.addWidget(groupBox)
+        return hBox
+    
+    def add_widget_extended(self):
+        """add widgets that are not useful when logged as admin"""
+        hBox = QtGui.QHBoxLayout()
         # save button
         self.buttonSave = QtGui.QPushButton("save",self)
         hBox.addWidget(self.buttonSave)
         hBox.addStretch()
         # saved data directory group (button to change folder and current folder)
-        groupBox2=QtGui.QGroupBox("Saved data directory")
+        groupBox=QtGui.QGroupBox("Saving options")
         fm=QtGui.QFontMetrics('HelveticaNeue')
         self.hlab=QtGui.QLabel("Selected directory : "+fm.elidedText(str(self.savefolder),QtCore.Qt.ElideLeft, 250))#crop the displayed path if too long (ElideLeft -> add ... left of the path
-        
-        
-        
         self.buttonChgSave = QtGui.QPushButton("Change folder",self)
-        hBox2=QtGui.QHBoxLayout()
-        hBox2.addWidget(self.hlab)
-        hBox2.addWidget(self.buttonChgSave)
-        groupBox2.setLayout(hBox2)
-        hBox.addWidget(groupBox2)
-        #self.vBox.addLayout(hBox)
+        hBox.addWidget(self.hlab)
+        hBox.addWidget(self.buttonChgSave)
         
-        groupBox3=QtGui.QGroupBox("Plot selection")
-        self.plotselect=QtGui.QComboBox()
-        for type in self.PlotTypes:
-            self.plotselect.addItem(type)
-        hBox3=QtGui.QHBoxLayout()
-        hBox3.addWidget(self.plotselect)
-        groupBox3.setLayout(hBox3)
-        hBox.addWidget(groupBox3)
-        self.vBox.addLayout(hBox)
+        groupBox.setLayout(hBox)
+        #self.vBox.addLayout(hBox)
         #select color of chg saving folder.
         if not self.savefolder:
             self.buttonChgSave.setStyleSheet("background-color: #c2a5cf")
@@ -493,78 +586,197 @@ class CaseCreatorWidget(DetectControlWidget):
         else:
             self.buttonChgSave.setStyleSheet("background-color: #a6dba0")
             self.hlab.setText("Selected directory : "+str(self.savefolder))
-        
-    def set_current_case(self,key):
-        self.releaseKeyboard()
-        #self.timer.stop()
-        self.media.stop()
-        self.currentCase = self.casesToAnalyze[key]
-        #attributes
-        self.case = self.currentCase['case']
-        #update buttons
-        self.both_visibles = True
-        self.cb.setChecked(self.both_visibles)
-        self.current_noise = 'Z'
-        self.SOIcombo.setCurrentIndex(self.NoiseTypes.index(self.current_noise))
-        if self.case.get_saved():
-            self.buttonSave.setStyleSheet("background-color: #a6dba0")
-        else:
-            self.buttonSave.setStyleSheet("background-color: #c2a5cf")
-        self.check_rb(self.case.get_quality())
-        #set SOI and update Canvas
-        self.set_noise_type('Z')
-        #plot
-        self.plot()
-        #Set mediafile
-        wavPath = self.mesPath.joinpath(self.currentCase['wavPath'])
-        self.set_media_source(str(wavPath), self.currentCase['tmin'])
-        #start timer
-        #self.timer.start()
-        self.grabKeyboard()
-        self.set_quality()
-        
-    def plot(self):
-        self.SelectAxis.cla()
-        self.case.plot_triggers(self.SelectAxis)
-        if self.currentplottype=='LAfast':
-            for key, pData in self.currentCase['plotData'].items():
-                t,y = pData
-                self.SelectAxis.plot(t, y , label = key, color='#272822', linewidth=1.)#plot display
-            tmin = self.currentCase['tmin']
-            tmax = self.currentCase['tmax']
-            self.SelectAxis.set_xlim(tmin,tmax)
-            self.SelectAxis.set_ylabel('LA dB')
-            self.SelectAxis.set_xlabel('t (s)')
-            self.SelectAxis.legend()
-        elif self.currentplottype=='Spectogram':
-            if not self.currentCase['case'].get_mIDmic() in self.micSignals.keys():
-                micSn=MicSignal.from_wavfolder(self.currentCase['case'].get_mID(), self.currentCase['case'].get_mic(), self.Paths)
-                if micSn:
-                    self.micSignals[self.currentCase['case'].get_mIDmic()]=micSn
-                else:
-                    print("wav file not found")
-                    pass
-            self.micSignals[self.currentCase['case'].get_mIDmic()].plot_spectrogram('3930_4096_6',self.SelectAxis)
-        for ca in self.canvas:
-            ca.draw()
-        #update canvas
-        self.update_stay_rect()
-
-    def _connections(self):
-        """connects the buttons/combobox to the methods to be applied"""
-        self.SOIcombo.currentIndexChanged.connect(self.set_noise_type)
-        self.cb.stateChanged.connect(self.set_both_visible)
-        self.CaseCombo.currentIndexChanged.connect(self.change_current_case)
-        for rb in self.Qradios:
-            rb.clicked.connect(self.set_quality)
-        self.buttonSave.clicked.connect(self.save_case)
-        self.buttonChgSave.clicked.connect(self.chg_folder)
-        self.plotselect.currentIndexChanged.connect(self.plotchange)
+        return groupBox
     
-    def plotchange(self,index):
-        """update the plot"""
-        self.currentplottype=self.PlotTypes[index]
-        self.plot()
+    def admin_actions(self):
+        #algorithms
+        self.addalgAction = QtGui.QAction('&Add alg', self)        
+        self.addalgAction.setShortcut('Ctrl+A')
+        self.addalgAction.setStatusTip('Add algorithm')
+        self.addalgAction.triggered.connect(self.asks_for_algorithm)
+        #case
+        self.addcaseAction = QtGui.QAction('&Add case', self)        
+        self.addcaseAction.setShortcut('Ctrl+C')
+        self.addcaseAction.setStatusTip('Add case')
+        self.addcaseAction.triggered.connect(self.asks_for_case)
+    
+    def asks_for_algorithm(self):
+        """queries the desired algorithms"""
+        dialogstring=''
+        for alg in self.algorithmsTypes.keys():
+            dialogstring+= self.algorithmsTypes[alg]['attributes']
+            dialogstring+='\n'
+        dialog,ok = QtGui.QInputDialog.getText(self, 'Algorithm input', 'Insert an algorithm description in the following form :\n'+dialogstring,QtGui.QLineEdit.Normal, 'Z2_3000_13.2_0.1')
+        try:
+            alg,fc,thres,dt=dialog.split('_')
+        except:
+            return False
+        else:
+            self.Algorithms[dialog]=(eval(self.algorithmsTypes[alg]['classname']+'('+str(fc)+','+str(thres)+','+str(dt)+')'))
+            self.ComboAlgorithms.addItem(dialog)
+        
+    
+    def asks_for_author(self):
+        author, ok = QtGui.QInputDialog.getText(self, "Set author", "Please your name : ")
+        if ok:
+            author = author.replace(' ','_')
+            if author=="":
+                author='anonymus'
+        else:
+            author =  'anonymus'
+        self.author = author
+    
+    def asks_for_case(self):
+        """asks for new case add"""
+        listofpaths=[]
+        keeponsasking=True
+        while keeponasking:
+            retour=(QtGui.QFileDialog.getOpenFileNames(self, 'Select cases'))
+            for file in retour[0]:
+                listofpaths.append(pathlib.Path(file).absolute())
+            ok = QtGui.QMessageBox.question(self,'Done ?',"Have you finished selecting the cases ?", QtGui.QMessageBox.Yes |QtGui.QMessageBox.No, QtGui.QMessageBox.Yes)
+            if ok==QtGui.QMessageBox.Yes:
+                keeponasking=False
+        self.load_cases(listofpaths)
+    
+    def asks_for_info(self):
+        result = QtGui.QMessageBox.question(self, 'Information', "Would you like to see the information page ?", QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
+        if result==QtGui.QMessageBox.Yes:
+            self.extbrowsercall()
+            QtGui.QMessageBox.information(self, 'Proceeding', "Tell me when you are ready to proceed.")
+    
+    def asks_for_ncases(self):
+        """asks for the number of cases to treat from the case_to_json file
+        if in admin session, will ask if you want to select the cases yourself. If so, a prompt will ask you to select them. Then the program will load them and add the path to Paths"""
+        askforcases=True
+        if self.adminsession:
+            result =QtGui.QMessageBox.question(self,'Initialization of cases',"Would you like to select the cases yourself?", QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.Yes)
+            if result==QtGui.QMessageBox.Yes:
+                keeponasking=True
+                askforcases=False
+            else:
+                keeponasking=False
+            listofpaths=[]
+            while keeponasking:
+                retour=(QtGui.QFileDialog.getOpenFileNames(self, 'Select cases'))
+                for file in retour[0]:
+                    listofpaths.append(pathlib.Path(file).absolute())
+                ok = QtGui.QMessageBox.question(self,'Done ?',"Have you finished selecting the cases ?", QtGui.QMessageBox.Yes |QtGui.QMessageBox.No, QtGui.QMessageBox.Yes)
+                if ok==QtGui.QMessageBox.Yes:
+                    keeponasking=False
+                
+        if askforcases or len(listofpaths)==0:
+            self.import_cases()#import the cases named in caseToAnalyse.json
+            self.ncases=len(self.casesKeys)
+            #asking for number of cases to treat
+            ncases, ok = QtGui.QInputDialog.getInt(self,"Number of cases to analyse", ("Please insert the number of cases \n you would like to analyse.\n \n (You are not forced to do all \n of the proposed cases). \n \n \n Maximum : "+str(self.ncases)+" : "),  value=min(20, self.ncases), min=1, max=self.ncases, step=1)
+            if ok and ncases <= self.ncases:
+                self.ncases = ncases
+                print("Thank you. Preparing "+str(self.ncases)+" cases.")
+            else:
+                print("Default value, set to maximum : " + str(self.ncases))
+                self.ncases=20
+            try:
+                with open("firstcases.json",'r') as l:
+                    firstcaseslist=json.load(l)
+            except:
+                self.casesKeys=[self.casesKeys[i] for i in range(0,self.ncases)]
+            else:
+                firstcaseskeys=[('m_'+i[0]+'_'+str(i[1])) for i in firstcaseslist]
+                print("first: "+str(firstcaseskeys))
+                if self.ncases <len(firstcaseslist)+1:
+                    self.casesKeys=[firstcaseskeys[i] for i in range(0,self.ncases)]
+                else:
+                    self.casesKeys=firstcaseskeys
+                    keys=list(self.casesToAnalyze.keys())
+                    ncmax=len(keys)
+                    while len(self.casesKeys) < min(ncases, ncmax):
+                        cas=keys[random.randint(0,ncmax)]
+                        if cas not in self.casesKeys:
+                            self.casesKeys.append(cas)
+        elif len(listofpaths)>0:
+            listofcase=[]
+            self.casesToAnalyze={}
+            self.load_cases(listofpaths)
+            
+    def _barplay(self, truth):
+        """tells what to do if audio is playing or not"""
+        super(CaseCreatorWidget, self)._barplay(truth)
+        self.CS.setUpdateOnExtEvent(truth)
+
+    def case_down(self):
+        """changes case to the next one"""
+        index=self.CaseCombo.currentIndex()
+        if index<len(self.casesKeys)-1:
+            self.change_current_case(index+1)
+            self.CaseCombo.setCurrentIndex(index+1)
+        else:
+            self.change_current_case(0)
+            self.CaseCombo.setCurrentIndex(0)
+            
+    def case_to_analyse(self, ID, mic, mesPath, givenauthor=None):
+        """setup the analysed cases from MBBM
+        called by load_cases
+        """
+        # read the signal
+        caseDict={}
+    
+        # initiate  MicSignal
+        micSn,micval = load_micSn(ID,mic,mesPath)
+        # test if signal is clipped, skipü it if True
+        if micSn.clippedtest():
+            clipped.add((ID,mic))
+            print('clipped')
+        # create Wav and add path to caseDict
+        caseDict['wavPath'] = str(micSn.export_to_Wav(mesPath, relative=False))
+        # initialize empty Case with None author
+        caseDict['case']=Case(micval['location'], micval['measurement'],ID, mic,micval['micValues']['Tb'], micval['micValues']['Te'], givenauthor)
+        #add tmin tmax
+        caseDict['tmin'] = float(micval['t'].min())
+        caseDict['tmax'] = float(micval['t'].max())
+        caseDict['micSn']=micSn
+        # Add data to plot ; key:[t,y] , #key is label of plot
+        caseDict['plotData'] = {}
+        # first plot prms
+        micval['y'],micval['t'],_ = micval['mS'].get_signal('prms' + str(mic))
+        caseDict['plotData']['LAfast']=[micval['t'].tolist(),(20*np.log10(micval['y']/(2e-5))).tolist()]
+        # second plot prms
+        # todo: plot stft band
+        # append Case Dict to  dict
+        self.casesToAnalyze[ID+'_'+mic]=caseDict
+        
+    def case_up(self):
+        """changes case to the previous one"""
+        index=self.CaseCombo.currentIndex()
+        if index==0:
+            self.change_current_case(-1)
+            self.CaseCombo.setCurrentIndex(len(self.casesKeys)-1)   
+        else:
+            self.change_current_case(index-1)
+            self.CaseCombo.setCurrentIndex(index-1)
+    
+    def change_current_case(self, index):
+        key = self.casesKeys[index]
+        #self.currentCase.get('saved',False):
+        self.set_current_case(key)
+        self.update_canvas()
+        # else:
+        #     QtGui.QMessageBox.warning(self, self.trUtf8("save error"), 
+        #      self.trUtf8("Before switching case save it!"))
+    
+    def change_quality(self, quality):
+        if quality in ['good','medium','bad']:
+            self.case.set_quality(quality)
+            if quality=='good':
+                curr=self.Qradios[0].isChecked()
+                self.Qradios[0].setChecked(not curr)
+            elif quality=='medium':
+                curr=self.Qradios[1].isChecked()
+                self.Qradios[1].setChecked(not curr)
+            else:
+                curr=self.Qradios[2].isChecked()
+                self.Qradios[2].setChecked(not curr)
+    
     def changeplot(self):
         index=self.plotselect.index(self.currentplottype)
         if index+1==len(self.PlotTypes):
@@ -572,6 +784,7 @@ class CaseCreatorWidget(DetectControlWidget):
         else:
             index+=1
         self.plotselect.setCurrentIndex(index)
+        self.currentplottype=self.PlotTypes[index]
         
     def chg_folder(self):
         """change the directory where to save the data"""
@@ -587,152 +800,13 @@ class CaseCreatorWidget(DetectControlWidget):
             self.hlab.setText("Selected directory : "+fm.elidedText(str(self.savefolder),QtCore.Qt.ElideLeft, 250))
         else:
             print("Path not modified.")
-    
-    def set_noise_type(self, index):
-        if isinstance(index,int):
-            self.current_noise = self.NoiseTypes[index]
-        else:
-            self.current_noise = index
-        self.SOI = self.case.get_SOI(self.current_noise)
-        self.update_stay_rect()
-        
-    def set_both_visible(self, state):
-        if state == QtCore.Qt.Checked:
-            self.both_visibles= True
-        else:
-            self.both_visibles= False
-        self.update_stay_rect()
-    def case_up(self):
-        """changes case to the previous one"""
-        index=self.CaseCombo.currentIndex()
-        if index==0:
-            self.change_current_case(-1)
-            self.CaseCombo.setCurrentIndex(len(self.casesKeys)-1)   
-        else:
-            self.change_current_case(index-1)
-            self.CaseCombo.setCurrentIndex(index-1)
 
-    def case_down(self):
-        """changes case to the next one"""
-        index=self.CaseCombo.currentIndex()
-        if index<len(self.casesKeys)-1:
-            self.change_current_case(index+1)
-            self.CaseCombo.setCurrentIndex(index+1)
-        else:
-            self.change_current_case(0)
-            self.CaseCombo.setCurrentIndex(0)
-    def chg_type(self):
-        """change the noise type to the next one on the list (and back to the first)"""
-        current_noise_index= self.NoiseTypes.index(self.current_noise)
-        if current_noise_index <len(self.NoiseTypes)-1:
-            self.set_noise_type(current_noise_index+1)
-            self.SOIcombo.setCurrentIndex(current_noise_index+1)
-        else:
-            self.set_noise_type(0)
-            self.SOIcombo.setCurrentIndex(0)
-        self.update_canvas()
-    def chg_typedisplay(self):
-        """toggle between show both and show one"""
-        self.both_visible = not self.both_visible
-        self.cb.setChecked(self.both_visible)
-        self.update_stay_rect
-        self.update_canvas()
-        
-    def change_current_case(self, index):
-        key = self.casesKeys[index]
-        #self.currentCase.get('saved',False):
-        self.set_current_case(key)
-        self.update_canvas()
-        # else:
-        #     QtGui.QMessageBox.warning(self, self.trUtf8("save error"), 
-        #      self.trUtf8("Before switching case save it!"))
-        
-    def set_quality(self):
-        for q,rb in zip( ['good','medium','bad'],self.Qradios):
-            if rb.isChecked():
-                self.case.set_quality(q)
-    def change_quality(self, quality):
-        if quality in ['good','medium','bad']:
-            self.case.set_quality(quality)
-            if quality=='good':
-                curr=self.Qradios[0].isChecked()
-                self.Qradios[0].setChecked(not curr)
-            elif quality=='medium':
-                curr=self.Qradios[1].isChecked()
-                self.Qradios[1].setChecked(not curr)
-            else:
-                curr=self.Qradios[2].isChecked()
-                self.Qradios[2].setChecked(not curr)
-    def get_quality(self):
-        return(self.currentCase['case'].get('quality',False))
-        
     def check_rb(self, q):
         self.rbG.setExclusive(True)#allows to choose multiple qualities
         for rb, qb in  zip(self.Qradios, ['good', 'medium', 'bad']):
             rb.setChecked(q==qb)
         self.rbG.setExclusive(True)
         
-    def add_int(self, xmin,xmax):
-        self.unsave()
-        Int = Interval(xmin,xmax)
-        self.SOI.append(Int)
-        #print('Add '+ repr(Int))
-        self.update_stay_rect()
-        if self.barplay==False:
-            self.update_canvas()
-    def remove_int(self, xmin, xmax = None):
-        self.unsave()
-        if xmax == None:
-            index = self.SOI.containspoint(xmin)
-            if index is not None:
-                #print('Remove '+ repr(self.SOI.RangeInter[index]))
-                self.SOI.removebyindex(index)
-        else:
-            self.SOI.remove(Interval(xmin,xmax))
-        self.update_stay_rect()
-        if self.barplay==False:
-            self.update_canvas()
-        
-    def set_int(self,press):
-        self.unsave()
-        if press:
-            self._t_int_min = self.t
-            return
-        else:
-            tmax = self.t
-            if abs(tmax-self._t_int_min) > self.minspan:
-                self.add_int(self._t_int_min,tmax)
-        if self.barplay==False:
-            self.update_canvas()
-
-    def set_remove(self,press):
-        """removes int while playing audio"""
-        self.unsave()
-        if press:
-            self._t_int_min = self.t
-            return
-        else:
-            tmax = self.t
-            if abs(tmax-self._t_int_min) > self.minspan:
-                self.remove_int(self._t_int_min,tmax)
-        if self.barplay==False:
-            self.update_canvas()
-
-    def onselect(self,xmin,xmax, remove=False):
-        #add interval1
-        if remove:
-            self.remove_int(xmin,xmax)
-        else:
-            self.add_int(xmin,xmax)
-     
-    def unsave(self):
-        """get back to unsaved status"""
-        if self.currentCase['case'].get_saved:
-            self.currentCase['case'].give_saved(False)
-            self.buttonSave.setStyleSheet("background-color: #c2a5cf")
-            currentIndex= self.casesKeys.index(str(self.CaseCombo.currentText()))
-            self.CaseCombo.setItemData(currentIndex,QtGui.QColor('#c2a5cf'),QtCore.Qt.BackgroundRole)
-    
     def checkSavedCases(self, folder=None):
         """returns the IDs in """
         if folder==None:
@@ -747,15 +821,290 @@ class CaseCreatorWidget(DetectControlWidget):
                 savedIDs.append('m_'+mid+'_'+mic)
         return(savedIDs)
     
+    def chg_type(self):
+        """change the noise type to the next one on the list (and back to the first)"""
+        current_noise_index= self.NoiseTypes.index(self.current_noise)
+        if current_noise_index <len(self.NoiseTypes)-1:
+            self.set_noise_type(current_noise_index+1)
+            self.SOIcombo.setCurrentIndex(current_noise_index+1)
+        else:
+            self.set_noise_type(0)
+            self.SOIcombo.setCurrentIndex(0)
+        self.update_canvas()
+    
+    def chg_typedisplay(self):
+        """toggle between show both and show one"""
+        self.both_visible = not self.both_visible
+        self.cb.setChecked(self.both_visible)
+        self.update_stay_rect
+        self.update_canvas()
+    
+    def _connections(self):
+        """connects the buttons/combobox to the methods to be applied"""
+        self.SOIcombo.currentIndexChanged.connect(self.set_noise_type)
+        self.cb.stateChanged.connect(self.set_both_visible)
+        self.CaseCombo.currentIndexChanged.connect(self.change_current_case)
+        for rb in self.Qradios:
+            rb.clicked.connect(self.set_quality)
+
+        if self.adminsession:
+            self.plotselect.currentIndexChanged.connect(self.plotchange)
+            self.ComboAuthors.currentIndexChanged.connect(self.load_author)
+            self.buttonCompare.stateChanged.connect(self.show_compare)
+            self.ComboAlgorithms.currentIndexChanged.connect(self.load_algorithm)
+        else:
+            self.buttonSave.clicked.connect(self.save_case)
+            self.buttonChgSave.clicked.connect(self.chg_folder)
+    
+    def extbrowsercall(self):
+        """call opening info page in external web browser"""
+        pathtoinfo=self.infofolder.joinpath('info.html').absolute().as_uri()
+        os.startfile(pathtoinfo)
+    
+    def get_quality(self):
+        return(self.currentCase['case'].get('quality',False))
+    
+    def import_cases(self):
+        """performs the basic import of cases"""
+        with self.mesPath.joinpath('caseToAnalyze.json').open('r+') as input:
+            self.casesToAnalyze = json.load(input)
+        for k,v in self.casesToAnalyze.items():
+            v['case']['author']=self.author
+            v['case']= Case(**v['case'])
+        self.casesKeys = sorted(list(self.casesToAnalyze.keys()))#list of name of cases
+    
+    def load_algorithm(self, index):
+        """loads the algorithm selected"""
+        self.currentAlgorithm=self.Algorithms[self.ComboAlgorithms.currentText()]
+        self.buttonCompare.setCheckState(QtCore.Qt.Unchecked)
+        self.plot()
+    
+    def load_author(self, index):
+        """loads the saved intervals of an author"""
+        self.author=self.authors[index]
+        self.TurnTheSavedGreen()
+    
+    def load_cases(self, listofpaths):
+        """loads the cases given in list of paths to casesToAnalyse
+        called by add_case
+        and by asks_for_ncases
+        """
+        for pathtofile in listofpaths:#listofpaths contains Windows paths
+            filename, extension =pathtofile.name.split('.')
+            filename=filename.split('_')
+            gauthor=None
+            try:
+                int(filename[-1])
+            except:
+                ID='m_'+filename[-3]
+                mic=filename[-2]
+                gauthor=filename[-1]
+            else:
+                ID='m_'+filename[-2]
+                mic=filename[-1]
+            mesPath=None
+            if extension=='json':
+                for paths in self.Paths:#find the path to 'raw_signals_config.json'
+                    try:
+                        listdirs=os.listdir(str(paths.joinpath('raw_signals')))
+                    except:
+                        pass
+                    else:
+                        if (ID+'_'+mic+'.mat') in listdirs:
+                            mesPath=paths
+            elif extension=='mat':
+                mesPath=pathtofile.parent.parent
+            if mesPath:
+                self.case_to_analyse(ID,mic,mesPath, gauthor)
+            else:
+                print("file not found")
+        self.casesKeys = sorted(list(self.casesToAnalyze.keys()))#list of name of cases
+    
+    def onclick(self,x):
+        #remove Interval
+        self.remove_int(x)
+    
+    def onselect(self,xmin,xmax, remove=False):
+        #add interval1
+        if remove:
+            self.remove_int(xmin,xmax)
+        else:
+            self.add_int(xmin,xmax)
+        
+    def plot(self):
+        self.SelectAxis.cla()
+        self.case.plot_triggers(self.SelectAxis)
+        if self.currentplottype=='LAfast':
+            ymax=0
+            for key, pData in self.currentCase['plotData'].items():
+                t,y = pData
+                self.SelectAxis.plot(t, y , label = key, color='#272822', linewidth=1.)#plot display
+                if max(y)>ymax:
+                    ymax=max(y)
+            tmin = self.currentCase['tmin']
+            tmax = self.currentCase['tmax']
+            self.SelectAxis.set_xlim(tmin,tmax)
+            self.SelectAxis.set_ylabel('LA dB')
+            self.SelectAxis.set_xlabel('t (s)')
+            self.SelectAxis.set_ylim([0,ymax*1.1])
+            self.SelectAxis.legend()
+        elif self.currentplottype=='Spectogram':
+            if not self.currentCase['case'].get_mIDmic() in self.micSignals.keys():
+                micSn=MicSignal.from_wav(self.currentCase['wavPath'])
+                if micSn:
+                    self.micSignals[self.currentCase['case'].get_mIDmic()]=micSn
+                else:
+                    print("wav file not found")
+                    pass
+            self.micSignals[self.currentCase['case'].get_mIDmic()].plot_spectrogram('3930_4096_6',self.SelectAxis)
+        for ca in self.canvas:
+            ca.draw()
+        #update canvas
+        self.update_stay_rect()
+
+    def plotchange(self,index):
+        """update the plot"""
+        self.currentplottype=self.PlotTypes[index]
+        self.plot()
+
+    def remove_int(self, xmin, xmax = None):
+        self.unsave()
+        if xmax == None:
+            index = self.SOI.containspoint(xmin)
+            if index is not None:
+                #print('Remove '+ repr(self.SOI.RangeInter[index]))
+                self.SOI.removebyindex(index)
+        else:
+            self.SOI.remove(Interval(xmin,xmax))
+        self.update_stay_rect()
+        if self.barplay==False:
+            self.update_canvas()
+
+    def save_case(self):
+        if self.adminsession:
+            QtGui.QMessageBox.warning(self,'Save try','You cannot save a file in admin mode')
+        else:
+            if self.case.get_quality() == None:
+                QtGui.QMessageBox.warning(self, self.trUtf8("save error"), 
+                self.trUtf8("Quality of selection has to be set!"))
+            else:
+                # set the author
+                if not self.savefolder:
+                    #asks for the folder where to save the datas
+                    self.chg_folder()
+                #self.case.case['author'] = self.author
+                casepath=self.case.save(self.savefolder)
+                self.buttonSave.setStyleSheet("background-color: #a6dba0")
+                currentIndex= self.casesKeys.index(str(self.CaseCombo.currentText()))
+                self.CaseCombo.setItemData(currentIndex,QtGui.QColor('#a6dba0'),QtCore.Qt.BackgroundRole)
+                #self.AnalysedCases.append(self.casesKeys[currentIndex])
+
+    def set_both_visible(self, state):
+        if state == QtCore.Qt.Checked:
+            self.both_visibles= True
+        else:
+            self.both_visibles= False
+        self.update_stay_rect()
+    
+    def set_current_case(self,key):
+        self.releaseKeyboard()
+        #self.timer.stop()
+        self.media.stop()
+        self.currentCase = self.casesToAnalyze[key]
+        #attributes
+        self.case = self.currentCase['case']
+        #update buttons
+        self.both_visibles = True
+        self.cb.setChecked(self.both_visibles)
+        self.current_noise = 'Z'
+        self.SOIcombo.setCurrentIndex(self.NoiseTypes.index(self.current_noise))
+        if not self.adminsession:
+            if self.case.get_saved():
+                self.buttonSave.setStyleSheet("background-color: #a6dba0")
+            else:
+                self.buttonSave.setStyleSheet("background-color: #c2a5cf")
+            self.check_rb(self.case.get_quality())
+        #set SOI and update Canvas
+        self.set_noise_type('Z')
+        #plot
+        self.plot()
+        #Set mediafile
+        wavPath = self.mesPath.joinpath(self.currentCase['wavPath'])
+        self.set_media_source(str(wavPath), self.currentCase['tmin'])
+        #start timer
+        #self.timer.start()
+        self.grabKeyboard()
+        self.set_quality()
+    
+    def set_int(self,press):
+        self.unsave()
+        if press:
+            self._t_int_min = self.t
+            return
+        else:
+            tmax = self.t
+            if abs(tmax-self._t_int_min) > self.minspan:
+                self.add_int(self._t_int_min,tmax)
+        if self.barplay==False:
+            self.update_canvas()
+    
+    def set_noise_type(self, index):
+        if isinstance(index,int):
+            self.current_noise = self.NoiseTypes[index]
+        else:
+            self.current_noise = index
+        self.SOI = self.case.get_SOI(self.current_noise)
+        self.update_stay_rect()
+    
+    def set_quality(self):
+        for q,rb in zip( ['good','medium','bad'],self.Qradios):
+            if rb.isChecked():
+                self.case.set_quality(q)
+
+    def set_remove(self,press):
+        """removes int while playing audio"""
+        self.unsave()
+        if press:
+            self._t_int_min = self.t
+            return
+        else:
+            tmax = self.t
+            if abs(tmax-self._t_int_min) > self.minspan:
+                self.remove_int(self._t_int_min,tmax)
+        if self.barplay==False:
+            self.update_canvas()
+
+    def show_compare(self,state):
+        """will show or remove the comparison between current author /current case and the current algorithm"""
+        if state==QtCore.Qt.Checked:
+            if self.currentCase.get('micSn',False):
+                MicSnObj=self.currentCase['micSn']
+            else:
+                ID=self.currentCase.get_mID()
+                mic=self.currentCase.get_mic()
+                matPath=self.currentCase.get_mat_path()
+                MicSnObj, stftname=load_micSn(ID,mic,matPath, self.currentAlgorithm)
+                self.casesToAnalyze[ID+'_'+mic]['micSn']=MicSnObj
+                self.casesToAnalyze[ID+'_'+mic]['stftName']=stftname
+            MicSnObj.calc_kg(self.currentAlgorithm)
+            alg_res = MicSnObj.get_KG_results(self.currentAlgorithm)['result']
+            self.case.plot_compare(self.SelectAxis, noiseType = self.currentAlgorithm.noiseType , **alg_res)
+        else:
+            self.plot()
+
+    def show_info(self):
+        self.extbrowsercall()
+
     def TurnTheSavedGreen(self):
         """
         as its name tells, it turns the saved cases green
         initiates the combobox Casecombo
+        it also load the intervals saved
         """
         try:
             sIDs=self.checkSavedCases()
         except:
-            print("No folder was found")
+            print("No saving folder was found")
             self.CaseCombo.setCurrentIndex(0)
             self.set_current_case(self.casesKeys[0])
         else:  
@@ -772,7 +1121,7 @@ class CaseCreatorWidget(DetectControlWidget):
                     for type in self.NoiseTypes:
                         self.casesToAnalyze[scased]['case'].set_SOI(caseinfile.get_SOI(type),type)
             if len(zind)==0:
-                if self.sparecase:
+                if self.sparecase and not self.adminsession:
                     k,v = self.sparecase
                     ok=QtGui.QMessageBox.warning(self, "All cases were treated!", "You have already reviewed all the cases. \n I have added the case "+k+" to the list.")
                     self.casesToAnalyze[k]=v
@@ -781,21 +1130,30 @@ class CaseCreatorWidget(DetectControlWidget):
                     self.CaseCombo.setCurrentIndex(self.casesKeys.index(k))
                     self.set_current_case(k)
                 else:
-                    ok=QtGui.QMessageBox.warning(self, "All cases were treated!", "You have already reviewed all the cases.")
-                    self.CaseCombo.setCurrentIndex(-1)
-                    self.current_noise='Z'
-                    self.SOI=self.casesToAnalyze[self.casesKeys[0]]['case'].get_SOI()
+                    if not self.adminsession:
+                        ok=QtGui.QMessageBox.warning(self, "All cases were treated!", "You have already reviewed all the cases.")
+                    try:
+                        i=self.CaseCombo.currentIndex()
+                        firsttime=False
+                    except:
+                        firsttime=True
+                    if not self.adminsession or firsttime:#initialise CaseCombo only if not admin session or firsttime
+                        self.CaseCombo.setCurrentIndex(-1)
+                        self.current_noise='Z'
+                        self.SOI=self.casesToAnalyze[self.casesKeys[0]]['case'].get_SOI()
             else:
                 zind=min(zind)
                 self.CaseCombo.setCurrentIndex(zind)
                 self.set_current_case(self.casesKeys[zind])
-                
-
-    
-    def onclick(self,x):
-        #remove Interval
-        self.remove_int(x)
-        
+     
+    def unsave(self):
+        """get back to unsaved status"""
+        if self.currentCase['case'].get_saved and not self.adminsession:
+            self.currentCase['case'].give_saved(False)
+            self.buttonSave.setStyleSheet("background-color: #c2a5cf")
+            currentIndex= self.casesKeys.index(str(self.CaseCombo.currentText()))
+            self.CaseCombo.setItemData(currentIndex,QtGui.QColor('#c2a5cf'),QtCore.Qt.BackgroundRole)
+     
     def update_stay_rect(self):
         for index,nT in enumerate(self.NoiseTypes):
             if nT == self.current_noise:
@@ -804,29 +1162,6 @@ class CaseCreatorWidget(DetectControlWidget):
                 self.CS.set_stay_rects_x_bounds(self.case.get_SOI(nT).tolist(), index)
             else:
                 self.CS.set_stay_rect_visible(False, index)
-    
-    def save_case(self):
-        if self.case.get_quality() == None:
-            QtGui.QMessageBox.warning(self, self.trUtf8("save error"), 
-             self.trUtf8("Quality of selection has to be set!"))
-        else:
-            # set the author
-            if not self.savefolder:
-                #asks for the folder where to save the datas
-                self.chg_folder()
-            #self.case.case['author'] = self.author
-            casepath=self.case.save(self.savefolder)
-            self.buttonSave.setStyleSheet("background-color: #a6dba0")
-            currentIndex= self.casesKeys.index(str(self.CaseCombo.currentText()))
-            self.CaseCombo.setItemData(currentIndex,QtGui.QColor('#a6dba0'),QtCore.Qt.BackgroundRole)
-            #self.AnalysedCases.append(self.casesKeys[currentIndex])
-    def show_info(self):
-        self.extbrowsercall()
-    
-    def extbrowsercall(self):
-        """call opening info page in external web browser"""
-        pathtoinfo=self.infofolder.joinpath('info.html').absolute().as_uri()
-        os.startfile(pathtoinfo)
     
     @classmethod
     def from_measurement(cls, mesVal, mID, mics, author = None):
@@ -1048,7 +1383,27 @@ class CompareCaseAlgWidget(DetectControlWidget):
             micSn.calc_kg(alg)
         return cls(wavPath, algorithms, micSn)
         
-    
+def load_micSn(ID,mic,matPath, gvar = ['Tb','Te','Tp_b','Tp_e','LAEQ'], algorithm=None):
+    """loads micSn from the matPath, returns a signal and a stftName"""
+    jsonconfigpath=matPath
+    mesVal = measuredValues.from_json(jsonconfigpath)
+    location =  mesVal.location
+    measurement = mesVal.measurement
+    measuredSignal.setup(jsonconfigpath)
+    mS = measuredSignal(ID,mic)
+    y, t, sR = mS.get_signal(mic)
+    ch_info = mS.channel_info(mic)
+    # get the values from measuredValues to initiate MicSignal and Case
+    var = gvar
+    micValues = mesVal.get_variables_values(ID, mic, var)
+    micValues.update(ch_info)
+    # initiate  MicSignal
+    MicSnObj = MicSignal(ID,mic,y,t,sR, micValues)
+    if algorithm:
+        stftName = MicSnObj.get_stft_name(algorithm)
+        return MicSnObj, stftName
+    else:
+        return MicSnObj, {'location':location,'measurement':measurement, 'micValues':micValues,'t':t,'y':y,'sR':sR, 'mS':mS}
 
 ##
 if __name__ == "__main__":

@@ -106,6 +106,12 @@ class Case(object):
     def get_bounds(self):
         """returns tb and te"""
         return(self.case['Tb'],self.case['Te'])
+    def get_mat_path(self, listofpaths):
+        """finds the exact path where the file .mat of this case is located relative to at least one of the paths given in listofpaths"""
+        for pathtofile in listofpaths:#listofpaths contains Windows paths
+            listfiles= os.listdir(presults.joinpath('raw_signals').as_posix())
+            if listfiles.count(self.case['mID']+"_mic_"+self.case['mic']+".mat")>0:
+                return pathtofile.joinpath('raw_signals'+self.case['mID']+"_mic_"+self.case['mic']+".mat")
     def get_mIDmic(self):
         """returns the mID and mic"""
         return(self.case['mID']+"_"+str(self.case['mic']))
