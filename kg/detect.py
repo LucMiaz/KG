@@ -190,6 +190,8 @@ class MicSignal(object):
         ret['ID'] = self.ID
         ret['mic'] = self.mic
         ret['t']=self.t
+        if not self.KG[noiseType].get(str(algorithm),False):
+            self.calc_kg(algorithm)
         ret['result'] = copy.deepcopy(self.KG[noiseType][str(algorithm)])
         return(ret)
         
@@ -238,8 +240,7 @@ class MicSignal(object):
             raise(e)
         else:
             ymin, ymax = ax.get_ylim()
-            ax.fill_between(detection['t'], where = detection['result'] ,\
-            y1 = ymin, y2 = ymax, alpha = 0.4, **kwargs)
+            ax.fill_between(detection['t'], where = detection['result'] ,y1 = ymin, y2 = ymax, alpha = 0.4, **kwargs)
             #ax.set_ybound(ymin, ymax)
     
     def plot_prms(self, ax ,label = None):

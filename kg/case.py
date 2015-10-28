@@ -2,6 +2,10 @@ import sys,os,pathlib
 from kg.intervals import *
 from kg.measurement_values import measuredValues
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
+from mpl_toolkits.axes_grid.inset_locator import inset_axes
+from matplotlib.font_manager import FontProperties
+from matplotlib.colors import LinearSegmentedColormap
+from pylab import *
 import matplotlib.pyplot as plt
 import json
 import time
@@ -109,9 +113,13 @@ class Case(object):
     def get_mat_path(self, listofpaths):
         """finds the exact path where the file .mat of this case is located relative to at least one of the paths given in listofpaths"""
         for pathtofile in listofpaths:#listofpaths contains Windows paths
-            listfiles= os.listdir(presults.joinpath('raw_signals').as_posix())
-            if listfiles.count(self.case['mID']+"_mic_"+self.case['mic']+".mat")>0:
-                return pathtofile.joinpath('raw_signals'+self.case['mID']+"_mic_"+self.case['mic']+".mat")
+            try:
+                listfiles= os.listdir(pathtofile.joinpath('raw_signals').as_posix())
+            except:
+                pass
+            else:
+                if listfiles.count(self.case['mID']+"_"+str(self.case['mic'])+".mat")>0:
+                    return pathtofile.joinpath('raw_signals/'+self.case['mID']+"_"+str(self.case['mic'])+".mat")
     def get_mIDmic(self):
         """returns the mID and mic"""
         return(self.case['mID']+"_"+str(self.case['mic']))
@@ -146,8 +154,9 @@ class Case(object):
             ax.axvspan(xmin, xmax, ymin, ymax, alpha = 0.2, **kwargs)
             
     def plot_compare(self, ax, result , t , noiseType = 'Z',** kwargs):
-        
-        resTF,disc = self.compare(result , t , noiseType, False)
+        fontP = FontProperties()
+        fontP.set_size('small')
+        resTF,disc = self.compare(result , t , noiseType, sum=False)
         
         def inter(t,TF):
             x=TF.astype(float)
@@ -155,11 +164,17 @@ class Case(object):
             tint=np.arange(t.min()-dt/2,t.max()+dt,dt/2)
             xint = np.interp(tint,t,x)>=0.5
             return(tint,xint)
+        colors = {'TP':'#4daf4a','TN':'#ff7f00','FP':'#e41a1c','FN':'#377eb8'}
         ymin,ymax = ax.get_ylim()
-        for k, c in zip(['TP','TN','FP','FN'],['#bebada','#8dd3c7','#fb8072','#ffffb3']):#blue green red yellow
+        for k in ['TP','TN','FP','FN']:#blue green red yellow
             t,x = inter(resTF['t'], resTF[k])
-            ax.fill_between(t,ymin,ymax, where = x,alpha= 0.7, color = c)
-        
+            ax.fill_between(t,ymin,ymax, where = x,alpha= 0.5, color = colors[k])
+        p1 = Rectangle((0, 0), 1, 1, fc=colors['TP'], alpha=0.5)
+        p2 = Rectangle((0, 0), 1, 1, fc=colors['TN'],alpha=0.5)
+        p3 = Rectangle((0, 0), 1, 1, fc=colors['FP'],alpha=0.5)
+        p4 = Rectangle((0,0),1,1,fc=colors['FN'],alpha=0.5)
+        ax.legend((p1, p2, p3,p4), ('True positive','True negative','False positive', 'False negative'),loc='upper center', bbox_to_anchor=(0.5, -0.05), fancybox=True, shadow=False, ncol=4, prop=fontP)
+
     def __str__(self):
         """prints the name of the case"""
         return( "case_"+str(self.case['mID'])+"_"+str(self.case['mic'])+'_'+str(self.case['author']))

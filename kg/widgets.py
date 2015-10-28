@@ -233,8 +233,10 @@ class DetectControlWidget(QMainWindow):
             self.change_quality('medium')
         elif event.key()==QtCore.Qt.Key_3:
             self.change_quality('good')
-        elif event.key()==QtCore.Qt.Key_U:
+        elif event.key()==QtCore.Qt.Key_U and self.modifiers==QtCore.Qt.ControlModifier:
             self.update_canvas()
+        elif event.key()==QtCore.Qt.Key_P and self.modifiers==QtCore.Qt.ControlModifier:
+            self.plot()
         elif event.key()==QtCore.Qt.Key_R and self.modifiers==QtCore.Qt.ControlModifier:
             text,ok=QtGui.QInputDialog.getItem(self,"Display Quality", "Current quality is "+self.mediarate+"\n Please select an update quality :", self.comboratelist, self.comboratelist.index(self.mediarate))
             if ok:
@@ -390,7 +392,7 @@ class CaseCreatorWidget(DetectControlWidget):
         hBox=self.add_widgets_basic()
         self.set_centralWidget()
         self.author=None
-        self.both_visible=True
+        self.both_visibles=True
         #set cases
         self.NoiseTypes = ['Z','KG']
         self.asks_for_info()
@@ -420,7 +422,26 @@ class CaseCreatorWidget(DetectControlWidget):
                 self.sparecase=(k,v)
                 break
         self.casesToAnalyze=newdictionary
-        self.TurnTheSavedGreen()#set caseCombo
+        
+        if self.adminsession:
+            self.AuthorCases={}
+            for auth in self.authors:
+                if auth=='admin':
+                    self.AuthorCases['admin']=self.casesToAnalyze
+                else:
+                    self.author=auth
+                    self.AuthorCases[auth]={}
+                    try:
+                        listofsaved=self.checkSavedCases()
+                    except:
+                        pass
+                    else:
+                        for i in listofsaved:
+                            self.AuthorCases[auth][i]=copy.deepcopy(self.casesToAnalyze[i])#copies the 
+            self.load_author(3)
+            self.ComboAuthors.setCurrentIndex(3)
+        else:
+            self.TurnTheSavedGreen()#set caseCombo
         #add connections
         self.connections()
         self.micSignals={}
@@ -464,7 +485,7 @@ class CaseCreatorWidget(DetectControlWidget):
             self.authors=['admin']
         else:
             self.authors=os.listdir(authorspath.as_posix())
-        
+        self.authors.append('admin')
         self.ComboAuthors=QtGui.QComboBox()
         for auth in self.authors:
             self.ComboAuthors.addItem(auth)
@@ -533,11 +554,11 @@ class CaseCreatorWidget(DetectControlWidget):
         # noise Type combo
         self.SOIcombo = QtGui.QComboBox()
         self.SOIcombo.addItem('Zischen', 'Z')
-        self.SOIcombo.setItemData(0,QtGui.QColor('#d8b365'),QtCore.Qt.BackgroundRole)#add backgroundcolor of combo Z
+        self.SOIcombo.setItemData(0,QtGui.QColor('#984ea3'),QtCore.Qt.BackgroundRole)#add backgroundcolor of combo Z
         self.SOIcombo.setItemData(0,QtGui.QColor('#f5f5f5'),QtCore.Qt.ForegroundRole)#change text color
         self.SOIcombo.addItem('Kreischen', 'KG')
-        self.SOIcombo.setItemData(1,QtGui.QColor('#5ab4ac'),QtCore.Qt.BackgroundRole)#add backgroundcolor of combo K
-        self.SOIcombo.setItemData(1,QtGui.QColor('#f5f5f5'),QtCore.Qt.ForegroundRole)#change text color
+        self.SOIcombo.setItemData(1,QtGui.QColor('#ffff33'),QtCore.Qt.BackgroundRole)#add backgroundcolor of combo K
+        self.SOIcombo.setItemData(1,QtGui.QColor('#272822'),QtCore.Qt.ForegroundRole)#change text color
         hBox1.addWidget(self.SOIcombo)
         # visualize both cb
         self.cb = QtGui.QCheckBox('both visible', self)
@@ -606,10 +627,14 @@ class CaseCreatorWidget(DetectControlWidget):
         for alg in self.algorithmsTypes.keys():
             dialogstring+= self.algorithmsTypes[alg]['attributes']
             dialogstring+='\n'
-        dialog,ok = QtGui.QInputDialog.getText(self, 'Algorithm input', 'Insert an algorithm description in the following form :\n'+dialogstring,QtGui.QLineEdit.Normal, 'Z2_3000_13.2_0.1')
+        self.releaseKeyboard()
+        dialog,ok = QtGui.QInputDialog.getText(self, 'Algorithm input', 'Insert an algorithm description in the following form :\n'+dialogstring, QtGui.QLineEdit.Normal, 'Z2_3000_13.2_0.1')
+        self.grabKeyboard()
+        
         try:
             alg,fc,thres,dt=dialog.split('_')
         except:
+            print("Could not read your input")
             return False
         else:
             self.Algorithms[dialog]=(eval(self.algorithmsTypes[alg]['classname']+'('+str(fc)+','+str(thres)+','+str(dt)+')'))
@@ -629,7 +654,8 @@ class CaseCreatorWidget(DetectControlWidget):
     def asks_for_case(self):
         """asks for new case add"""
         listofpaths=[]
-        keeponsasking=True
+        keeponasking=True
+        self.releaseKeyboard()
         while keeponasking:
             retour=(QtGui.QFileDialog.getOpenFileNames(self, 'Select cases'))
             for file in retour[0]:
@@ -638,6 +664,7 @@ class CaseCreatorWidget(DetectControlWidget):
             if ok==QtGui.QMessageBox.Yes:
                 keeponasking=False
         self.load_cases(listofpaths)
+        self.grabKeyboard()
     
     def asks_for_info(self):
         result = QtGui.QMessageBox.question(self, 'Information', "Would you like to see the information page ?", QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
@@ -648,6 +675,7 @@ class CaseCreatorWidget(DetectControlWidget):
     def asks_for_ncases(self):
         """asks for the number of cases to treat from the case_to_json file
         if in admin session, will ask if you want to select the cases yourself. If so, a prompt will ask you to select them. Then the program will load them and add the path to Paths"""
+        self.releaseKeyboard()
         askforcases=True
         if self.adminsession:
             result =QtGui.QMessageBox.question(self,'Initialization of cases',"Would you like to select the cases yourself?", QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.Yes)
@@ -698,6 +726,7 @@ class CaseCreatorWidget(DetectControlWidget):
             listofcase=[]
             self.casesToAnalyze={}
             self.load_cases(listofpaths)
+        self.grabKeyboard()
             
     def _barplay(self, truth):
         """tells what to do if audio is playing or not"""
@@ -714,15 +743,15 @@ class CaseCreatorWidget(DetectControlWidget):
             self.change_current_case(0)
             self.CaseCombo.setCurrentIndex(0)
             
-    def case_to_analyse(self, ID, mic, mesPath, givenauthor=None):
+    def case_to_analyse(self, ID, mic, matPath, givenauthor=None):
         """setup the analysed cases from MBBM
         called by load_cases
         """
         # read the signal
         caseDict={}
-    
+        mesPath=matPath.parent.parent
         # initiate  MicSignal
-        micSn,micval = load_micSn(ID,mic,mesPath)
+        micSn,micval = load_micSn(ID,mic,matPath)
         # test if signal is clipped, skipü it if True
         if micSn.clippedtest():
             clipped.add((ID,mic))
@@ -756,6 +785,8 @@ class CaseCreatorWidget(DetectControlWidget):
             self.CaseCombo.setCurrentIndex(index-1)
     
     def change_current_case(self, index):
+        if self.adminsession:
+            self.buttonCompare.setChecked(QtCore.Qt.Unchecked)
         key = self.casesKeys[index]
         #self.currentCase.get('saved',False):
         self.set_current_case(key)
@@ -834,8 +865,8 @@ class CaseCreatorWidget(DetectControlWidget):
     
     def chg_typedisplay(self):
         """toggle between show both and show one"""
-        self.both_visible = not self.both_visible
-        self.cb.setChecked(self.both_visible)
+        self.both_visibles=not self.both_visibles
+        self.cb.setChecked(self.both_visibles)
         self.update_stay_rect
         self.update_canvas()
     
@@ -864,6 +895,11 @@ class CaseCreatorWidget(DetectControlWidget):
     def get_quality(self):
         return(self.currentCase['case'].get('quality',False))
     
+    def hide_rect(self):
+        """hides the rectangles without touching the SOI"""
+        self.update_stay_rect(True)
+        self.update_canvas()
+    
     def import_cases(self):
         """performs the basic import of cases"""
         with self.mesPath.joinpath('caseToAnalyze.json').open('r+') as input:
@@ -875,13 +911,20 @@ class CaseCreatorWidget(DetectControlWidget):
     
     def load_algorithm(self, index):
         """loads the algorithm selected"""
+        self.buttonCompare.setChecked(QtCore.Qt.Unchecked)
         self.currentAlgorithm=self.Algorithms[self.ComboAlgorithms.currentText()]
         self.buttonCompare.setCheckState(QtCore.Qt.Unchecked)
         self.plot()
     
     def load_author(self, index):
         """loads the saved intervals of an author"""
+        self.buttonCompare.setChecked(QtCore.Qt.Unchecked)
         self.author=self.authors[index]
+        self.casesToAnalyze=self.AuthorCases[self.author]
+        self.CaseCombo.clear()
+        self.casesKeys=sorted(list(self.casesToAnalyze.keys()))
+        for j in self.casesKeys:
+            self.CaseCombo.addItem(j)
         self.TurnTheSavedGreen()
     
     def load_cases(self, listofpaths):
@@ -913,7 +956,7 @@ class CaseCreatorWidget(DetectControlWidget):
                         if (ID+'_'+mic+'.mat') in listdirs:
                             mesPath=paths
             elif extension=='mat':
-                mesPath=pathtofile.parent.parent
+                mesPath=pathtofile
             if mesPath:
                 self.case_to_analyse(ID,mic,mesPath, gauthor)
             else:
@@ -966,6 +1009,7 @@ class CaseCreatorWidget(DetectControlWidget):
         """update the plot"""
         self.currentplottype=self.PlotTypes[index]
         self.plot()
+        self.update_canvas()
 
     def remove_int(self, xmin, xmax = None):
         self.unsave()
@@ -1005,6 +1049,7 @@ class CaseCreatorWidget(DetectControlWidget):
         else:
             self.both_visibles= False
         self.update_stay_rect()
+        self.update_canvas()
     
     def set_current_case(self,key):
         self.releaseKeyboard()
@@ -1077,20 +1122,31 @@ class CaseCreatorWidget(DetectControlWidget):
     def show_compare(self,state):
         """will show or remove the comparison between current author /current case and the current algorithm"""
         if state==QtCore.Qt.Checked:
+            self.hide_rect()
             if self.currentCase.get('micSn',False):
                 MicSnObj=self.currentCase['micSn']
             else:
-                ID=self.currentCase.get_mID()
-                mic=self.currentCase.get_mic()
-                matPath=self.currentCase.get_mat_path()
+                ID=self.case.get_mID()
+                mic=self.case.get_mic()
+                matPath=self.case.get_mat_path(self.Paths)
+                if not matPath:
+                    print("not matPath found")
+                    pass
                 MicSnObj, stftname=load_micSn(ID,mic,matPath, self.currentAlgorithm)
-                self.casesToAnalyze[ID+'_'+mic]['micSn']=MicSnObj
-                self.casesToAnalyze[ID+'_'+mic]['stftName']=stftname
+                self.casesToAnalyze[ID+'_'+str(mic)]['micSn']=MicSnObj
+                self.casesToAnalyze[ID+'_'+str(mic)]['stftName']=stftname
             MicSnObj.calc_kg(self.currentAlgorithm)
             alg_res = MicSnObj.get_KG_results(self.currentAlgorithm)['result']
-            self.case.plot_compare(self.SelectAxis, noiseType = self.currentAlgorithm.noiseType , **alg_res)
+            if self.author!='admin':
+                self.case.plot_compare(self.SelectAxis, alg_res['result'], alg_res['t'], noiseType = self.currentAlgorithm.noiseType)
+            else:
+                MicSnObj.plot_KG(self.currentAlgorithm, self.SelectAxis, color = '#984ea3')
+            for ca in self.canvas:
+                ca.draw()
         else:
             self.plot()
+            self.TurnTheSavedGreen()
+        self.update_canvas()
 
     def show_info(self):
         self.extbrowsercall()
@@ -1106,9 +1162,15 @@ class CaseCreatorWidget(DetectControlWidget):
         except:
             print("No saving folder was found")
             self.CaseCombo.setCurrentIndex(0)
-            self.set_current_case(self.casesKeys[0])
-        else:  
+            try:
+                self.set_current_case(self.casesKeys[0])
+            except:
+                self.CaseCombo.setCurrentIndex(-1)
+        else:
             zind=[i for i in range(0,len(self.casesKeys))]
+            for ucased in self.casesKeys:
+                currentIndex=self.casesKeys.index(ucased)
+                self.CaseCombo.setItemData(currentIndex,QtGui.QColor('#f5f5f5'),QtCore.Qt.BackgroundRole)
             for scased in sIDs:
                 if scased in self.casesKeys:
                     zind.remove(self.casesKeys.index(scased))
@@ -1120,6 +1182,8 @@ class CaseCreatorWidget(DetectControlWidget):
                     self.casesToAnalyze[scased]['case'].set_quality(caseinfile.get_quality())
                     for type in self.NoiseTypes:
                         self.casesToAnalyze[scased]['case'].set_SOI(caseinfile.get_SOI(type),type)
+            
+                
             if len(zind)==0:
                 if self.sparecase and not self.adminsession:
                     k,v = self.sparecase
@@ -1145,6 +1209,8 @@ class CaseCreatorWidget(DetectControlWidget):
                 zind=min(zind)
                 self.CaseCombo.setCurrentIndex(zind)
                 self.set_current_case(self.casesKeys[zind])
+        self.plot()
+        self.update_canvas()
      
     def unsave(self):
         """get back to unsaved status"""
@@ -1154,14 +1220,17 @@ class CaseCreatorWidget(DetectControlWidget):
             currentIndex= self.casesKeys.index(str(self.CaseCombo.currentText()))
             self.CaseCombo.setItemData(currentIndex,QtGui.QColor('#c2a5cf'),QtCore.Qt.BackgroundRole)
      
-    def update_stay_rect(self):
+    def update_stay_rect(self, hide=False):
         for index,nT in enumerate(self.NoiseTypes):
-            if nT == self.current_noise:
-                self.CS.set_stay_rects_x_bounds(self.SOI.tolist(),index)
-            elif self.both_visibles:
-                self.CS.set_stay_rects_x_bounds(self.case.get_SOI(nT).tolist(), index)
+            if not hide:
+                if nT == self.current_noise:
+                    self.CS.set_stay_rects_x_bounds(self.SOI.tolist(),index)
+                elif self.both_visibles:
+                    self.CS.set_stay_rects_x_bounds(self.case.get_SOI(nT).tolist(), index)
+                else:
+                    self.CS.set_stay_rect_visible(False, index)
             else:
-                self.CS.set_stay_rect_visible(False, index)
+                self.CS.set_stay_rects_x_bounds([], index)
     
     @classmethod
     def from_measurement(cls, mesVal, mID, mics, author = None):
@@ -1383,9 +1452,9 @@ class CompareCaseAlgWidget(DetectControlWidget):
             micSn.calc_kg(alg)
         return cls(wavPath, algorithms, micSn)
         
-def load_micSn(ID,mic,matPath, gvar = ['Tb','Te','Tp_b','Tp_e','LAEQ'], algorithm=None):
+def load_micSn(ID,mic,matPath, algorithm=None,gvar = ['Tb','Te','Tp_b','Tp_e','LAEQ'] ):
     """loads micSn from the matPath, returns a signal and a stftName"""
-    jsonconfigpath=matPath
+    jsonconfigpath=matPath.parent.parent
     mesVal = measuredValues.from_json(jsonconfigpath)
     location =  mesVal.location
     measurement = mesVal.measurement

@@ -59,7 +59,7 @@ if __name__ == "__main__":
         matplotlib.rcParams['grid.linewidth']=0.2
         matplotlib.rcParams['grid.alpha']=0.8
         matplotlib.rcParams['legend.framealpha']=0.4
-        #matplotlib.rcParams['figure.autolayout']=True
+        matplotlib.rcParams['figure.autolayout']=True
         font={'family':'sans-serif','weight':'regular','size':11}
         matplotlib.rc('font',**font)  
 

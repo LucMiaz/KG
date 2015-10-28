@@ -315,7 +315,7 @@ class CaseSelector(_my_SelectorWidget):
         if not isinstance(nrect,list):
             nrect=[nrect]
         if stay_rectprops is None:
-            cc= ['#d8b365','#5ab4ac','#a6dba0','#e66101']#green yellow blue red
+            cc= ['#984ea3','#ffff33','#d8b365','#5ab4ac']#green yellow blue red
             color =[cc[i%len(cc)] for i in range(0,len(nrect))]
             self.stay_rectprops = [dict(facecolor= c, alpha=0.5) for c in color]
         else:
