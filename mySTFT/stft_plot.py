@@ -47,17 +47,19 @@ def plot_spectrogram(X, param, ax, colorbar = True, title = 'Spectrogram', dB= T
     # np.round(np.max(ZdB)-60 ,-1), vmax = np.round(np.max(ZdB)+5,-1), clip = False)
     spect = ax.pcolormesh(X, Y, np.transpose(Z), norm=norm, cmap = cmap)
     #legenda
-    if colorbar:
+    if False:
         axcolorbar = inset_axes(ax,
                 width="2.5%", # width = 10% of parent_bbox width
                 height="100%", # height : 50%
-                loc=3,
+                loc='upper left',
                 bbox_to_anchor=(1.01, 0., 1, 1),
                 bbox_transform=ax.transAxes,
                 borderpad=0,
                 )
         axcolorbar.tick_params(axis='both', which='both', labelsize=8)
         ax.figure.colorbar(spect, cax = axcolorbar)
+    elif colorbar:
+        ax.legend(spect,loc='upper center', bbox_to_anchor=(0.5, -0.05), fancybox=True, shadow=False)
     #
     if freqscale =='log':
         ax.set_yscale('log')
@@ -65,8 +67,8 @@ def plot_spectrogram(X, param, ax, colorbar = True, title = 'Spectrogram', dB= T
         ax.set_yscale('linear')
     ax.xaxis.set_minor_locator(matplotlib.ticker.AutoMinorLocator())
     ax.grid(which= 'both' ,ls="-", linewidth=0.15, color='#aaaaaa', alpha=0.3)
-    ax.set_xlim(t.min(),t.max())
-    ax.set_ylim(freq.min(),freq.max())
+    #ax.set_xlim(t.min(),t.max())
+    #ax.set_ylim(freq.min(),freq.max())
     if not colorbar:
         return(spect)
 

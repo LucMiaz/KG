@@ -742,6 +742,9 @@ class CaseCreatorWidget(DetectControlWidget):
         else:
             self.change_current_case(0)
             self.CaseCombo.setCurrentIndex(0)
+        if self.adminsession:
+            self.currentplottype=self.PlotTypes[0]
+            self.plot()
             
     def case_to_analyse(self, ID, mic, matPath, givenauthor=None):
         """setup the analysed cases from MBBM
@@ -914,6 +917,7 @@ class CaseCreatorWidget(DetectControlWidget):
         self.buttonCompare.setChecked(QtCore.Qt.Unchecked)
         self.currentAlgorithm=self.Algorithms[self.ComboAlgorithms.currentText()]
         self.buttonCompare.setCheckState(QtCore.Qt.Unchecked)
+        self.currentplottype=self.PlotTypes[0]
         self.plot()
     
     def load_author(self, index):
@@ -922,10 +926,12 @@ class CaseCreatorWidget(DetectControlWidget):
         self.author=self.authors[index]
         self.casesToAnalyze=self.AuthorCases[self.author]
         self.CaseCombo.clear()
+        self.currentplottype=self.PlotTypes[0]
         self.casesKeys=sorted(list(self.casesToAnalyze.keys()))
         for j in self.casesKeys:
             self.CaseCombo.addItem(j)
         self.TurnTheSavedGreen()
+        self.chg_type()
     
     def load_cases(self, listofpaths):
         """loads the cases given in list of paths to casesToAnalyse
@@ -996,10 +1002,11 @@ class CaseCreatorWidget(DetectControlWidget):
                 micSn=MicSignal.from_wav(self.currentCase['wavPath'])
                 if micSn:
                     self.micSignals[self.currentCase['case'].get_mIDmic()]=micSn
+                    stftName = micSn.get_stft_name(self.currentAlgorithm)
                 else:
                     print("wav file not found")
                     pass
-            self.micSignals[self.currentCase['case'].get_mIDmic()].plot_spectrogram('3930_4096_6',self.SelectAxis)
+            self.micSignals[self.currentCase['case'].get_mIDmic()].plot_spectrogram(stftName,self.SelectAxis)
         for ca in self.canvas:
             ca.draw()
         #update canvas

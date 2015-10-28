@@ -36,7 +36,7 @@ class Case(object):
                 }
         self.case['caseID'] = str(self)
     
-    def compare(self, result, t , noiseType = 'Z', sum = True, full=False):
+    def compare(self, result, t , noiseType = 'Z', sum = True, full=True):
         """Compares the discretization of this case with the one of an algorithm whose results are given in otherdisc. timeparam variable contains the variables for the discretization. Returns a dictionnary with the number of True positives, True negatives, False positives and False negatives"""
         #restrict comparation between Tb and Te
         
@@ -164,7 +164,7 @@ class Case(object):
             tint=np.arange(t.min()-dt/2,t.max()+dt,dt/2)
             xint = np.interp(tint,t,x)>=0.5
             return(tint,xint)
-        colors = {'TP':'#4daf4a','TN':'#ff7f00','FP':'#e41a1c','FN':'#377eb8'}
+        colors = {'TP':'#7de023','TN':'#c8ff96','FP':'#d14316','FN':'#ffac92'}
         ymin,ymax = ax.get_ylim()
         for k in ['TP','TN','FP','FN']:#blue green red yellow
             t,x = inter(resTF['t'], resTF[k])
