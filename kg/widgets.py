@@ -25,6 +25,7 @@ from kg.algorithm import *
 from scipy.io import wavfile
 import random
 import json
+import time
 #import seaborn as sns
 #sns.set(style='ticks',palette='Set2')
                           
@@ -60,12 +61,21 @@ class kgControlWidget(QMainWindow):
         #self.setLayout(self.mainLayout)
         self.setLayout(self.vBox)
         self.toCleanOnNew=[]
+        self.savePlotFolder=pathlib.Path('')
+        self.savePlotType='pdf'
+        self.savePlotdpi=300
         
     def add_to_authors(self):
         if self.initilialized:
-            self.ComboAuthors.clear()
+            try:
+                self.ComboAuthors.clear()
+            except:
+                pass
             for auth in self.CaseWidget.authors:
-                self.ComboAuthors.addItem(auth)
+                try:
+                    self.ComboAuthors.addItem(auth)
+                except:
+                    pass
     
     def add_widgets_admin(self):
         """add admin tools such as different types of plot, algorithm test and authors browser"""
@@ -75,9 +85,11 @@ class kgControlWidget(QMainWindow):
         for type in self.CaseWidget.PlotTypes:
             self.plotselect.addItem(type)
         hBox=QtGui.QHBoxLayout()
-        labelAuthor=QtGui.QLabel("Plot type")
+        labelAuthor=QtGui.QGroupBox("Plot type")
+        hpb=QtGui.QHBoxLayout()
+        hpb.addWidget(self.plotselect)
+        labelAuthor.setLayout(hpb)
         hBox.addWidget(labelAuthor)
-        hBox.addWidget(self.plotselect)
         
         #Authors
         try:
@@ -88,9 +100,11 @@ class kgControlWidget(QMainWindow):
             self.CaseWidget.authors=os.listdir(authorspath.as_posix())
         self.CaseWidget.authors.append('admin')
         self.ComboAuthors=QtGui.QComboBox()
-        labelAuthor=QtGui.QLabel("Authors")
+        labelAuthor=QtGui.QGroupBox("Authors")
+        hcb=QtGui.QHBoxLayout()
+        hcb.addWidget(self.ComboAuthors)
+        labelAuthor.setLayout(hcb)
         hBox.addWidget(labelAuthor)
-        hBox.addWidget(self.ComboAuthors)
         #for cls in vars()['Algorithm'].__subclasses__():
         #    algid, algdescription=eval(cls.__name__()+".phony()")
         #    self.algorithmsTypes[algid]={'classname':cls.__name__(), 'attributes': algdescription}
@@ -98,7 +112,11 @@ class kgControlWidget(QMainWindow):
         self.ComboAlgorithms=QtGui.QComboBox()
         self.CaseWidget.asks_for_algorithm()
         self.CaseWidget.currentAlgorithm=self.CaseWidget.Algorithms[self.ComboAlgorithms.currentText()]
-        hBox.addWidget(self.ComboAlgorithms)
+        labelAlg=QtGui.QGroupBox("Algorithms")
+        hab=QtGui.QHBoxLayout()
+        hab.addWidget(self.ComboAlgorithms)
+        labelAlg.setLayout(hab)
+        hBox.addWidget(labelAlg)
         groupBox.setLayout(hBox)
         hBox=QtGui.QHBoxLayout()
         hBox.addWidget(groupBox)
@@ -233,25 +251,33 @@ class kgControlWidget(QMainWindow):
     def admin_actions(self):
         #algorithms
         self.addalgAction = QtGui.QAction('&Add alg', self)        
-        self.addalgAction.setShortcut('Ctrl+A')
+        self.addalgAction.setShortcut('Ctrl+Shift+A')
         self.addalgAction.setStatusTip('Add algorithm')
         self.addalgAction.triggered.connect(self.CaseWidget.asks_for_algorithm)
         #case
         self.addcaseAction = QtGui.QAction('&Add case', self)        
-        self.addcaseAction.setShortcut('Ctrl+C')
+        self.addcaseAction.setShortcut('Ctrl+Shift+C')
         self.addcaseAction.setStatusTip('Add case')
         self.addcaseAction.triggered.connect(self.CaseWidget.asks_for_case)
         #show compare
         self.compareAction = QtGui.QAction('&Compare',self)
-        #self.compareAction.setShortcut('')
+        self.compareAction.setShortcut('Ctrl+Alt+C')
         self.compareAction.setStatusTip('Compare algorithm with case')
         self.compareAction.triggered.connect(self.CaseWidget.show_compare)
         
     def admin_actions_disable(self):
+        self.basic_action_disable()
         #disable actions
         self.addalgAction.setDisabled(True)
         self.addcaseAction.setDisabled(True)
         self.compareAction.setDisabled(True)
+        
+    def admin_actions_enable(self):
+        #disable actions
+        self.basic_action_enable()
+        self.addalgAction.setEnabled(True)
+        self.addcaseAction.setEnabled(True)
+        self.compareAction.setEnabled(True)
         
     def _barplay(self, truth):
         """define what to do when audio is playing/not playing"""
@@ -280,7 +306,49 @@ class kgControlWidget(QMainWindow):
             rAction.setStatusTip(rate)
             rAction.triggered.connect(lambda: self.change_rate(self.comboratedict[rate]))
             self.rateActions[rate]=rAction
+        #save plot
+        self.savePlotAction=QtGui.QAction('&SaveImage',self)
+        self.savePlotAction.setShortcut('Ctrl+Shift+S')
+        self.savePlotAction.setStatusTip('Save current plot and intervals in the save image folder')
+        self.savePlotAction.triggered.connect(self.savePlot)
+        #change save plot folder
+        self.chgSavePlotFolderAction=QtGui.QAction('&Change output folder',self)
+        self.chgSavePlotFolderAction.setStatusTip('Change the current folder for saving the Plot')
+        self.chgSavePlotFolderAction.triggered.connect(self.chgSavePlotFolder)
+        #change save plot type
+        self.chgSavePlotTypeAction=QtGui.QAction('&Change output type',self)
+        self.chgSavePlotTypeAction.setStatusTip('Change output type : example pdf, svg, png')
+        self.chgSavePlotTypeAction.triggered.connect(self.chgSavePlotType)
+        self.basic_action_disable()
     
+    def basic_action_disable(self):
+        self.chgSavePlotTypeAction.setDisabled(True)
+        self.chgSavePlotFolderAction.setDisabled(True)
+        self.savePlotAction.setDisabled(True)
+    
+    def basic_action_enable(self):
+        self.chgSavePlotTypeAction.setEnabled(True)
+        self.chgSavePlotFolderAction.setEnabled(True)
+        self.savePlotAction.setEnabled(True)
+    
+    def chgSavePlotdpi(self):
+        retour,ok=QtGui.QInputDialog.getInt(self,'dpi','Please select dot per inch ratio for output')
+        if ok:
+            self.savePlotdpi=int(retour)
+    def chgSavePlotFolder(self):
+        retour=(QtGui.QFileDialog.getExistingDirectory(self.kgControl, 'Please select an output directory.'))
+        try:
+            pathsave=pathlib.Path(retour).absolute()
+        except:
+            pass
+        else:
+            if pathsave.isdir():
+                self.savePlotFolder=pathsave
+    def chgSavePlotType(self):
+        self.releaseKeyboard()
+        result,ok=QtGui.QInputDialog.getItem(self,'Image extension','Please select an image type',['png','ps','pdf','svg'])
+        if ok:
+            self.savePlotType=result
     
     def change_rate(self,rate):
         if self.boolaudio:
@@ -334,8 +402,13 @@ class kgControlWidget(QMainWindow):
         self.changesavingfolderAction.triggered.connect(self.CaseWidget.chg_folder)
         
     def creator_actions_disable(self):
+        self.basic_action_disable()
         self.changesavingfolderAction.setDisabled(True)
         self.saveAction.setDisabled(True)
+    def creator_actions_enable(self):
+        self.basic_action_enable()
+        self.changesavingfolderAction.setEnabled(True)
+        self.saveAction.setEnabled(True)
     
     def define_actions(self):
         """define actions for the menu"""
@@ -478,6 +551,10 @@ class kgControlWidget(QMainWindow):
         self.newCaseMenu= self.fileMenu.addMenu('&New...')
         self.newCaseMenu.addAction(self.createCaseAdminAction)
         self.newCaseMenu.addAction(self.createCaseCreatorAction)
+        self.plotMenu=self.Menu.addMenu('&Save Figure')
+        self.plotMenu.addAction(self.savePlotAction)
+        self.plotMenu.addAction(self.chgSavePlotFolderAction)
+        self.plotMenu.addAction(self.chgSavePlotTypeAction)
         
     def menu_bar_advanced(self):
         
@@ -504,43 +581,114 @@ class kgControlWidget(QMainWindow):
         
     
     def NewCaseAdmin(self):
-        self.clean_old_Widgets()
         newadmin=True
+        self.releaseKeyboard()
         if self.boolaudio:
             ok = QtGui.QMessageBox.question(self,'Creating a new admin session',"Creating a new admin session,\n do you want to proceed ?", QtGui.QMessageBox.Yes |QtGui.QMessageBox.No, QtGui.QMessageBox.Yes)
             if not ok==QtGui.QMessageBox.Yes:
                 newadmin=False
         if newadmin:
-            self.releaseKeyboard()
+            self.clean_old_Widgets()
             self.CaseWidget=CaseAnalyserWidget(self, self.mesPath)
             self.CaseWidget.basic_widgets()
-            self.grabKeyboard()
             self.define_actions()
-            self.addalgAction.setEnabled(True)
-            self.addcaseAction.setEnabled(True)
-            self.compareAction.setEnabled(True)
+            self.admin_actions_enable()
             self.connections()
             self.connections_admin()
             self.add_to_authors()
+        self.grabKeyboard()
     
     def NewCaseCreator(self):
-        self.clean_old_Widgets()
         newcase=True
+        self.releaseKeyboard()
         if self.boolaudio:
             ok = QtGui.QMessageBox.question(self,'Creating a new case creator session',"Creating a new case creator session,\n do you want to proceed ?", QtGui.QMessageBox.Yes |QtGui.QMessageBox.No, QtGui.QMessageBox.Yes)
             if not ok==QtGui.QMessageBox.Yes:
                 newcase=False
         if newcase:
-            self.releaseKeyboard()
+            self.clean_old_Widgets()
             self.CaseWidget=CaseCreatorWidget(self, self.mesPath)
             self.CaseWidget.basic_widgets()
-            self.grabKeyboard()
             self.define_actions()
-            self.changesavingfolderAction.setEnabled(True)
-            self.saveAction.setEnabled(True)
+            self.creator_actions_enable()
             self.connections()
             self.connections_creator()
+        self.grabKeyboard()
         
+    def savePlot(self):
+        if self.CaseWidget:
+            self.set_savefig_params()
+            self.statusBar().showMessage('Saving plot')
+            name=self.savePlotFolder.absolute().as_posix()+str(self.CaseWidget)+'_'+self.CaseWidget.author+'_'+self.CaseWidget.case.get_mIDmic()+'_'+time.strftime('%d-%m-%Y-%H-%M.')+str(self.savePlotType)
+            self.SelectAxis.figure.savefig(name)
+            print('Plot saved as '+name)
+            self.set_textparam_bw()
+            self.statusBar().clearMessage()
+            os.startfile(pathlib.Path(name).as_uri())
+    
+    def set_textparam_bw(self, bw=False):
+        """set matplotlib text as black if true, as white if False"""
+        if not bw:
+            textcolor='#f5f5f5'
+            axescolor='#f5f5f5'
+            axbgcolor='#272822'
+            bgcolor='#aaaaaa'
+            matplotlib.rcParams['xtick.color']=axescolor
+            matplotlib.rcParams['grid.color']=bgcolor
+            matplotlib.rcParams['ytick.color']=axescolor
+            matplotlib.rcParams['patch.linewidth']='0.25'
+            matplotlib.rcParams['lines.color']=axbgcolor
+            matplotlib.rcParams['lines.linewidth']='0.75'
+            matplotlib.rcParams['axes.linewidth']='0.4'
+            matplotlib.rcParams['xtick.major.width']='0.4'
+            matplotlib.rcParams['ytick.major.width']='0.4'
+            matplotlib.rcParams['xtick.minor.width']='0.3'
+            matplotlib.rcParams['xtick.minor.width']='0.3'
+            matplotlib.rcParams['text.color']=bgcolor#LAFast (on ax)
+            matplotlib.rcParams['axes.labelcolor']=axescolor#labels diplayed on the figure (LA, t(s))
+        else:
+            textcolor='#272822'
+            axescolor='#272822'
+            axbgcolor='#f5f5f5'
+            bgcolor='#f5f5f5'
+            matplotlib.rcParams['xtick.color']=axescolor
+            matplotlib.rcParams['grid.color']=bgcolor
+            matplotlib.rcParams['ytick.color']=axescolor
+            matplotlib.rcParams['patch.linewidth']='0.25'
+            matplotlib.rcParams['lines.color']=axbgcolor
+            matplotlib.rcParams['lines.linewidth']='0.75'
+            matplotlib.rcParams['axes.linewidth']='0.4'
+            matplotlib.rcParams['xtick.major.width']='0.4'
+            matplotlib.rcParams['ytick.major.width']='0.4'
+            matplotlib.rcParams['xtick.minor.width']='0.3'
+            matplotlib.rcParams['xtick.minor.width']='0.3'
+            matplotlib.rcParams['text.color']=bgcolor#LAFast (on ax)
+            matplotlib.rcParams['axes.labelcolor']=axescolor#labels diplayed on the figure (LA, t(s))
+    
+    def set_savefig_params(self, dpi=None, facecolor='#ffffff', edgecolor='white', format=None, bbox='standard', pad_inches=0.1, jpeg_quality=100, transparent=True, bw=True):
+        if not dpi:
+            dpi=self.savePlotdpi
+        matplotlib.rcParams['savefig.dpi']=dpi# figure dots per inch
+        matplotlib.rcParams['savefig.facecolor']=facecolor# figure facecolor when saving
+        matplotlib.rcParams['savefig.edgecolor']=edgecolor# figure edgecolor when saving
+        if not format:
+            format=self.savePlotType
+        matplotlib.rcParams['savefig.format']=format# png, ps, pdf, svg
+        matplotlib.rcParams['savefig.bbox']=bbox# 'tight' or 'standard'.
+        matplotlib.rcParams['savefig.pad_inches']=pad_inches# Padding to be used when bbox is set to 'tight'
+                                # backends but will workd with temporary file based ones:
+                                # e.g. setting animation.writer to ffmpeg will not work,
+                                # use ffmpeg_file instead
+        if self.savePlotType=='jpeg':
+            matplotlib.rcParams['savefig.jpeg_quality']=jpeg_quality #when a jpeg is saved, the default quality parameter.
+        if self.savePlotType in ['png','PNG'] and transparent:
+            matplotlib.rcParams['savefig.transparent']=True
+        else:
+            matplotlib.rcParams['savefig.transparent']=False# setting that controls whether figures are saved with a
+                                # transparent background by default 
+        if bw:
+            self.set_textparam_bw(True)
+    
     def show_info(self):
         self.extbrowsercall()
         #self.infoTab=QtGui.QWidget()
@@ -676,6 +824,38 @@ class MainCaseWidget():
             self.change_current_case(0)
             self.kgControl.CaseCombo.setCurrentIndex(0)
         self._on_case_change()
+    
+    def case_to_analyse(self, ID, mic, matPath, givenauthor=None):
+        """setup the analysed cases from MBBM
+        called by load_cases
+        """
+        # read the signal
+        caseDict={}
+        mesPath=matPath.parent.parent
+        # initiate  MicSignal
+        micSn,micval = load_micSn(ID,mic,matPath)
+        # test if signal is clipped, skipü it if True
+        if micSn.clippedtest():
+            clipped.add((ID,mic))
+            print('clipped')
+        # create Wav and add path to caseDict
+        caseDict['wavPath'] = str(micSn.export_to_Wav(mesPath, relative=False))
+        # initialize empty Case with None author
+        caseDict['case']=Case(micval['location'], micval['measurement'],ID, mic,micval['micValues']['Tb'], micval['micValues']['Te'], givenauthor)
+        #add tmin tmax
+        caseDict['tmin'] = float(micval['t'].min())
+        caseDict['tmax'] = float(micval['t'].max())
+        caseDict['micSn']=micSn
+        # Add data to plot ; key:[t,y] , #key is label of plot
+        caseDict['plotData'] = {}
+        # first plot prms
+        micval['y'],micval['t'],_ = micval['mS'].get_signal('prms' + str(mic))
+        caseDict['plotData']['LAfast']=[micval['t'].tolist(),(20*np.log10(micval['y']/(2e-5))).tolist()]
+        # second plot prms
+        # todo: plot stft band
+        # append Case Dict to  dict
+        self.casesToAnalyze[ID+'_'+mic]=caseDict
+        self.add_to_author(caseDict['case']['author'])
         
     def case_up(self):
         """changes case to the previous one"""
@@ -748,7 +928,8 @@ class MainCaseWidget():
         
     def _connections(self):
         pass
-    
+    def deal_with_missing_key(self):
+        return(self.kgControl.ComboCase[0])
     def get_quality(self):
         return(self.currentCase['case'].get('quality',False))
     
@@ -818,6 +999,7 @@ class MainCaseWidget():
         self.kgControl.SelectAxis.cla()
         self.case.plot_triggers(self.kgControl.SelectAxis)
         if self.currentplottype=='LAfast':
+            self.kgControl.statusBar().showMessage("Computing LAfast")
             ymax=0
             for key, pData in self.currentCase['plotData'].items():
                 t,y = pData
@@ -832,6 +1014,7 @@ class MainCaseWidget():
             self.kgControl.SelectAxis.set_ylim([0,ymax*1.1])
             self.kgControl.SelectAxis.legend()
         elif self.currentplottype=='Spectogram':
+            self.kgControl.statusBar().showMessage("Computing STFT. Long process, please wait.")
             if not self.currentCase['case'].get_mIDmic() in self.micSignals.keys():
                 micSn=MicSignal.from_wav(self.currentCase['wavPath'])
                 if micSn:
@@ -845,13 +1028,15 @@ class MainCaseWidget():
             ca.draw()
         #update canvas
         self.update_stay_rect()
+        self.kgControl.statusBar().clearMessage()
     
     def plotchange(self,index):
         """update the plot"""
         self.currentplottype=self.PlotTypes[index]
         self.plot()
         self.update_canvas()
-    
+    def __str__(self):
+        return('MainCase')
     def save_case(self):
         pass
     def show_compare(self):
@@ -875,7 +1060,11 @@ class MainCaseWidget():
         self.kgControl.releaseKeyboard()
         #self.timer.stop()
         self.kgControl.media.stop()
-        self.currentCase = self.casesToAnalyze[key]
+        try:
+            self.currentCase = self.casesToAnalyze[key]
+        except:
+            key=self.deal_with_missing_key()
+            self.currentCase=self.casesToAnalyze[key]
         #attributes
         self.case = self.currentCase['case']
         #update buttons
@@ -1090,22 +1279,10 @@ class CaseAnalyserWidget(MainCaseWidget):
                 self.sparecase=(k,v)
                 break
         self.casesToAnalyze=newdictionary
-        
-        self.AuthorCases={}
-        for auth in self.authors:
-            if auth=='admin':
-                self.AuthorCases['admin']=self.casesToAnalyze
-            else:
-                self.author=auth
-                self.AuthorCases[auth]={}
-                try:
-                    listofsaved=self.checkSavedCases()
-                except:
-                    pass
-                else:
-                    for i in listofsaved:
-                        self.AuthorCases[auth][i]=copy.deepcopy(self.casesToAnalyze[i])#copies the 
+        self.generate_authors()
 
+        self.author=self.authors[0]
+        self.casesToAnalyze=self.AuthorCases[self.author]
         #add connections
         self.connections()
         self.micSignals={}
@@ -1131,7 +1308,7 @@ class CaseAnalyserWidget(MainCaseWidget):
             alg,fc,thres,dt=dialog.split('_')
         except:
             print("Could not read your input")
-            return False
+            self.asks_for_algorithm()
         else:
             self.Algorithms[dialog]=(eval(self.algorithmsTypes[alg]['classname']+'('+str(fc)+','+str(thres)+','+str(dt)+')'))
             self.kgControl.ComboAlgorithms.addItem(dialog)
@@ -1166,38 +1343,6 @@ class CaseAnalyserWidget(MainCaseWidget):
         self.load_author(-1)
         ##todo place comboAuthors as Action in the menu and place a label instead.
         self.kgControl.ComboAuthors.setCurrentIndex(-1)
-        
-    def case_to_analyse(self, ID, mic, matPath, givenauthor=None):
-        """setup the analysed cases from MBBM
-        called by load_cases
-        """
-        # read the signal
-        caseDict={}
-        mesPath=matPath.parent.parent
-        # initiate  MicSignal
-        micSn,micval = load_micSn(ID,mic,matPath)
-        # test if signal is clipped, skipü it if True
-        if micSn.clippedtest():
-            clipped.add((ID,mic))
-            print('clipped')
-        # create Wav and add path to caseDict
-        caseDict['wavPath'] = str(micSn.export_to_Wav(mesPath, relative=False))
-        # initialize empty Case with None author
-        caseDict['case']=Case(micval['location'], micval['measurement'],ID, mic,micval['micValues']['Tb'], micval['micValues']['Te'], givenauthor)
-        #add tmin tmax
-        caseDict['tmin'] = float(micval['t'].min())
-        caseDict['tmax'] = float(micval['t'].max())
-        caseDict['micSn']=micSn
-        # Add data to plot ; key:[t,y] , #key is label of plot
-        caseDict['plotData'] = {}
-        # first plot prms
-        micval['y'],micval['t'],_ = micval['mS'].get_signal('prms' + str(mic))
-        caseDict['plotData']['LAfast']=[micval['t'].tolist(),(20*np.log10(micval['y']/(2e-5))).tolist()]
-        # second plot prms
-        # todo: plot stft band
-        # append Case Dict to  dict
-        self.casesToAnalyze[ID+'_'+mic]=caseDict
-        self.add_to_author(caseDict['case']['author'])
     
     def change_current_case(self, index):
         key = self.casesKeys[index]
@@ -1210,7 +1355,43 @@ class CaseAnalyserWidget(MainCaseWidget):
         
     def _connections(self):
         pass
-        
+    
+    def deal_with_missing_key(self):
+        if self.author:
+            try:
+                self.casesToAnalyze=self.AuthorCases[self.author]
+            except:
+                self.generate_authors()
+                self.casesToAnalyze=self.AuthorCases[self.author]
+            return(list(self.casesToAnalyze.keys())[0])
+        else:
+            try:
+                self.author=self.kgControl.ComboAuthors[0]
+            except:
+                print('No ComboAuthors defined. Problem in deal_with_missing_key function of class CaseAnalyserWidget')
+            else:
+                self.kgControl.ComboAuthors.setCurrentIndex(0)
+                return(self.caseToAnalyze['case'].get_mID())
+    
+    def generate_authors(self):
+        self.AuthorCases={}
+        for auth in self.authors:
+            if auth=='admin':
+                self.AuthorCases['admin']=self.casesToAnalyze
+            else:
+                self.author=auth
+                self.AuthorCases[auth]={}
+                try:
+                    listofsaved=self.checkSavedCases()
+                except:
+                    pass
+                else:
+                    for i in listofsaved:
+                        try:
+                            self.AuthorCases[auth][i]=copy.deepcopy(self.casesToAnalyze[i])
+                        except:
+                            pass
+    
     def load_algorithm(self, index):
         """loads the algorithm selected"""
         self.currentAlgorithm=self.Algorithms[self.kgControl.ComboAlgorithms.currentText()]
@@ -1232,9 +1413,14 @@ class CaseAnalyserWidget(MainCaseWidget):
     def _on_case_change(self):
         self.currentplottype=self.PlotTypes[0]
         self.plot()
-    def show_compare(self,state):
+        
+    def __str__(self):
+        return('Analysis')
+        
+    def show_compare(self):
         """will show or remove the comparison between current author /current case and the current algorithm"""
         if True:
+            self.kgControl.statusBar().showMessage("Computing results")
             self.hide_rect()
             if self.currentCase.get('micSn',False):
                 MicSnObj=self.currentCase['micSn']
@@ -1243,23 +1429,27 @@ class CaseAnalyserWidget(MainCaseWidget):
                 mic=self.case.get_mic()
                 matPath=self.case.get_mat_path(self.Paths)
                 if not matPath:
-                    print("not matPath found")
-                    pass
-                MicSnObj, stftname=load_micSn(ID,mic,matPath, self.currentAlgorithm)
-                self.casesToAnalyze[ID+'_'+str(mic)]['micSn']=MicSnObj
-                self.casesToAnalyze[ID+'_'+str(mic)]['stftName']=stftname
-            MicSnObj.calc_kg(self.currentAlgorithm)
-            alg_res = MicSnObj.get_KG_results(self.currentAlgorithm)['result']
-            if self.author!='admin':
-                self.case.plot_compare(self.kgControl.SelectAxis, alg_res['result'], alg_res['t'], noiseType = self.currentAlgorithm.noiseType)
-            else:
-                MicSnObj.plot_KG(self.currentAlgorithm, self.kgControl.SelectAxis, color = '#984ea3')
-            for ca in self.canvas:
-                ca.draw()
+                    print("not matPath found, please connect external Harddrive")
+                    return None       
+                else:
+                    MicSnObj, stftname=load_micSn(ID,mic,matPath, self.currentAlgorithm)
+                    self.casesToAnalyze[ID+'_'+str(mic)]['micSn']=MicSnObj
+                    self.casesToAnalyze[ID+'_'+str(mic)]['stftName']=stftname
+            if MicSnObj:
+                MicSnObj.calc_kg(self.currentAlgorithm)
+                alg_res = MicSnObj.get_KG_results(self.currentAlgorithm)['result']
+                if self.author!='admin':
+                    self.case.plot_compare(self.kgControl.SelectAxis, alg_res['result'], alg_res['t'], noiseType = self.currentAlgorithm.noiseType)
+                else:
+                    MicSnObj.plot_KG(self.currentAlgorithm, self.kgControl.SelectAxis, color = '#984ea3')
+                for ca in self.canvas:
+                    ca.draw()
+            
         else:
             self.plot()
             self.TurnTheSavedGreen()
         self.update_canvas()
+        self.kgControl.statusBar().clearMessage()
     
     def _zind_zero(self):
         try:
@@ -1456,10 +1646,13 @@ class CaseCreatorWidget(MainCaseWidget):
         if self.barplay==False:
             self.update_canvas()
             
+    def __str__(self):
+        return('Creation')
+        
     def save_case(self):
         if self.case.get_quality() == None:
-            QtGui.QMessageBox.warning(self.kgControl, self.trUtf8("save error"), 
-            self.trUtf8("Quality of selection has to be set!"))
+            QtGui.QMessageBox.warning(self.kgControl, self.kgControl.trUtf8("save error"), 
+            self.kgControl.trUtf8("Quality of selection has to be set!"))
         else:
             # set the author
             if not self.savefolder:

@@ -173,7 +173,7 @@ class Case(object):
         p2 = Rectangle((0, 0), 1, 1, fc=colors['TN'],alpha=0.5)
         p3 = Rectangle((0, 0), 1, 1, fc=colors['FP'],alpha=0.5)
         p4 = Rectangle((0,0),1,1,fc=colors['FN'],alpha=0.5)
-        ax.legend((p1, p2, p3,p4), ('True positive','True negative','False positive', 'False negative'),loc='upper center', bbox_to_anchor=(0.5, -0.05), fancybox=True, shadow=False, ncol=4, prop=fontP)
+        ax.legend((p1, p2, p3,p4), ('True positive','True negative','False positive', 'False negative'),loc='upper right', bbox_to_anchor=(0.5, -0.05), fancybox=True, shadow=False, ncol=2, prop=fontP)
 
     def __str__(self):
         """prints the name of the case"""

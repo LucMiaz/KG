@@ -23,6 +23,10 @@ if __name__ == "__main__":
         axescolor='#f5f5f5'
         axbgcolor='#272822'
         bgcolor='#aaaaaa'
+        textcolor='#aaaaaa'
+        axescolor='#f4f4f4'
+        axbgcolor='#272822'
+        bgcolor='#aaaaaa'
         palette=QtGui.QPalette()
         palette.setColor(QtGui.QPalette.Window,'#a3a3a3')
         palette.setColor(QtGui.QPalette.Button,textcolor)
@@ -40,9 +44,9 @@ if __name__ == "__main__":
         palette.setColor(QtGui.QPalette.Dark, axbgcolor)
         matplotlib.rcParams['axes.facecolor']=axescolor#background of ax   
         matplotlib.rcParams['axes.edgecolor']=axbgcolor
-        matplotlib.rcParams['xtick.color']=axescolor
+        matplotlib.rcParams['xtick.color']=textcolor
         matplotlib.rcParams['grid.color']=bgcolor
-        matplotlib.rcParams['ytick.color']=axescolor
+        matplotlib.rcParams['ytick.color']=textcolor
         matplotlib.rcParams['figure.edgecolor']=textcolor
         matplotlib.rcParams['figure.facecolor']='#eeee00'
         matplotlib.rcParams['patch.linewidth']='0.25'
@@ -53,15 +57,13 @@ if __name__ == "__main__":
         matplotlib.rcParams['ytick.major.width']='0.4'
         matplotlib.rcParams['xtick.minor.width']='0.3'
         matplotlib.rcParams['xtick.minor.width']='0.3'
-        matplotlib.rcParams['text.color']=bgcolor#LAFast (on ax)
-        matplotlib.rcParams['axes.labelcolor']=axescolor#labels diplayed on the figure (LA, t(s))
-        matplotlib.rcParams['font.family']='HelveticaNeue'
+        matplotlib.rcParams['text.color']=textcolor#LAFast (on ax)
+        matplotlib.rcParams['axes.labelcolor']=textcolor#labels diplayed on the figure (LA, t(s))
+        matplotlib.rcParams['font.family']='Georgia'
         matplotlib.rcParams['grid.linewidth']=0.2
         matplotlib.rcParams['grid.alpha']=0.8
         matplotlib.rcParams['legend.framealpha']=0.4
         matplotlib.rcParams['figure.autolayout']=True
-        font={'family':'sans-serif','weight':'regular','size':11}
-        matplotlib.rc('font',**font)  
 
     app=QtGui.QApplication(sys.argv)
     W = kgControlWidget(mesPath)
