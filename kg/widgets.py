@@ -64,6 +64,7 @@ class kgControlWidget(QMainWindow):
         self.savePlotFolder=pathlib.Path('')
         self.savePlotType='pdf'
         self.savePlotdpi=300
+        self.statusBar().setStyleSheet("QStatusBar{padding-left:10px;background:#272822;color:#f5f5f5;font-weight:bold;}")
         
     def add_to_authors(self):
         if self.initilialized:
@@ -264,6 +265,11 @@ class kgControlWidget(QMainWindow):
         self.compareAction.setShortcut('Ctrl+Alt+C')
         self.compareAction.setStatusTip('Compare algorithm with case')
         self.compareAction.triggered.connect(self.CaseWidget.show_compare)
+        #show author comparison
+        self.authorIntAction=QtGui.QAction('&Show author intervals',self)
+        self.authorIntAction.setShortcut('Ctrl+Shift+P')
+        self.authorIntAction.setStatusTip('Showing author intervals')
+        self.authorIntAction.triggered.connect(self.show_author_int)
         
     def admin_actions_disable(self):
         self.basic_action_disable()
@@ -336,7 +342,7 @@ class kgControlWidget(QMainWindow):
         if ok:
             self.savePlotdpi=int(retour)
     def chgSavePlotFolder(self):
-        retour=(QtGui.QFileDialog.getExistingDirectory(self.kgControl, 'Please select an output directory.'))
+        retour=(QtGui.QFileDialog.getExistingDirectory(self, 'Please select an output directory.'))
         try:
             pathsave=pathlib.Path(retour).absolute()
         except:
@@ -575,6 +581,7 @@ class kgControlWidget(QMainWindow):
         self.adminMenu=self.Menu.addMenu('&Admin')
         self.adminMenu.addAction(self.addalgAction)
         self.adminMenu.addAction(self.compareAction)
+        self.adminMenu.addAction(self.authorIntAction)
         
         for rate in sorted(self.comboratedict.keys()):
             self.rateSubMenu.addAction(self.rateActions[rate])
@@ -688,6 +695,10 @@ class kgControlWidget(QMainWindow):
                                 # transparent background by default 
         if bw:
             self.set_textparam_bw(True)
+    
+    def show_author_int(self):
+        self.CaseWidget.plot()
+        self.CaseWidget.update_canvas()
     
     def show_info(self):
         self.extbrowsercall()
@@ -887,7 +898,14 @@ class MainCaseWidget():
         pass
     
     def change_current_case(self, index):
-        pass
+        key = self.casesKeys[index]
+        #self.currentCase.get('saved',False):
+        self.set_current_case(key)
+        self.update_canvas()
+        # else:
+        #     QtGui.QMessageBox.warning(self.kgControl, self.trUtf8("save error"), 
+        #      self.trUtf8("Before switching case save it!"))
+        
     def changeplot(self):
         index=self.kgControl.plotselect.index(self.currentplottype)
         if index+1==len(self.PlotTypes):
@@ -1211,8 +1229,8 @@ class MainCaseWidget():
                 zind=min(zind)
                 self.kgControl.CaseCombo.setCurrentIndex(zind)
                 self.set_current_case(self.casesKeys[zind])
-        self.plot()
-        self.update_canvas()
+        #self.plot()
+        #self.update_canvas()
 
     def update_canvas(self):
         for handle in self.ca_set_bar_handle:
@@ -1301,7 +1319,7 @@ class CaseAnalyserWidget(MainCaseWidget):
             dialogstring+= self.algorithmsTypes[alg]['attributes']
             dialogstring+='\n'
         self.kgControl.releaseKeyboard()
-        dialog,ok = QtGui.QInputDialog.getText(self.kgControl, 'Algorithm input', 'Insert an algorithm description in the following form :\n'+dialogstring, QtGui.QLineEdit.Normal, 'Z2_3000_13.2_0.1')
+        dialog,ok = QtGui.QInputDialog.getText(self.kgControl, 'Algorithm input', 'Insert an algorithm description in the following form :\n'+dialogstring, QtGui.QLineEdit.Normal, 'Z2_4000_0.706_0.1')
         self.kgControl.grabKeyboard()
         
         try:
@@ -1343,15 +1361,6 @@ class CaseAnalyserWidget(MainCaseWidget):
         self.load_author(-1)
         ##todo place comboAuthors as Action in the menu and place a label instead.
         self.kgControl.ComboAuthors.setCurrentIndex(-1)
-    
-    def change_current_case(self, index):
-        key = self.casesKeys[index]
-        #self.currentCase.get('saved',False):
-        self.set_current_case(key)
-        self.update_canvas()
-        # else:
-        #     QtGui.QMessageBox.warning(self.kgControl, self.trUtf8("save error"), 
-        #      self.trUtf8("Before switching case save it!"))
         
     def _connections(self):
         pass
@@ -1554,15 +1563,6 @@ class CaseCreatorWidget(MainCaseWidget):
         self.casesToAnalyze=newdictionary
         self.kgControl.CaseCombo.addItems(self.casesKeys)
         self.TurnTheSavedGreen()#set caseCombo
-        
-    def change_current_case(self, index):
-        key = self.casesKeys[index]
-        #self.currentCase.get('saved',False):
-        self.set_current_case(key)
-        self.update_canvas()
-        # else:
-        #     QtGui.QMessageBox.warning(self.kgControl, self.trUtf8("save error"), 
-        #      self.trUtf8("Before switching case save it!"))
         
     def change_quality(self, quality):
         if quality in ['good','medium','bad']:

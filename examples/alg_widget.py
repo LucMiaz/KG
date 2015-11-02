@@ -30,7 +30,7 @@ if __name__ == "__main__":
             algorithm=eval(algorithmclass+".askforattributes(CTW)")
     # setup algorithms
     # todo: parametrize alg parameter in the best possible way 
-    algorithms = [ZischenDetetkt2(100,13.0,0.02), ZischenDetetkt2(4000,0.79,0.1)]
+    algorithms = [ZischenDetetkt2(4000,0.79088,0.02)]
     
     ##load cases
     # load measured values

@@ -28,7 +28,7 @@ if __name__ == "__main__":
         axbgcolor='#272822'
         bgcolor='#aaaaaa'
         palette=QtGui.QPalette()
-        palette.setColor(QtGui.QPalette.Window,'#a3a3a3')
+        palette.setColor(QtGui.QPalette.Window,'#4a4944')
         palette.setColor(QtGui.QPalette.Button,textcolor)
         palette.setColor(QtGui.QPalette.ButtonText,axbgcolor)
         palette.setColor(QtGui.QPalette.Text,axbgcolor)
@@ -36,11 +36,11 @@ if __name__ == "__main__":
         palette.setColor(QtGui.QPalette.AlternateBase,'#f3f3f3')
         palette.setColor(QtGui.QPalette.WindowText,textcolor)
         palette.setColor(QtGui.QPalette.Highlight, '#c2a5cf')
-        palette.setColor(QtGui.QPalette.HighlightedText, axbgcolor)
-        palette.setColor(QtGui.QPalette.AlternateBase,axbgcolor)
-        palette.setColor(QtGui.QPalette.ToolTipBase, axbgcolor)
+        palette.setColor(QtGui.QPalette.HighlightedText, axbcolor)
+        palette.setColor(QtGui.QPalette.AlternateBase,axescolor)
+        palette.setColor(QtGui.QPalette.ToolTipBase, axescolor)
         palette.setColor(QtGui.QPalette.Light, axescolor)
-        palette.setColor(QtGui.QPalette.Midlight, bgcolor)
+        palette.setColor(QtGui.QPalette.Midlight, textcolor)
         palette.setColor(QtGui.QPalette.Dark, axbgcolor)
         matplotlib.rcParams['axes.facecolor']=axescolor#background of ax   
         matplotlib.rcParams['axes.edgecolor']=axbgcolor
