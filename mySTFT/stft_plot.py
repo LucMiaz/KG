@@ -16,7 +16,7 @@ import mySTFT
 from mySTFT.stft import *
 
 
-def plot_spectrogram(X, param, ax, colorbar = True, title = 'Spectrogram', dB= True, freqscale = 'log', dBMax = None, scaling = 'density', **kwargs):
+def plot_spectrogram(X, param, ax, colorbar = False, title = 'Spectrogram', dB= True, freqscale = 'log', dBMax = None, scaling = 'density', **kwargs):
     # TODO: correct t axis scala
     """
     plot the spectrogram of a STFT
@@ -65,8 +65,8 @@ def plot_spectrogram(X, param, ax, colorbar = True, title = 'Spectrogram', dB= T
         ax.set_yscale('linear')
     ax.xaxis.set_minor_locator(matplotlib.ticker.AutoMinorLocator())
     ax.grid(which= 'both' ,ls="-", linewidth=0.15, color='#aaaaaa', alpha=0.3)
-    #ax.set_xlim(t.min(),t.max())
-    #ax.set_ylim(freq.min(),freq.max())
+    ax.set_xlim(t.min(),t.max())
+    ax.set_ylim(freq.min(),freq.max())
     if not colorbar:
         return(spect)
 

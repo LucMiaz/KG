@@ -179,7 +179,8 @@ class MicSignal(object):
         par = algorithm.get_stft_param(self.sR)
         return(str(par['M']) +'_'+ str(par['N']) +'_'+ str(par['overlap']))
         
-
+    def get_stft_keys(self):
+        return self.STFT.keys()
     def get_KG_results(self, algorithm):
         '''
         get values in self.KG for algorithm
@@ -209,7 +210,7 @@ class MicSignal(object):
             tb,te = tlim
         return(np.logical_and(t >= tb,t <= te))
   
-    def plot_BPR(self, algorithm, ax, label = None,**kwarks):
+    def plot_BPR(self, algorithm, ax, label = None, decalage=None,**kwarks):
         '''
         plot detection results for a given algorithm
         '''
@@ -223,10 +224,21 @@ class MicSignal(object):
             print('No calculation for', algorithm)
             raise(e)
         else:
-            l, = ax.plot(detection['t'], 10*np.log10(1+detection['avBPR']),\
+            if decalage:
+                t=[]
+                for i in detection['t']:
+                    t.append(decalage+i)
+            else:
+                t=detection['t']
+            logBPR= 10*np.log10(1+detection['avBPR'])
+            l, = ax.plot(t,logBPR,\
                         label=label,**kwarks)
             ax.axhline(algorithm.param['threshold'],lw=1,\
                         color = plt.getp(l,'color'))
+            ax.set_xlim([min(t),max(t)])
+            ax.set_ylabel('BPR')
+            ax.set_xlabel('t (s)')
+            ax.set_ylim([min(logBPR),max(logBPR)*1.1])
     
     def plot_KG(self, algorithm, ax, **kwargs):
         '''
@@ -240,7 +252,23 @@ class MicSignal(object):
             raise(e)
         else:
             ymin, ymax = ax.get_ylim()
-            ax.fill_between(detection['t'], where = detection['result'] ,y1 = ymin, y2 = ymax, alpha = 0.4, **kwargs)
+            xmin,xmax=ax.get_ylim()
+            delta=detection['t'][1]-detection['t'][0]
+            tmin=abs(min(detection['t']))
+            t=[]
+            for i in detection['t']:
+                t.append(i+tmin)
+            #result=[]
+            #isany=False
+            #for dt in range(xmin,xmax, delta):
+            #    t.append(dt)
+            #    if dt in detection['t']:
+            #        isany=True
+            #        result.append(detection['result'][detection['t'].index(dt)])
+            #    else:
+            #        result.append(False)
+            #ax.fill_between(detection['t'], where = detection['result'] ,y1 = ymin, y2 = ymax, alpha = 0.4, **kwargs)
+            ax.fill_between(t, where = detection['result'] ,y1 = ymin, y2 = ymax, alpha = 0.4, **kwargs)
             #ax.set_ybound(ymin, ymax)
     
     def plot_prms(self, ax ,label = None):
@@ -254,15 +282,23 @@ class MicSignal(object):
         '''
         pass
     
-    def plot_signal(self, ax , label = None,**kwargs):
+    def plot_signal(self, ax , decalage = None,label = None,**kwargs):
         """
         plot signal
         """
         if label == None:
             label = str(self)
-        ax.plot(self.t, self.y, label = label, **kwargs)
+        if decalage:
+            t=[]
+            for i in self.t:
+                t.append(decalage+i)
+        else:
+            t=self.t
+        ax.plot(t, self.y, label = label, **kwargs)
+        ax.set_xlim([min(t),max(t)])
+        ax.set_ylim([min(self.y)*1.1,max(self.y)*1.1])
             
-    def plot_spectrogram(self, name, ax, freqscale = 'lin', **kwargs):
+    def plot_spectrogram(self, name, ax, freqscale = 'lin',decalage=None, **kwargs):
         '''
         plot spectrogram
         '''
@@ -283,7 +319,14 @@ class MicSignal(object):
             print("Computing STFT")
             name = self.calc_stft(M, N, overlap)
             STFT=self.STFT[name]
-        plot_spectrogram(STFT['X'], STFT['param'], ax, zorder = 1,**kwargs )
+            
+        if decalage:
+            X=[]
+            for i in STFT['X']:
+                X.append(STFT['X']+decalage)
+        else:
+            X=STFT['X']
+        plot_spectrogram(X, STFT['param'], ax, zorder = 1,**kwargs )
            
     def plot_spectrum(self, ID, mic, ax, label=None):
         pass

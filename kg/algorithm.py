@@ -346,6 +346,10 @@ class ZischenDetetkt2(Algorithm):
         output['BPR'] = list(BPRforR)
         output['avBPR']=avBPR
         return(output)
+    def plot_spec(self,ax, micSn, decalage=None):
+        micSn.calc_kg(self)
+        micSn.plot_BPR(self,ax,decalage=decalage,color = '#272822',lw=1)
+        
     def stringsummary(self):
         return str(self.param['fc'])+"_"+str(self.param['dt'])
     def stringdefinition(self):

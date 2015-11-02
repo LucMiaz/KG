@@ -66,6 +66,18 @@ class kgControlWidget(QMainWindow):
         self.savePlotdpi=300
         self.statusBar().setStyleSheet("QStatusBar{padding-left:10px;background:#272822;color:#f5f5f5;font-weight:bold;}")
         
+    def add_second_axis(self, type):
+        self.SecondAxis=self.SelectAxis.figure.add_subplot(2,1,2,sharex = self.SelectAxis)
+        self.CaseWidget._plot(type, self.SecondAxis)
+        self.removeSecondAxisAction.setEnabled(True)
+        
+    def add_second_axis_LAfast(self):
+        self.add_second_axis('LAfast')
+    def add_second_axis_signal(self):
+        self.add_second_axis('Signal')
+    def add_second_axis_spec(self):
+        self.add_second_axis('Spec')
+        
     def add_to_authors(self):
         if self.initilialized:
             try:
@@ -86,11 +98,11 @@ class kgControlWidget(QMainWindow):
         for type in self.CaseWidget.PlotTypes:
             self.plotselect.addItem(type)
         hBox=QtGui.QHBoxLayout()
-        labelAuthor=QtGui.QGroupBox("Plot type")
+        labelPlot=QtGui.QGroupBox("Plot type")
         hpb=QtGui.QHBoxLayout()
         hpb.addWidget(self.plotselect)
-        labelAuthor.setLayout(hpb)
-        hBox.addWidget(labelAuthor)
+        labelPlot.setLayout(hpb)
+        hBox.addWidget(labelPlot)
         
         #Authors
         try:
@@ -270,6 +282,27 @@ class kgControlWidget(QMainWindow):
         self.authorIntAction.setShortcut('Ctrl+Shift+P')
         self.authorIntAction.setStatusTip('Showing author intervals')
         self.authorIntAction.triggered.connect(self.show_author_int)
+        #hide author
+        self.authorHideAction=QtGui.QAction('&Hide author intervals',self)
+        self.authorHideAction.setShortcut('Ctrl+Alt+P')
+        self.authorHideAction.setStatusTip('Hide authors intervals')
+        self.authorHideAction.triggered.connect(self.CaseWidget.hide_rect)
+        #add a second axis
+        self.addSecondAxisLAfastAction=QtGui.QAction('&add LAfast',self)
+        self.addSecondAxisLAfastAction.setStatusTip('Add LAfast on a second axis')
+        self.addSecondAxisLAfastAction.triggered.connect(self.add_second_axis_LAfast)
+        #
+        self.addSecondAxisSignalAction=QtGui.QAction('&add signal',self)
+        self.addSecondAxisSignalAction.setStatusTip('Add signal on a second axis')
+        self.addSecondAxisSignalAction.triggered.connect(self.add_second_axis_signal)
+        
+        self.addSecondAxisSpecAction=QtGui.QAction('&add spec',self)
+        self.addSecondAxisSpecAction.setStatusTip('Add spec on a second axis')
+        self.addSecondAxisSpecAction.triggered.connect(self.add_second_axis_spec)
+        #remove second axis
+        self.removeSecondAxisAction=QtGui.QAction('&remove second axis',self)
+        self.removeSecondAxisAction.setStatusTip('Remove the second axis')
+        self.removeSecondAxisAction.triggered.connect(self.remove_second_axis)
         
     def admin_actions_disable(self):
         self.basic_action_disable()
@@ -277,6 +310,12 @@ class kgControlWidget(QMainWindow):
         self.addalgAction.setDisabled(True)
         self.addcaseAction.setDisabled(True)
         self.compareAction.setDisabled(True)
+        self.removeSecondAxisAction.setDisabled(True)
+        self.addSecondAxisSignalAction.setDisabled(True)
+        self.addSecondAxisLAfastAction.setDisabled(True)
+        self.addSecondAxisSpecAction.setDisabled(True)
+        self.authorHideAction.setDisabled(True)
+        self.authorIntAction.setDisabled(True)
         
     def admin_actions_enable(self):
         #disable actions
@@ -284,6 +323,12 @@ class kgControlWidget(QMainWindow):
         self.addalgAction.setEnabled(True)
         self.addcaseAction.setEnabled(True)
         self.compareAction.setEnabled(True)
+        self.addSecondAxisSignalAction.setEnabled(True)
+        self.addSecondAxisLAfastAction.setEnabled(True)
+        self.addSecondAxisSpecAction.setEnabled(True)
+        #self.removeSecondAxisAction.setEnabled(True)
+        self.authorIntAction.setEnabled(True)
+        self.authorHideAction.setEnabled(True)
         
     def _barplay(self, truth):
         """define what to do when audio is playing/not playing"""
@@ -379,17 +424,17 @@ class kgControlWidget(QMainWindow):
         self.media.tick.connect(self.update_time)
         self.media.finished.connect(self.media_finish)
         self.media.stateChanged.connect(self.timer_status)#update timer status on media Statechange
-        self.SOIcombo.currentIndexChanged.connect(self.CaseWidget.set_noise_type)
+        self.SOIcombo.activated.connect(self.CaseWidget.set_noise_type)
         self.cb.stateChanged.connect(self.CaseWidget.set_both_visible)
-        self.CaseCombo.currentIndexChanged.connect(self.CaseWidget.change_current_case)
+        self.CaseCombo.activated.connect(self.CaseWidget.change_current_case)
         for rb in self.Qradios:
             rb.clicked.connect(self.CaseWidget.set_quality)
         self.boolaudio=True
     
     def connections_admin(self):
-        self.plotselect.currentIndexChanged.connect(self.CaseWidget.plotchange)
-        self.ComboAuthors.currentIndexChanged.connect(self.CaseWidget.load_author)
-        self.ComboAlgorithms.currentIndexChanged.connect(self.CaseWidget.load_algorithm)
+        self.plotselect.activated.connect(self.CaseWidget.plotchange)
+        self.ComboAuthors.activated.connect(self.CaseWidget.load_author)
+        self.ComboAlgorithms.activated.connect(self.CaseWidget.load_algorithm)
     
     def connections_creator(self):
         self.buttonSave.clicked.connect(self.CaseWidget.save_case)
@@ -582,6 +627,12 @@ class kgControlWidget(QMainWindow):
         self.adminMenu.addAction(self.addalgAction)
         self.adminMenu.addAction(self.compareAction)
         self.adminMenu.addAction(self.authorIntAction)
+        self.adminMenu.addAction(self.authorHideAction)
+        self.addSecondAxisMenu=self.adminMenu.addMenu('&Add second axis')
+        self.addSecondAxisMenu.addAction(self.addSecondAxisLAfastAction)
+        self.addSecondAxisMenu.addAction(self.addSecondAxisSpecAction)
+        self.addSecondAxisMenu.addAction(self.addSecondAxisSignalAction)
+        self.adminMenu.addAction(self.removeSecondAxisAction)
         
         for rate in sorted(self.comboratedict.keys()):
             self.rateSubMenu.addAction(self.rateActions[rate])
@@ -621,7 +672,13 @@ class kgControlWidget(QMainWindow):
             self.connections()
             self.connections_creator()
         self.grabKeyboard()
-        
+    
+    def remove_second_axis(self):
+        self.SelectAxis.figure.delaxes(self.SecondAxis)
+        self.CaseWidget.update_canvas()
+        self.CaseWidget.plot()
+        self.removeSecondAxisAction.setDisabled(True)
+    
     def savePlot(self):
         if self.CaseWidget:
             self.set_savefig_params()
@@ -773,7 +830,7 @@ class MainCaseWidget():
         # set the author        
         self.mesPath = mesPath
         self.minspan = 0.05
-        self.PlotTypes=['LAfast', 'Spectogram']
+        self.PlotTypes=['LAfast', 'Spec','Spectogram', 'Signal']
         self.currentplottype=self.PlotTypes[0]
         self.author=None
         self.both_visibles=True
@@ -898,6 +955,7 @@ class MainCaseWidget():
         pass
     
     def change_current_case(self, index):
+        self.currentplottype='LAfast'
         key = self.casesKeys[index]
         #self.currentCase.get('saved',False):
         self.set_current_case(key)
@@ -950,7 +1008,17 @@ class MainCaseWidget():
         return(self.kgControl.ComboCase[0])
     def get_quality(self):
         return(self.currentCase['case'].get('quality',False))
-    
+    def get_current_signal(self):
+        if not self.currentCase['case'].get_mIDmic() in self.micSignals.keys():
+            micSn=MicSignal.from_wav(self.currentCase['wavPath'])
+            if micSn:
+                self.micSignals[self.currentCase['case'].get_mIDmic()]=micSn
+            else:
+                print("wav file not found")
+                pass
+        else:
+            micSn=self.micSignals[self.currentCase['case'].get_mIDmic()]
+        return micSn
     def hide_rect(self):
         """hides the rectangles without touching the SOI"""
         self.update_stay_rect(True)
@@ -1013,46 +1081,71 @@ class MainCaseWidget():
     
     def onselect(self,xmin,xmax, remove=False):
         pass
+        
     def plot(self):
-        self.kgControl.SelectAxis.cla()
-        self.case.plot_triggers(self.kgControl.SelectAxis)
-        if self.currentplottype=='LAfast':
-            self.kgControl.statusBar().showMessage("Computing LAfast")
-            ymax=0
-            for key, pData in self.currentCase['plotData'].items():
-                t,y = pData
-                self.kgControl.SelectAxis.plot(t, y , label = key, color='#272822', linewidth=1.)#plot display
-                if max(y)>ymax:
-                    ymax=max(y)
-            tmin = self.currentCase['tmin']
-            tmax = self.currentCase['tmax']
-            self.kgControl.SelectAxis.set_xlim(tmin,tmax)
-            self.kgControl.SelectAxis.set_ylabel('LA dB')
-            self.kgControl.SelectAxis.set_xlabel('t (s)')
-            self.kgControl.SelectAxis.set_ylim([0,ymax*1.1])
-            self.kgControl.SelectAxis.legend()
-        elif self.currentplottype=='Spectogram':
-            self.kgControl.statusBar().showMessage("Computing STFT. Long process, please wait.")
-            if not self.currentCase['case'].get_mIDmic() in self.micSignals.keys():
-                micSn=MicSignal.from_wav(self.currentCase['wavPath'])
-                if micSn:
-                    self.micSignals[self.currentCase['case'].get_mIDmic()]=micSn
-                    stftName = micSn.get_stft_name(self.currentAlgorithm)
-                else:
-                    print("wav file not found")
-                    pass
-            self.micSignals[self.currentCase['case'].get_mIDmic()].plot_spectrogram(stftName,self.kgControl.SelectAxis)
+        cpt =self.currentplottype
+        self._plot(cpt, self.kgControl.SelectAxis)
+        
+    def _plot(self, cpt, ax):
+        ax.cla()
+        if cpt=='Spectogram':
+            self.plot_spectrogam(ax)
+        elif cpt=='LAfast':
+            self.plot_LAfast(ax)
+        elif cpt=='Spec':
+            self.plot_spec(ax, decalage= self.currentCase['tmin'])
+        elif cpt=='Signal':
+            self.plot_signal(ax)
+    
+    def plot_finish(self):
         for ca in self.canvas:
             ca.draw()
-        #update canvas
+        
         self.update_stay_rect()
         self.kgControl.statusBar().clearMessage()
+    
+    def plot_LAfast(self,ax):
+        self.kgControl.statusBar().showMessage("Computing LAfast")
+        ymax=0
+        tmin = self.currentCase['tmin']
+        tmax = self.currentCase['tmax']
+        for key, pData in self.currentCase['plotData'].items():
+            t,y = pData
+            ax.plot(t, y , label = key, color='#272822', linewidth=1.)#plot display
+            if max(y)>ymax:
+                ymax=max(y)
+    
+        ax.set_xlim(tmin,tmax)
+        ax.set_ylabel('LA dB')
+        ax.set_xlabel('t (s)')
+        ax.set_ylim([0,ymax*1.1])
+        ax.legend()
+        self.plot_finish()
+    
+    def plot_spec(self, ax, decalage=None):
+        pass
+    
+    def plot_spectrogam(self,ax):
+        #matplotlib.rcParams['figure.autolayout']=False
+        self.kgControl.statusBar().showMessage("Computing STFT. Long process, please wait.")
+        micSn=self.get_current_signal()
+        stftName = micSn.get_stft_name(self.currentAlgorithm)
+        self.micSignals[self.currentCase['case'].get_mIDmic()].plot_spectrogram(stftName,ax, decalage=self.currentCase['tmin'])
+        self.micSignals[self.currentCase['case'].get_mIDmic()]=micSn
+        self.plot_finish()
+    
+    def plot_signal(self,ax):
+        micSn=self.get_current_signal()
+        micSn.plot_signal(ax, decalage=self.currentCase['tmin'])
+        self.plot_finish()
     
     def plotchange(self,index):
         """update the plot"""
         self.currentplottype=self.PlotTypes[index]
         self.plot()
         self.update_canvas()
+    
+    
     def __str__(self):
         return('MainCase')
     def save_case(self):
@@ -1094,7 +1187,7 @@ class MainCaseWidget():
         #set SOI and update Canvas
         self.set_noise_type('Z')
         #plot
-        self.plot()
+        ##self.plot()
         #Set mediafile
         wavPath = self.mesPath.joinpath(self.currentCase['wavPath'])
         self.set_media_source(str(wavPath), self.currentCase['tmin'])
@@ -1321,15 +1414,15 @@ class CaseAnalyserWidget(MainCaseWidget):
         self.kgControl.releaseKeyboard()
         dialog,ok = QtGui.QInputDialog.getText(self.kgControl, 'Algorithm input', 'Insert an algorithm description in the following form :\n'+dialogstring, QtGui.QLineEdit.Normal, 'Z2_4000_0.706_0.1')
         self.kgControl.grabKeyboard()
-        
-        try:
-            alg,fc,thres,dt=dialog.split('_')
-        except:
-            print("Could not read your input")
-            self.asks_for_algorithm()
-        else:
-            self.Algorithms[dialog]=(eval(self.algorithmsTypes[alg]['classname']+'('+str(fc)+','+str(thres)+','+str(dt)+')'))
-            self.kgControl.ComboAlgorithms.addItem(dialog)
+        if ok:
+            try:
+                alg,fc,thres,dt=dialog.split('_')
+            except:
+                print("Could not read your input")
+                self.asks_for_algorithm()
+            else:
+                self.Algorithms[dialog]=(eval(self.algorithmsTypes[alg]['classname']+'('+str(fc)+','+str(thres)+','+str(dt)+')'))
+                self.kgControl.ComboAlgorithms.addItem(dialog)
         
     def asks_for_ncases(self):
         result =QtGui.QMessageBox.question(self.kgControl,'Initialization of cases',"Would you like to select the cases yourself?", QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.Yes)
@@ -1412,7 +1505,7 @@ class CaseAnalyserWidget(MainCaseWidget):
         self.author=self.authors[index]
         self.casesToAnalyze=self.AuthorCases[self.author]
         self.kgControl.CaseCombo.clear()
-        self.currentplottype=self.PlotTypes[0]
+        #self.currentplottype=self.PlotTypes[0]
         self.casesKeys=sorted(list(self.casesToAnalyze.keys()))
         for j in self.casesKeys:
             self.kgControl.CaseCombo.addItem(j)
@@ -1422,12 +1515,22 @@ class CaseAnalyserWidget(MainCaseWidget):
     def _on_case_change(self):
         self.currentplottype=self.PlotTypes[0]
         self.plot()
-        
+    
+    def plot_spec(self, ax, decalage=None):
+        self.kgControl.statusBar().showMessage("Computing spec. Long process, please wait.")
+        micSn=self.get_current_signal()
+        self.Algorithms[self.kgControl.ComboAlgorithms.currentText()].plot_spec(ax, micSn, decalage)
+        self.micSignals[self.currentCase['case'].get_mIDmic()]=micSn
+        self.kgControl.statusBar().showMessage("Done")
+        self.plot_finish()
+    
     def __str__(self):
         return('Analysis')
         
-    def show_compare(self):
+    def show_compare(self,ax=None):
         """will show or remove the comparison between current author /current case and the current algorithm"""
+        if not ax:
+            ax=self.kgControl.SelectAxis
         if True:
             self.kgControl.statusBar().showMessage("Computing results")
             self.hide_rect()
@@ -1448,9 +1551,9 @@ class CaseAnalyserWidget(MainCaseWidget):
                 MicSnObj.calc_kg(self.currentAlgorithm)
                 alg_res = MicSnObj.get_KG_results(self.currentAlgorithm)['result']
                 if self.author!='admin':
-                    self.case.plot_compare(self.kgControl.SelectAxis, alg_res['result'], alg_res['t'], noiseType = self.currentAlgorithm.noiseType)
+                    self.case.plot_compare(ax, alg_res['result'], alg_res['t'], noiseType = self.currentAlgorithm.noiseType)
                 else:
-                    MicSnObj.plot_KG(self.currentAlgorithm, self.kgControl.SelectAxis, color = '#984ea3')
+                    MicSnObj.plot_KG(self.currentAlgorithm, ax, color = '#984ea3')
                 for ca in self.canvas:
                     ca.draw()
             
@@ -1850,7 +1953,7 @@ class CompareCaseAlgWidget(kgControlWidget):
         self.canvas[0].draw()
 
     def _connections(self):
-        self.algCombo.currentIndexChanged.connect(self.set_current_alg)
+        self.algCombo.activated.connect(self.set_current_alg)
         #self.buttonplot.clicked.connect(self.callTrueFalse)
   
     def show_info(self):

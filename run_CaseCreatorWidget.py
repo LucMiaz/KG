@@ -36,7 +36,7 @@ if __name__ == "__main__":
         palette.setColor(QtGui.QPalette.AlternateBase,'#f3f3f3')
         palette.setColor(QtGui.QPalette.WindowText,textcolor)
         palette.setColor(QtGui.QPalette.Highlight, '#c2a5cf')
-        palette.setColor(QtGui.QPalette.HighlightedText, axbcolor)
+        palette.setColor(QtGui.QPalette.HighlightedText, axbgcolor)
         palette.setColor(QtGui.QPalette.AlternateBase,axescolor)
         palette.setColor(QtGui.QPalette.ToolTipBase, axescolor)
         palette.setColor(QtGui.QPalette.Light, axescolor)
