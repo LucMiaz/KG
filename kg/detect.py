@@ -233,8 +233,7 @@ class MicSignal(object):
             logBPR= 10*np.log10(1+detection['avBPR'])
             l, = ax.plot(t,logBPR,\
                         label=label,**kwarks)
-            ax.axhline(algorithm.param['threshold'],lw=1,\
-                        color = plt.getp(l,'color'))
+            ax.axhline(algorithm.param['threshold'],lw=1, color = plt.getp(l,'color'))
             ax.set_xlim([min(t),max(t)])
             ax.set_ylabel('BPR')
             ax.set_xlabel('t (s)')

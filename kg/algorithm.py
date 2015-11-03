@@ -281,7 +281,7 @@ class ZischenDetetkt2(Algorithm):
     def __init__(self, fc, threshold, dt, Rexport=False):
         #
         param = {'fmin': 100,'fmax': 15000, 'overlap': 6} 
-        param['threshold'] = int(threshold)
+        param['threshold'] = float(threshold)
         param['fc']= int(fc)
         param['dt']= float(dt)
         description = """implement the Algorithm:

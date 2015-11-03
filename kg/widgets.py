@@ -103,15 +103,11 @@ class kgControlWidget(QMainWindow):
         hpb.addWidget(self.plotselect)
         labelPlot.setLayout(hpb)
         hBox.addWidget(labelPlot)
-        
+        self.CaseWidget.authors=['admin']
         #Authors
-        try:
-            authorspath=self.CaseWidget.mesPath.joinpath('test_cases')
-        except:
-            self.CaseWidget.authors=['admin']
-        else:
-            self.CaseWidget.authors=os.listdir(authorspath.as_posix())
-        self.CaseWidget.authors.append('admin')
+        self.CaseWidget.generate_authors()
+        self.CaseWidget.generate_authors_cases()
+        
         self.ComboAuthors=QtGui.QComboBox()
         labelAuthor=QtGui.QGroupBox("Authors")
         hcb=QtGui.QHBoxLayout()
@@ -227,6 +223,14 @@ class kgControlWidget(QMainWindow):
             QualityBox.addWidget(rb) 
         groupQualityBox.setLayout(QualityBox)
         CreatorBox.addWidget(groupQualityBox)
+        
+        labelSpec=QtGui.QGroupBox("Information")
+        hcb=QtGui.QHBoxLayout()
+        self.SpecificationsLabel=QtGui.QLabel()
+        hcb.addWidget(self.SpecificationsLabel)
+        labelSpec.setLayout(hcb)
+
+        CreatorBox.addWidget(labelSpec)
 
         CreatorBox.addStretch(1)
         self.toCleanOnNew.append(CreatorBox)
@@ -262,6 +266,7 @@ class kgControlWidget(QMainWindow):
         self.vBox.addLayout(hBox)
     
     def admin_actions(self):
+        self.extended_action()
         #algorithms
         self.addalgAction = QtGui.QAction('&Add alg', self)        
         self.addalgAction.setShortcut('Ctrl+Shift+A')
@@ -371,6 +376,8 @@ class kgControlWidget(QMainWindow):
         self.chgSavePlotTypeAction.setStatusTip('Change output type : example pdf, svg, png')
         self.chgSavePlotTypeAction.triggered.connect(self.chgSavePlotType)
         self.basic_action_disable()
+
+        #
     
     def basic_action_disable(self):
         self.chgSavePlotTypeAction.setDisabled(True)
@@ -424,42 +431,58 @@ class kgControlWidget(QMainWindow):
         self.media.tick.connect(self.update_time)
         self.media.finished.connect(self.media_finish)
         self.media.stateChanged.connect(self.timer_status)#update timer status on media Statechange
-        self.SOIcombo.activated.connect(self.CaseWidget.set_noise_type)
+        self.SOIcombo.currentIndexChanged.connect(self.CaseWidget.set_noise_type)
         self.cb.stateChanged.connect(self.CaseWidget.set_both_visible)
-        self.CaseCombo.activated.connect(self.CaseWidget.change_current_case)
+        self.CaseCombo.currentIndexChanged.connect(self.CaseWidget.change_current_case)
         for rb in self.Qradios:
             rb.clicked.connect(self.CaseWidget.set_quality)
         self.boolaudio=True
     
     def connections_admin(self):
-        self.plotselect.activated.connect(self.CaseWidget.plotchange)
-        self.ComboAuthors.activated.connect(self.CaseWidget.load_author)
-        self.ComboAlgorithms.activated.connect(self.CaseWidget.load_algorithm)
+        self.plotselect.currentIndexChanged.connect(self.CaseWidget.plotchange)
+        self.ComboAuthors.currentIndexChanged.connect(self.CaseWidget.load_author)
+        self.ComboAlgorithms.currentIndexChanged.connect(self.CaseWidget.load_algorithm)
     
     def connections_creator(self):
         self.buttonSave.clicked.connect(self.CaseWidget.save_case)
         self.buttonChgSave.clicked.connect(self.CaseWidget.chg_folder)
     
     def creator_actions(self):
+        self.extended_action()
         #save
         self.saveAction=QtGui.QAction('&Save',self)
         self.saveAction.setShortcut('Ctrl+S')
         self.saveAction.setStatusTip('Save case')
         self.saveAction.triggered.connect(self.CaseWidget.save_case)
-        #saving folder
-        self.changesavingfolderAction=QtGui.QAction('&ChgSFolder',self)
-        self.changesavingfolderAction.setShortcut('Ctrl+F')
-        self.changesavingfolderAction.setStatusTip('Change saving folder')
-        self.changesavingfolderAction.triggered.connect(self.CaseWidget.chg_folder)
+        #change quality:
+        self.chgQualityBadAction=QtGui.QAction('&Bad',self)
+        self.chgQualityBadAction.setShortcut('Ctrl+1')
+        self.chgQualityBadAction.setStatusTip('Change Quality to Bad')
+        self.chgQualityBadAction.triggered.connect(lambda: self.CaseWidget.change_quality('bad'))
+        self.chgQualityMediumAction=QtGui.QAction('&Medium',self)
+        self.chgQualityMediumAction.setShortcut('Ctrl+2')
+        self.chgQualityMediumAction.setStatusTip('Change Quality to Medium')
+        self.chgQualityMediumAction.triggered.connect(lambda: self.CaseWidget.change_quality('medium'))
+        self.chgQualityGoodAction=QtGui.QAction('&Good',self)
+        self.chgQualityGoodAction.setShortcut('Ctrl+3')
+        self.chgQualityGoodAction.setStatusTip('Change Quality to Good')
+        self.chgQualityGoodAction.triggered.connect(lambda: self.CaseWidget.change_quality('good'))
+        #
         
     def creator_actions_disable(self):
         self.basic_action_disable()
-        self.changesavingfolderAction.setDisabled(True)
+
         self.saveAction.setDisabled(True)
+        self.chgQualityBadAction.setDisabled(True)
+        self.chgQualityGoodAction.setDisabled(True)
+        self.chgQualityMediumAction.setDisabled(True)
     def creator_actions_enable(self):
         self.basic_action_enable()
-        self.changesavingfolderAction.setEnabled(True)
+
         self.saveAction.setEnabled(True)
+        self.chgQualityMediumAction.setEnabled(True)
+        self.chgQualityGoodAction.setEnabled(True)
+        self.chgQualityBadAction.setEnabled(True)
     
     def define_actions(self):
         """define actions for the menu"""
@@ -471,31 +494,17 @@ class kgControlWidget(QMainWindow):
             self.exitAction.triggered.connect(QtGui.qApp.quit)
             
             #media
-            self.playAction = QtGui.QAction('&Play', self)        
-            self.playAction.setShortcut('SPACE')
-            self.playAction.setStatusTip('Play the audio')
-            self.playAction.triggered.connect(self.media.play)
+            self.playPauseAction = QtGui.QAction('&Play/Pause', self)        
+            self.playPauseAction.setShortcut('SPACE')
+            self.playPauseAction.setStatusTip('Play or pause the audio')
+            self.playPauseAction.triggered.connect(self.playPause)
             
             self.stopAction = QtGui.QAction('&Stop', self)        
-            self.stopAction.setShortcut('SPACE')
-            self.stopAction.setStatusTip('Stop the audio')
+            self.stopAction.setShortcut('Ctrl+SPACE')
+            self.stopAction.setStatusTip('Stops the audio')
             self.stopAction.triggered.connect(self.media.stop)
             
-            self.pauseAction = QtGui.QAction('&Pause', self)        
-            self.pauseAction.setShortcut('SPACE')
-            self.pauseAction.setStatusTip('Pause the audio')
-            self.pauseAction.triggered.connect(self.media.pause)
-            
             #change cases
-            self.nextcaseAction= QtGui.QAction('&Next case', self)        
-            self.nextcaseAction.setShortcuts(['DOWN', 'ARROW'])
-            self.nextcaseAction.setStatusTip('Move to next case')
-            self.nextcaseAction.triggered.connect(self.CaseWidget.case_down)
-            
-            self.prevcaseAction= QtGui.QAction('&Prev case', self)        
-            self.prevcaseAction.setShortcuts(['UP','ARROW'])
-            self.prevcaseAction.setStatusTip('Move to previous case')
-            self.prevcaseAction.triggered.connect(self.CaseWidget.case_up)
             self.creator_actions()
             self.admin_actions()
             self.menu_bar_advanced()
@@ -503,6 +512,55 @@ class kgControlWidget(QMainWindow):
         self.creator_actions_disable()
         self.admin_actions_disable()
     
+    def extended_action(self):
+        """create actions that need a CaseWidget initiated"""
+        #
+        self.bothTypeAction=QtGui.QAction('&Show both types',self)
+        self.bothTypeAction.setShortcut('Ctrl+B')
+        self.bothTypeAction.setStatusTip('Toggle between displaying both or only one type of noise')
+        self.bothTypeAction.triggered.connect(self.CaseWidget.chg_typedisplay)
+        #
+        self.toggleTypeAction=QtGui.QAction('&Noise Type',self)
+        self.toggleTypeAction.setShortcut('Ctrl+T')
+        self.toggleTypeAction.setStatusTip('Toggle between types')
+        self.toggleTypeAction.triggered.connect(self.CaseWidget.chg_type)
+        #case moving
+        self.caseUpAction=QtGui.QAction('&Case up',self)
+        self.caseUpAction.setShortcut('Ctrl+Up')
+        self.caseUpAction.setStatusTip('Go to previous Case')
+        self.caseUpAction.triggered.connect(self.CaseWidget.case_up)
+        
+        self.caseDownAction=QtGui.QAction('&Case down',self)
+        self.caseDownAction.setShortcut('Ctrl+Down')
+        self.caseDownAction.setStatusTip('Go to next Case')
+        self.caseDownAction.triggered.connect(self.CaseWidget.case_down)
+        
+        #show saving folder
+        self.showSavingFolderAction=QtGui.QAction('&Show path to save folder',self)
+        self.showSavingFolderAction.setStatusTip('Opens a message box with saving folder')
+        self.showSavingFolderAction.triggered.connect(self.show_savingFolder)
+        #saving folder
+        self.changesavingfolderAction=QtGui.QAction('&ChgSFolder',self)
+        self.changesavingfolderAction.setShortcut('Ctrl+F')
+        self.changesavingfolderAction.setStatusTip('Change saving folder')
+        self.changesavingfolderAction.triggered.connect(self.CaseWidget.chg_folder)
+    
+    def extended_action_disable(self):
+        self.caseUpAction.setDisabled(True)
+        self.caseDownAction.setDisabled(True)
+        self.bothTypeAction.setDisabled(True)
+        self.toggleTypeAction.setDisabled(True)
+        self.showSavingFolderAction.setDisabled(True)
+        self.changesavingfolderAction.setDisabled(True)
+        
+    def extended_action_enable(self):
+        self.caseDownAction.setEnabled(True)
+        self.caseUpAction.setEnabled(True)
+        self.bothTypeAction.setEnabled(True)
+        self.toggleTypeAction.setEnabled(True)
+        self.showSavingFolderAction.setEnabled(True)
+        self.changesavingfolderAction.setEnabled(True)
+        
     def extbrowsercall(self):
         """call opening info page in external web browser"""
         pathtoinfo=self.infofolder.joinpath('info.html').absolute().as_uri()
@@ -512,67 +570,9 @@ class kgControlWidget(QMainWindow):
         self.modifiers = QtGui.QApplication.keyboardModifiers()#checks on keypress what modifyers there is
         if event.isAutoRepeat():
             return
-        if self.session:
-            #Any session
-            if event.key()==QtCore.Qt.Key_Space:
-                if self.modifiers==QtCore.Qt.ControlModifier:#if ctrl pressed, go stops
-                    self.CaseWidget.media_finish()
-                else:
-                    if self.media.state()==1:#if stopped
-                        self.CaseWidget.media.play()
-                    elif self.media.state()==4:#if paused
-                        self.CaseWidget.media.play()
-                    else:#if playing (2), buffering (3), loading(0) or error(5)
-                        self.CaseWidget.media.pause()
-            elif event.key()==QtCore.Qt.Key_Up or event.key()==QtCore.Qt.Key_Left:
-                    self.CaseWidget.media.stop()
-                    self.CaseWidget.case_up()
-            elif event.key()==QtCore.Qt.Key_Down or event.key()==QtCore.Qt.Key_Right:
-                    self.CaseWidget.media.stop()
-                    self.CaseWidget.case_down()
-            elif event.key()==QtCore.Qt.Key_Z:
-                self.CaseWidget.media.pause()
-                self.CaseWidget.chg_type()
-            elif event.key()==QtCore.Qt.Key_K:
-                self.CaseWidget.media.pause()
-                self.CaseWidget.chg_type()
-            elif event.key()==QtCore.Qt.Key_T:
-                self.CaseWidget.media.pause()
-                self.CaseWidget.chg_type()
-            elif event.key()==QtCore.Qt.Key_B:
-                self.CaseWidget.media.pause()
-                self.CaseWidget.chg_typedisplay()
-            elif event.key()==QtCore.Qt.Key_P:
-                self.CaseWidget.media.stop()
-                self.CaseWidget.change_plot()
-            #Creator session
-            elif self.session==2: #elements active only if we are in creator session
-                if event.key() == QtCore.Qt.Key_D:
-                    self.CaseWidget.set_remove(True)
-                elif event.key() == QtCore.Qt.Key_S and not self.modifiers==QtCore.Qt.ControlModifier:
-                    self.CaseWidget.set_int(True)
-                elif event.key()== QtCore.Qt.Key_S and self.modifiers==QtCore.Qt.ControlModifier:
-                    self.CaseWidget.media.stop()
-                    self.CaseWidget.save_case()
-                elif event.key()==QtCore.Qt.Key_Enter:
-                    self.CaseWidget.media.stop()
-                    if not self.get_quality:
-                        self.change_quality(1)
-                    self.CaseWidget.save_cases()
-                    self.CaseWidget.case_down()
-                elif event.key()==QtCore.Qt.Key_F:
-                    self.CaseWidget.media.stop()
-                    self.CaseWidget.chg_folder()
-                elif event.key()==QtCore.Qt.Key_1:
-                    self.CaseWidget.change_quality('bad')
-                elif event.key()==QtCore.Qt.Key_2:
-                    self.CaseWidget.change_quality('medium')
-                elif event.key()==QtCore.Qt.Key_3:
-                    self.CaseWidget.change_quality('good')
-                elif event.key()==QtCore.Qt.Key_U and self.modifiers==QtCore.Qt.ControlModifier:
-                    self.CaseWidget.update_canvas()
-                elif event.key()==QtCore.Qt.Key_P and self.modifiers==QtCore.Qt.ControlModifier:
-                    self.CaseWidget.plot()
+        if self.session==2:
+            if event.key() == QtCore.Qt.Key_D:
+                self.CaseWidget.set_remove(True)
         event.accept()
                     
         
@@ -614,14 +614,19 @@ class kgControlWidget(QMainWindow):
         self.rateSubMenu=self.fileMenu.addMenu('&Rate')
         self.fileMenu.addAction(self.exitAction)
         self.mediaMenu=self.Menu.addMenu('&Media')
-        self.mediaMenu.addAction(self.playAction)
-        self.mediaMenu.addAction(self.pauseAction)
+        self.mediaMenu.addAction(self.playPauseAction)
         self.mediaMenu.addAction(self.stopAction)
         
         self.caseMenu=self.Menu.addMenu('&Cases')
         self.caseMenu.addAction(self.addcaseAction)
-        self.caseMenu.addAction(self.nextcaseAction)
-        self.caseMenu.addAction(self.prevcaseAction)
+        self.caseMenu.addAction(self.caseUpAction)
+        self.caseMenu.addAction(self.caseDownAction)
+        self.caseMenu.addAction(self.toggleTypeAction)
+        self.caseMenu.addAction(self.bothTypeAction)
+        self.QualityMenu=self.caseMenu.addMenu('&Quality')
+        self.QualityMenu.addAction(self.chgQualityBadAction)
+        self.QualityMenu.addAction(self.chgQualityMediumAction)
+        self.QualityMenu.addAction(self.chgQualityGoodAction)
         
         self.adminMenu=self.Menu.addMenu('&Admin')
         self.adminMenu.addAction(self.addalgAction)
@@ -633,6 +638,10 @@ class kgControlWidget(QMainWindow):
         self.addSecondAxisMenu.addAction(self.addSecondAxisSpecAction)
         self.addSecondAxisMenu.addAction(self.addSecondAxisSignalAction)
         self.adminMenu.addAction(self.removeSecondAxisAction)
+        self.savingMenu=self.Menu.addMenu('&Saving options')
+        self.savingMenu.addAction(self.saveAction)
+        self.savingMenu.addAction(self.changesavingfolderAction)
+        self.savingMenu.addAction(self.showSavingFolderAction)
         
         for rate in sorted(self.comboratedict.keys()):
             self.rateSubMenu.addAction(self.rateActions[rate])
@@ -671,7 +680,14 @@ class kgControlWidget(QMainWindow):
             self.creator_actions_enable()
             self.connections()
             self.connections_creator()
+            self.CaseWidget.currentPlotType='LAfast'
         self.grabKeyboard()
+    
+    def playPause(self):
+        if self.media.state()==Phonon.State.PausedState or self.media.state()==Phonon.State.StoppedState:
+            self.media.play()
+        else:
+            self.media.pause()
     
     def remove_second_axis(self):
         self.SelectAxis.figure.delaxes(self.SecondAxis)
@@ -765,7 +781,9 @@ class kgControlWidget(QMainWindow):
         #self.info_view.load(QtCore.QUrl('info.html'))
         #self.infoLayout.addWidget(self.info_view)
         #self.TabWidget.addTab(self.infoTab, 'Information')
-        
+    
+    def show_savingFolder(self):
+        QtGui.QMessageBox.information(self, "Saving folder", str(self.CaseWidget.savefolder.as_posix()))
     
     def timer_status(self,newstate, oldstate):
         """changes the timer status according to played audio"""
@@ -830,7 +848,7 @@ class MainCaseWidget():
         # set the author        
         self.mesPath = mesPath
         self.minspan = 0.05
-        self.PlotTypes=['LAfast', 'Spec','Spectogram', 'Signal']
+        self.PlotTypes=['','LAfast', 'Spec','Spectogram', 'Signal']
         self.currentplottype=self.PlotTypes[0]
         self.author=None
         self.both_visibles=True
@@ -955,11 +973,11 @@ class MainCaseWidget():
         pass
     
     def change_current_case(self, index):
-        self.currentplottype='LAfast'
+        self.set_currentplottype()
         key = self.casesKeys[index]
         #self.currentCase.get('saved',False):
         self.set_current_case(key)
-        self.update_canvas()
+        #self.update_canvas()
         # else:
         #     QtGui.QMessageBox.warning(self.kgControl, self.trUtf8("save error"), 
         #      self.trUtf8("Before switching case save it!"))
@@ -973,8 +991,20 @@ class MainCaseWidget():
         self.kgControl.plotselect.setCurrentIndex(index)
         self.currentplottype=self.PlotTypes[index]
         
-    def change_quality(self):
+    def change_quality(self, quality):
         pass
+    
+    def change_quality_displayed(self, quality):
+        if quality in ['good','medium','bad']:
+            if quality=='good':
+                curr=self.kgControl.Qradios[0].isChecked()
+                self.kgControl.Qradios[0].setChecked(not curr)
+            elif quality=='medium':
+                curr=self.kgControl.Qradios[1].isChecked()
+                self.kgControl.Qradios[1].setChecked(not curr)
+            else:
+                curr=self.kgControl.Qradios[2].isChecked()
+                self.kgControl.Qradios[2].setChecked(not curr)
         
     def chg_type(self):
         """change the noise type to the next one on the list (and back to the first)"""
@@ -1069,9 +1099,6 @@ class MainCaseWidget():
             else:
                 print("file not found")
         self.casesKeys = sorted(list(self.casesToAnalyze.keys()))#list of name of cases
-        
-    
-
     
     def _on_case_change(self):
         """defines actions to do when the cases is changed with case_up or case_down"""
@@ -1093,9 +1120,11 @@ class MainCaseWidget():
         elif cpt=='LAfast':
             self.plot_LAfast(ax)
         elif cpt=='Spec':
-            self.plot_spec(ax, decalage= self.currentCase['tmin'])
+            self.plot_spec(ax, decalage= self.tShift)
         elif cpt=='Signal':
             self.plot_signal(ax)
+        else:
+            self.kgControl.SelectAxis.cla()
     
     def plot_finish(self):
         for ca in self.canvas:
@@ -1130,13 +1159,13 @@ class MainCaseWidget():
         self.kgControl.statusBar().showMessage("Computing STFT. Long process, please wait.")
         micSn=self.get_current_signal()
         stftName = micSn.get_stft_name(self.currentAlgorithm)
-        self.micSignals[self.currentCase['case'].get_mIDmic()].plot_spectrogram(stftName,ax, decalage=self.currentCase['tmin'])
+        self.micSignals[self.currentCase['case'].get_mIDmic()].plot_spectrogram(stftName,ax, decalage=self.tShift)
         self.micSignals[self.currentCase['case'].get_mIDmic()]=micSn
         self.plot_finish()
     
     def plot_signal(self,ax):
         micSn=self.get_current_signal()
-        micSn.plot_signal(ax, decalage=self.currentCase['tmin'])
+        micSn.plot_signal(ax, decalage=self.tShift)
         self.plot_finish()
     
     def plotchange(self,index):
@@ -1149,8 +1178,6 @@ class MainCaseWidget():
     def __str__(self):
         return('MainCase')
     def save_case(self):
-        pass
-    def show_compare(self):
         pass
         
     def set_both_visible(self, state):
@@ -1187,14 +1214,19 @@ class MainCaseWidget():
         #set SOI and update Canvas
         self.set_noise_type('Z')
         #plot
-        ##self.plot()
+        #self.plot()
         #Set mediafile
         wavPath = self.mesPath.joinpath(self.currentCase['wavPath'])
         self.set_media_source(str(wavPath), self.currentCase['tmin'])
         #start timer
         #self.timer.start()
         self.kgControl.grabKeyboard()
-        self.set_quality()
+        self.change_quality_displayed(self.case.get_quality())
+        self.kgControl.SpecificationsLabel=self.case.get_today()
+        self.kgControl.show_author_int()
+    
+    def set_currentplottype(self):
+        self.currentplottype='LAfast'
     
     def set_media_source(self, wavPath, t0 = 0, **kwargs):
         self.tShift = t0
@@ -1277,12 +1309,12 @@ class MainCaseWidget():
                     cas=keys[random.randint(0,ncmax)]
                     if cas not in self.casesKeys:
                         self.casesKeys.append(cas)
-                        
-                        
+    
+    def show_compare(self):
+        pass 
     def show_info(self):
         pass
 
-    
     def TurnTheSavedGreen(self):
         """
         as its name tells, it turns the saved cases green
@@ -1378,8 +1410,7 @@ class CaseAnalyserWidget(MainCaseWidget):
         self.algorithmsTypes={'Z2':{'classname':'ZischenDetetkt2','attributes':'Z2_fc_threshold_dt'}}
         #gets number of cases to analyse
         self.asks_for_ncases()
-        for dir in os.listdir(mesPath.joinpath('test_cases').as_posix()):
-            self.add_to_authors(str(dir))
+        #self.generate_authors()
         newdictionary={}
         for k in self.casesKeys:
             newdictionary[k]=self.casesToAnalyze[k]
@@ -1390,10 +1421,10 @@ class CaseAnalyserWidget(MainCaseWidget):
                 self.sparecase=(k,v)
                 break
         self.casesToAnalyze=newdictionary
-        self.generate_authors()
+        #self.generate_authors_cases()
 
-        self.author=self.authors[0]
-        self.casesToAnalyze=self.AuthorCases[self.author]
+        #self.author=self.authors[0]
+        #self.casesToAnalyze=self.AuthorCases[self.author]
         #add connections
         self.connections()
         self.micSignals={}
@@ -1454,7 +1485,17 @@ class CaseAnalyserWidget(MainCaseWidget):
         self.load_author(-1)
         ##todo place comboAuthors as Action in the menu and place a label instead.
         self.kgControl.ComboAuthors.setCurrentIndex(-1)
-        
+    
+    def chg_folder(self):
+        """change the directory where to save the data"""
+        newpathlib=str(QFileDialog.getExistingDirectory(self.kgControl,"Please select a directory where I can save your data."))
+        if newpathlib!="":
+            self.savefolder=pathlib.Path(newpathlib)
+            self.generate_authors()
+            self.generate_authors_cases()
+        else:
+            print("Path not modified.")
+    
     def _connections(self):
         pass
     
@@ -1474,8 +1515,10 @@ class CaseAnalyserWidget(MainCaseWidget):
             else:
                 self.kgControl.ComboAuthors.setCurrentIndex(0)
                 return(self.caseToAnalyze['case'].get_mID())
-    
     def generate_authors(self):
+        for dir in os.listdir(self.savefolder.joinpath('test_cases').as_posix()):
+            self.add_to_authors(str(dir))
+    def generate_authors_cases(self):
         self.AuthorCases={}
         for auth in self.authors:
             if auth=='admin':
@@ -1493,6 +1536,8 @@ class CaseAnalyserWidget(MainCaseWidget):
                             self.AuthorCases[auth][i]=copy.deepcopy(self.casesToAnalyze[i])
                         except:
                             pass
+        self.author=self.authors[0]
+        self.casesToAnalyze=self.AuthorCases[self.author]
     
     def load_algorithm(self, index):
         """loads the algorithm selected"""
@@ -1510,7 +1555,7 @@ class CaseAnalyserWidget(MainCaseWidget):
         for j in self.casesKeys:
             self.kgControl.CaseCombo.addItem(j)
         self.TurnTheSavedGreen()
-        self.chg_type()
+        #self.chg_type()
         
     def _on_case_change(self):
         self.currentplottype=self.PlotTypes[0]
@@ -1523,6 +1568,9 @@ class CaseAnalyserWidget(MainCaseWidget):
         self.micSignals[self.currentCase['case'].get_mIDmic()]=micSn
         self.kgControl.statusBar().showMessage("Done")
         self.plot_finish()
+    
+    def set_currentplottype(self):
+        self.currentplottype=''
     
     def __str__(self):
         return('Analysis')
@@ -1558,7 +1606,7 @@ class CaseAnalyserWidget(MainCaseWidget):
                     ca.draw()
             
         else:
-            self.plot()
+            #self.plot()
             self.TurnTheSavedGreen()
         self.update_canvas()
         self.kgControl.statusBar().clearMessage()
@@ -1690,7 +1738,7 @@ class CaseCreatorWidget(MainCaseWidget):
     
     def chg_folder(self):
         """change the directory where to save the data"""
-        newpathlib=str(QFileDialog.getExistingDirectory(self,"Please select a directory where I can save your data."))
+        newpathlib=str(QFileDialog.getExistingDirectory(self.kgControl,"Please select a directory where I can save your data."))
         if newpathlib!="":
             self.savefolder=pathlib.Path(newpathlib)
             #select color of chg saving folder.
@@ -1762,6 +1810,7 @@ class CaseCreatorWidget(MainCaseWidget):
                 #asks for the folder where to save the datas
                 self.chg_folder()
             #self.case.case['author'] = self.author
+            self.case.today()
             casepath=self.case.save(self.savefolder)
             self.kgControl.buttonSave.setStyleSheet("background-color: #a6dba0")
             currentIndex= self.casesKeys.index(str(self.kgControl.CaseCombo.currentText()))
@@ -1953,7 +2002,7 @@ class CompareCaseAlgWidget(kgControlWidget):
         self.canvas[0].draw()
 
     def _connections(self):
-        self.algCombo.activated.connect(self.set_current_alg)
+        self.algCombo.currentIndexChanged.connect(self.set_current_alg)
         #self.buttonplot.clicked.connect(self.callTrueFalse)
   
     def show_info(self):

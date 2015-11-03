@@ -33,6 +33,7 @@ class Case(object):
                 "Z": SetOfIntervals(),#Zischen
                 "quality": None, #quality of the detection
                 "saved":False,
+                "saving-date":None
                 }
         self.case['caseID'] = str(self)
     
@@ -91,6 +92,7 @@ class Case(object):
         '''
         if self.case['quality']  == None:
             print('Warning: case quality has to be set')
+        self.set_saved(True)
         casePath = mesPath.joinpath('test_cases').joinpath(self.case['author'])
         os.makedirs(casePath.as_posix(), exist_ok = True)
         name = str(self) + '.json'
@@ -132,6 +134,8 @@ class Case(object):
     def get_quality(self):
         """returns case quality"""
         return(self.case['quality'])
+    def get_today(self):
+        return self.case['saving-date']
     def get_saved(self):
         """tells if the case has been saved"""
         return(self.case['saved'])
@@ -175,6 +179,10 @@ class Case(object):
         p4 = Rectangle((0,0),1,1,fc=colors['FN'],alpha=0.5)
         ax.legend((p1, p2, p3,p4), ('True positive','True negative','False positive', 'False negative'),loc='upper right', bbox_to_anchor=(0.5, -0.05), fancybox=True, shadow=False, ncol=2, prop=fontP)
 
+    def today(self):
+        """sets date as today"""
+        self.case['saving-date']=time.strftime("%Y-%m-%d_%H:%M")
+    
     def __str__(self):
         """prints the name of the case"""
         return( "case_"+str(self.case['mID'])+"_"+str(self.case['mic'])+'_'+str(self.case['author']))
