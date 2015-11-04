@@ -253,10 +253,7 @@ class MicSignal(object):
             ymin, ymax = ax.get_ylim()
             xmin,xmax=ax.get_ylim()
             delta=detection['t'][1]-detection['t'][0]
-            tmin=abs(min(detection['t']))
-            t=[]
-            for i in detection['t']:
-                t.append(i+tmin)
+
             #result=[]
             #isany=False
             #for dt in range(xmin,xmax, delta):
@@ -267,7 +264,7 @@ class MicSignal(object):
             #    else:
             #        result.append(False)
             #ax.fill_between(detection['t'], where = detection['result'] ,y1 = ymin, y2 = ymax, alpha = 0.4, **kwargs)
-            ax.fill_between(t, where = detection['result'] ,y1 = ymin, y2 = ymax, alpha = 0.4, **kwargs)
+            ax.fill_between(detection['t'], where = detection['result'] ,y1 = ymin, y2 = ymax, alpha = 0.4, **kwargs)
             #ax.set_ybound(ymin, ymax)
     
     def plot_prms(self, ax ,label = None):
@@ -297,7 +294,7 @@ class MicSignal(object):
         ax.set_xlim([min(t),max(t)])
         ax.set_ylim([min(self.y)*1.1,max(self.y)*1.1])
             
-    def plot_spectrogram(self, name, ax, freqscale = 'lin',decalage=None, **kwargs):
+    def plot_spectrogram(self, name, ax, t0, freqscale = 'lin', **kwargs):
         '''
         plot spectrogram
         '''
@@ -306,9 +303,10 @@ class MicSignal(object):
         kwargs = {
         'fmin': 200,
         'fmax':10000,
-        't0': min(self.t),
-        'tmin': min(self.t),
-        'tmax': max(self.t),
+        't0': t0,
+        'tmin':t0
+        #'tmin': min(self.t),
+        #'tmax': max(self.t),
         }
         try:
             STFT = self.STFT[name]
@@ -319,13 +317,7 @@ class MicSignal(object):
             name = self.calc_stft(M, N, overlap)
             STFT=self.STFT[name]
             
-        if decalage:
-            X=[]
-            for i in STFT['X']:
-                X.append(STFT['X']+decalage)
-        else:
-            X=STFT['X']
-        plot_spectrogram(X, STFT['param'], ax, zorder = 1,**kwargs )
+        plot_spectrogram(STFT['X'], STFT['param'], ax, zorder = 1,**kwargs )
            
     def plot_spectrum(self, ID, mic, ax, label=None):
         pass

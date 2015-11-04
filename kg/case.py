@@ -74,6 +74,9 @@ class Case(object):
         self.case['disc'+noiseType+str(t)] = self.case[noiseType].discretize(t)
         return self.case['disc'+noiseType+str(t)]
     
+    def set_author(self, author):
+        self.case['author']=author
+    
     def set_quality(self, quality):
         """
         set quality of generated case:
@@ -103,6 +106,8 @@ class Case(object):
     def set_saved(self, truth):
         if truth in [True, False]:
             self.case['saved']=truth
+    def get_author(self):
+        return(self.case['author'])
     def get_SOI(self, noiseType='Z'):
         return(self.case[noiseType])
     def set_SOI(self,listofSOI,noiseType='Z'):
@@ -172,7 +177,7 @@ class Case(object):
         ymin,ymax = ax.get_ylim()
         for k in ['TP','TN','FP','FN']:#blue green red yellow
             t,x = inter(resTF['t'], resTF[k])
-            ax.fill_between(t,ymin,ymax, where = x,alpha= 0.5, color = colors[k])
+            ax.fill_between(t,ymin,ymax, where = x,alpha= 0.8, color = colors[k])
         p1 = Rectangle((0, 0), 1, 1, fc=colors['TP'], alpha=0.5)
         p2 = Rectangle((0, 0), 1, 1, fc=colors['TN'],alpha=0.5)
         p3 = Rectangle((0, 0), 1, 1, fc=colors['FP'],alpha=0.5)

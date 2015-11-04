@@ -37,6 +37,9 @@ class Algorithm(object):
         '''function which implement algorithm'''
         pass
     
+    def get_Type(self):
+        return None
+    
     def test_on_case(self, case, mesValues, micSn = None):
         '''
         test algorithm  on Case
@@ -391,6 +394,9 @@ class ZischenDetetkt2(Algorithm):
     def get_id(self):
         """return a short version of class name"""
         return("Z2")
+    def get_Type(self):
+        """returns the type of noise this algorithm is designed to analyze"""
+        return 'Z'
     @classmethod
     def from_info(cls):
         pass

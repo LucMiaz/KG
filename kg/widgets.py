@@ -46,7 +46,7 @@ class kgControlWidget(QMainWindow):
         self.comboratedict={'15ms : High':15, '25ms : Fairly High':25, ' 30ms : Medium ':30, '40ms : Pretty Low ':40, '50ms :Low':50, '60ms : Ancient':60}
         self.menu_bar()
         self.boolaudio=False
-        self.initilialized=False
+        self.initialized=False
         #self.mainLayout=QtGui.QVBoxLayout()
         
         #TAB
@@ -56,7 +56,7 @@ class kgControlWidget(QMainWindow):
         #self.TabWidget.addTab(self.mainTab,'Main')
         #self.mainLayout.addWidget(self.TabWidget)
         #self.show_info()
-        
+        self.showAuthorsInts=False
         self.vBox=QtGui.QVBoxLayout()
         #self.setLayout(self.mainLayout)
         self.setLayout(self.vBox)
@@ -79,7 +79,7 @@ class kgControlWidget(QMainWindow):
         self.add_second_axis('Spec')
         
     def add_to_authors(self):
-        if self.initilialized:
+        if self.initialized:
             try:
                 self.ComboAuthors.clear()
             except:
@@ -90,30 +90,70 @@ class kgControlWidget(QMainWindow):
                 except:
                     pass
     
+    def add_to_cases(self):
+        self.CaseCombo.clear()
+        for case in self.CaseWidget.PrimaryListOfCases:
+            self.CaseCombo.addItem(case)
+
+    
     def add_widgets_admin(self):
         """add admin tools such as different types of plot, algorithm test and authors browser"""
+        CreatorBox = QtGui.QHBoxLayout()
+        
+        # select case combo 
+        groupCaseBox = QtGui.QGroupBox('Select case to analyze ')
+        self.CaseCombo = QtGui.QComboBox()
+        
+        CaseBox = QtGui.QHBoxLayout()
+        CaseBox.addWidget(self.CaseCombo)
+        groupCaseBox.setLayout(CaseBox)
+        
+        CreatorBox.addWidget(groupCaseBox)
+        CreatorBox.addStretch(1)
+
+        labelSpec=QtGui.QGroupBox("Information")
+        hcb=QtGui.QHBoxLayout()
+        self.SpecificationsLabel=QtGui.QLabel('Quality and noise Type')
+        self.DateLabel=QtGui.QLabel('Date')
+        self.AlgAuthLabel=QtGui.QLabel('None')
+        hcb.addWidget(self.SpecificationsLabel)
+        hcb.addWidget(self.DateLabel)
+        hcb.addWidget(self.AlgAuthLabel)
+        labelSpec.setLayout(hcb)
+
+        CreatorBox.addWidget(labelSpec)
+
+        CreatorBox.addStretch(1)
+        
         #Plots
-        groupBox=QtGui.QGroupBox("Admin options")
-        self.plotselect=QtGui.QComboBox()
-        for type in self.CaseWidget.PlotTypes:
-            self.plotselect.addItem(type)
-        hBox=QtGui.QHBoxLayout()
-        labelPlot=QtGui.QGroupBox("Plot type")
-        hpb=QtGui.QHBoxLayout()
-        hpb.addWidget(self.plotselect)
-        labelPlot.setLayout(hpb)
-        hBox.addWidget(labelPlot)
-        self.CaseWidget.authors=['admin']
+
+        #self.plotselect=QtGui.QComboBox()
+        #for type in self.CaseWidget.PlotTypes:
+        #    self.plotselect.addItem(type)
+            
+        #hBox=QtGui.QHBoxLayout()
+        
+        #labelPlot=QtGui.QGroupBox("Plot type")
+        #hpb=QtGui.QHBoxLayout()
+        #hpb.addWidget(self.plotselect)
+        #labelPlot.setLayout(hpb)
+        #hBox.addWidget(labelPlot)
+        #self.toCleanOnNew.append(hBox)
+        #self.vBox.addLayout(hBox)
         #Authors
-        self.CaseWidget.generate_authors()
-        self.CaseWidget.generate_authors_cases()
+        
+
         
         self.ComboAuthors=QtGui.QComboBox()
         labelAuthor=QtGui.QGroupBox("Authors")
         hcb=QtGui.QHBoxLayout()
         hcb.addWidget(self.ComboAuthors)
         labelAuthor.setLayout(hcb)
-        hBox.addWidget(labelAuthor)
+        
+        CreatorBox.addWidget(labelAuthor)
+        CreatorBox.addStretch(1)
+
+        
         #for cls in vars()['Algorithm'].__subclasses__():
         #    algid, algdescription=eval(cls.__name__()+".phony()")
         #    self.algorithmsTypes[algid]={'classname':cls.__name__(), 'attributes': algdescription}
@@ -125,13 +165,13 @@ class kgControlWidget(QMainWindow):
         hab=QtGui.QHBoxLayout()
         hab.addWidget(self.ComboAlgorithms)
         labelAlg.setLayout(hab)
-        hBox.addWidget(labelAlg)
-        groupBox.setLayout(hBox)
-        hBox=QtGui.QHBoxLayout()
-        hBox.addWidget(groupBox)
-        self.CaseWidget.author=self.CaseWidget.authors[0]
-        self.toCleanOnNew.append(hBox)
-        self.vBox.addLayout(hBox)
+        CreatorBox.addWidget(labelAlg)
+        CreatorBox.addStretch(1)
+        self.vBox.addLayout(CreatorBox)
+
+        
+        self.toCleanOnNew.append(CreatorBox)
+        
     
     def add_widgets_audio(self):
         if not self.boolaudio:
@@ -168,20 +208,28 @@ class kgControlWidget(QMainWindow):
         plt.ioff()
         fig = Figure((15,10))
         fig.set_dpi(110)#default 110
-        ax = fig.add_subplot(111)
+        ax = fig.add_subplot(211)
         ca = FigureCanvas(fig)
         self.SelectAxis = ax
         axbgcolor='#272822'
         fig.set_facecolor(axbgcolor)
+        axs =fig.add_subplot(212, sharex=self.SelectAxis)
+        fig.subplots_adjust(hspace=0.1)
+        self.SecondAxis=axs
+        
         #case Selector
         self.CaseWidget.CS = CaseSelector(self.SelectAxis, self.CaseWidget.onselect, self.CaseWidget.onclick, 
                                 nrect = [50,50], update_on_ext_event = True , 
                                 minspan = self.CaseWidget.minspan )
+        self.CaseWidget.CS2=CaseSelector(self.SecondAxis,self.CaseWidget.onselect, self.CaseWidget.onclick, nrect=[50,50], update_on_ext_event=True, minspan=self.CaseWidget.minspan)
         canvas['selector'] = {'animate':True,'bar':True, 'canvas':ca , 'axHandle': self.CaseWidget.CS}
         
         #set canvas
         self.CaseWidget.set_mpl(canvas)
-        
+    
+    
+    def add_widgets_creator(self):
+        """add widgets that are not useful when logged as admin"""
         # add first row of buttons
         CreatorBox = QtGui.QHBoxLayout()
         
@@ -194,6 +242,9 @@ class kgControlWidget(QMainWindow):
         groupCaseBox.setLayout(CaseBox)
         
         CreatorBox.addWidget(groupCaseBox)
+        CreatorBox.addStretch(1)
+        
+        hBox = QtGui.QHBoxLayout()
         # select noise Type
         groupTypeBox = QtGui.QGroupBox('Noise Type to select')
         TypeBox = QtGui.QHBoxLayout()
@@ -223,22 +274,6 @@ class kgControlWidget(QMainWindow):
             QualityBox.addWidget(rb) 
         groupQualityBox.setLayout(QualityBox)
         CreatorBox.addWidget(groupQualityBox)
-        
-        labelSpec=QtGui.QGroupBox("Information")
-        hcb=QtGui.QHBoxLayout()
-        self.SpecificationsLabel=QtGui.QLabel()
-        hcb.addWidget(self.SpecificationsLabel)
-        labelSpec.setLayout(hcb)
-
-        CreatorBox.addWidget(labelSpec)
-
-        CreatorBox.addStretch(1)
-        self.toCleanOnNew.append(CreatorBox)
-        self.vBox.addLayout(CreatorBox)
-    
-    def add_widgets_creator(self):
-        """add widgets that are not useful when logged as admin"""
-        hBox = QtGui.QHBoxLayout()
         # save button
         self.buttonSave = QtGui.QPushButton("save",self)
         hBox1 = QtGui.QHBoxLayout()
@@ -263,6 +298,7 @@ class kgControlWidget(QMainWindow):
             self.hlab.setText("Selected directory : "+str(self.CaseWidget.savefolder))
         hBox.addWidget(groupBox)
         self.toCleanOnNew.append(hBox)
+        self.vBox.addLayout(CreatorBox)
         self.vBox.addLayout(hBox)
     
     def admin_actions(self):
@@ -308,6 +344,11 @@ class kgControlWidget(QMainWindow):
         self.removeSecondAxisAction=QtGui.QAction('&remove second axis',self)
         self.removeSecondAxisAction.setStatusTip('Remove the second axis')
         self.removeSecondAxisAction.triggered.connect(self.remove_second_axis)
+        #toggle between showing author or algorithm result
+        self.toggleAuthorAlgorithmAction=QtGui.QAction('&Toggle Author Algorithm Ints',self)
+        self.toggleAuthorAlgorithmAction.setStatusTip('Show either Author intervals or Algorithm intervals')
+        self.toggleAuthorAlgorithmAction.setShortcut('Ctrl+Alt+A')
+        self.toggleAuthorAlgorithmAction.triggered.connect(self.toggleAuthAlg)
         
     def admin_actions_disable(self):
         self.basic_action_disable()
@@ -431,21 +472,22 @@ class kgControlWidget(QMainWindow):
         self.media.tick.connect(self.update_time)
         self.media.finished.connect(self.media_finish)
         self.media.stateChanged.connect(self.timer_status)#update timer status on media Statechange
-        self.SOIcombo.currentIndexChanged.connect(self.CaseWidget.set_noise_type)
-        self.cb.stateChanged.connect(self.CaseWidget.set_both_visible)
         self.CaseCombo.currentIndexChanged.connect(self.CaseWidget.change_current_case)
-        for rb in self.Qradios:
-            rb.clicked.connect(self.CaseWidget.set_quality)
         self.boolaudio=True
     
     def connections_admin(self):
-        self.plotselect.currentIndexChanged.connect(self.CaseWidget.plotchange)
+        #self.plotselect.currentIndexChanged.connect(self.CaseWidget.plotchange)
         self.ComboAuthors.currentIndexChanged.connect(self.CaseWidget.load_author)
         self.ComboAlgorithms.currentIndexChanged.connect(self.CaseWidget.load_algorithm)
+        
     
     def connections_creator(self):
         self.buttonSave.clicked.connect(self.CaseWidget.save_case)
+        self.SOIcombo.currentIndexChanged.connect(self.CaseWidget.set_noise_type)
         self.buttonChgSave.clicked.connect(self.CaseWidget.chg_folder)
+        self.cb.stateChanged.connect(self.CaseWidget.set_both_visible)
+        for rb in self.Qradios:
+            rb.clicked.connect(self.CaseWidget.set_quality)
     
     def creator_actions(self):
         self.extended_action()
@@ -486,7 +528,7 @@ class kgControlWidget(QMainWindow):
     
     def define_actions(self):
         """define actions for the menu"""
-        if not self.initilialized:
+        if not self.initialized:
             #exit
             self.exitAction = QtGui.QAction(QtGui.QIcon('exit.png'), '&Exit', self)        
             self.exitAction.setShortcut('Ctrl+Q')
@@ -508,12 +550,17 @@ class kgControlWidget(QMainWindow):
             self.creator_actions()
             self.admin_actions()
             self.menu_bar_advanced()
-            self.initilialized=True
+            self.initialized=True
         self.creator_actions_disable()
         self.admin_actions_disable()
     
     def extended_action(self):
         """create actions that need a CaseWidget initiated"""
+        #
+        self.plotAction=QtGui.QAction('&Plot',self)
+        self.plotAction.setShortcut('Ctrl+Enter')
+        self.plotAction.setStatusTip('Plot the spectogram and the Spec for the current Case and Algorithm')
+        self.plotAction.triggered.connect(self.CaseWidget.plot)
         #
         self.bothTypeAction=QtGui.QAction('&Show both types',self)
         self.bothTypeAction.setShortcut('Ctrl+B')
@@ -546,6 +593,7 @@ class kgControlWidget(QMainWindow):
         self.changesavingfolderAction.triggered.connect(self.CaseWidget.chg_folder)
     
     def extended_action_disable(self):
+        self.plotAction.setDisabled(True)
         self.caseUpAction.setDisabled(True)
         self.caseDownAction.setDisabled(True)
         self.bothTypeAction.setDisabled(True)
@@ -554,6 +602,7 @@ class kgControlWidget(QMainWindow):
         self.changesavingfolderAction.setDisabled(True)
         
     def extended_action_enable(self):
+        self.plotAction.setEnabled(True)
         self.caseDownAction.setEnabled(True)
         self.caseUpAction.setEnabled(True)
         self.bothTypeAction.setEnabled(True)
@@ -618,6 +667,7 @@ class kgControlWidget(QMainWindow):
         self.mediaMenu.addAction(self.stopAction)
         
         self.caseMenu=self.Menu.addMenu('&Cases')
+        self.caseMenu.addAction(self.plotAction)
         self.caseMenu.addAction(self.addcaseAction)
         self.caseMenu.addAction(self.caseUpAction)
         self.caseMenu.addAction(self.caseDownAction)
@@ -631,6 +681,7 @@ class kgControlWidget(QMainWindow):
         self.adminMenu=self.Menu.addMenu('&Admin')
         self.adminMenu.addAction(self.addalgAction)
         self.adminMenu.addAction(self.compareAction)
+        self.adminMenu.addAction(self.toggleAuthorAlgorithmAction)
         self.adminMenu.addAction(self.authorIntAction)
         self.adminMenu.addAction(self.authorHideAction)
         self.addSecondAxisMenu=self.adminMenu.addMenu('&Add second axis')
@@ -642,6 +693,12 @@ class kgControlWidget(QMainWindow):
         self.savingMenu.addAction(self.saveAction)
         self.savingMenu.addAction(self.changesavingfolderAction)
         self.savingMenu.addAction(self.showSavingFolderAction)
+        self.plotMenu.addAction(self.plotAction)
+        
+        self.shortMenu=self.Menu.addMenu('&Quick Plotting')
+        self.shortMenu.addAction(self.plotAction)
+        self.shortMenu.addAction(self.toggleAuthorAlgorithmAction)
+        self.shortMenu.addAction(self.compareAction)
         
         for rate in sorted(self.comboratedict.keys()):
             self.rateSubMenu.addAction(self.rateActions[rate])
@@ -655,6 +712,7 @@ class kgControlWidget(QMainWindow):
             if not ok==QtGui.QMessageBox.Yes:
                 newadmin=False
         if newadmin:
+            self.both_visibles= False
             self.clean_old_Widgets()
             self.CaseWidget=CaseAnalyserWidget(self, self.mesPath)
             self.CaseWidget.basic_widgets()
@@ -663,6 +721,7 @@ class kgControlWidget(QMainWindow):
             self.connections()
             self.connections_admin()
             self.add_to_authors()
+            
         self.grabKeyboard()
     
     def NewCaseCreator(self):
@@ -688,6 +747,12 @@ class kgControlWidget(QMainWindow):
             self.media.play()
         else:
             self.media.pause()
+    
+    def remove_Fill_Between(self):
+        """removes the spans put on both axes"""
+        #self.SelectAxis.collections.pop()
+        for coll in (self.SecondAxis.collections):
+            self.SecondAxis.collections.remove(coll)
     
     def remove_second_axis(self):
         self.SelectAxis.figure.delaxes(self.SecondAxis)
@@ -770,8 +835,8 @@ class kgControlWidget(QMainWindow):
             self.set_textparam_bw(True)
     
     def show_author_int(self):
-        self.CaseWidget.plot()
-        self.CaseWidget.update_canvas()
+        #self.CaseWidget.plot()
+        self.CaseWidget.update_stay_rect()
     
     def show_info(self):
         self.extbrowsercall()
@@ -797,6 +862,10 @@ class kgControlWidget(QMainWindow):
             #self.timer.stop()
             self._barplay(False)
     
+    def toggleAuthAlg(self):
+        self.showAuthorsInts=not self.showAuthorsInts
+        self.AlgAuthLabel.setText(str(self.showAuthorsInts))
+    
     def update_time(self,t):
         self.CaseWidget.update_time(t)
 
@@ -816,7 +885,7 @@ class MainCaseWidget():
         self.mpl = {}
         self.ca_update_handle = []
         self.ca_set_bar_handle = []
-        
+        self.CollectionSTFT=None #will store the collections element QuadMesh produced when plotting STFT
         #bools to know if the timer is to be activated
         self.barplay=False
         #refresh timer
@@ -941,7 +1010,7 @@ class MainCaseWidget():
         # todo: plot stft band
         # append Case Dict to  dict
         self.casesToAnalyze[ID+'_'+mic]=caseDict
-        self.add_to_author(caseDict['case']['author'])
+        self.add_author(caseDict['case'].get_author())
         
     def case_up(self):
         """changes case to the previous one"""
@@ -973,7 +1042,7 @@ class MainCaseWidget():
         pass
     
     def change_current_case(self, index):
-        self.set_currentplottype()
+        #self.set_currentplottype()
         key = self.casesKeys[index]
         #self.currentCase.get('saved',False):
         self.set_current_case(key)
@@ -995,16 +1064,7 @@ class MainCaseWidget():
         pass
     
     def change_quality_displayed(self, quality):
-        if quality in ['good','medium','bad']:
-            if quality=='good':
-                curr=self.kgControl.Qradios[0].isChecked()
-                self.kgControl.Qradios[0].setChecked(not curr)
-            elif quality=='medium':
-                curr=self.kgControl.Qradios[1].isChecked()
-                self.kgControl.Qradios[1].setChecked(not curr)
-            else:
-                curr=self.kgControl.Qradios[2].isChecked()
-                self.kgControl.Qradios[2].setChecked(not curr)
+        pass
         
     def chg_type(self):
         """change the noise type to the next one on the list (and back to the first)"""
@@ -1063,13 +1123,21 @@ class MainCaseWidget():
             v['case']= Case(**v['case'])
         self.casesKeys = sorted(list(self.casesToAnalyze.keys()))#list of name of cases
     
-    def load_cases(self, listofpaths):
+    def load_cases(self, listofpaths, names=False):
         """loads the cases given in list of paths to casesToAnalyse
         called by add_case
         and by asks_for_ncases
+        
+        Boolean names is there to tell whether one is passing names or filepaths
         """
+        self.PrimaryListOfCases=[]
         for pathtofile in listofpaths:#listofpaths contains Windows paths
-            filename, extension =pathtofile.name.split('.')
+            if not names:
+                filename, extension =pathtofile.name.split('.')
+            else:
+                filename=pathtofile
+                extension=None
+            self.PrimaryListOfCases.append(filename)
             filename=filename.split('_')
             gauthor=None
             try:
@@ -1093,12 +1161,17 @@ class MainCaseWidget():
                             mesPath=paths
             elif extension=='mat':
                 mesPath=pathtofile
+            elif not extension:
+                pass
             if mesPath:
                 self.case_to_analyse(ID,mic,mesPath, gauthor)
                 self.add_to_authors(gauthor)
             else:
                 print("file not found")
         self.casesKeys = sorted(list(self.casesToAnalyze.keys()))#list of name of cases
+    
+    def noise(self):
+        pass
     
     def _on_case_change(self):
         """defines actions to do when the cases is changed with case_up or case_down"""
@@ -1110,8 +1183,13 @@ class MainCaseWidget():
         pass
         
     def plot(self):
-        cpt =self.currentplottype
-        self._plot(cpt, self.kgControl.SelectAxis)
+        #cpt =self.currentplottype
+        #self._plot(cpt, self.kgControl.SelectAxis)
+        self.kgControl.AlgAuthLabel.setText('None')
+        self._plot('Spectogram',self.kgControl.SelectAxis)
+        self._plot('Spec', self.kgControl.SecondAxis)
+        self.CS.new_background()
+        self.CS2.new_background()
         
     def _plot(self, cpt, ax):
         ax.cla()
@@ -1123,8 +1201,6 @@ class MainCaseWidget():
             self.plot_spec(ax, decalage= self.tShift)
         elif cpt=='Signal':
             self.plot_signal(ax)
-        else:
-            self.kgControl.SelectAxis.cla()
     
     def plot_finish(self):
         for ca in self.canvas:
@@ -1159,9 +1235,11 @@ class MainCaseWidget():
         self.kgControl.statusBar().showMessage("Computing STFT. Long process, please wait.")
         micSn=self.get_current_signal()
         stftName = micSn.get_stft_name(self.currentAlgorithm)
-        self.micSignals[self.currentCase['case'].get_mIDmic()].plot_spectrogram(stftName,ax, decalage=self.tShift)
+        self.micSignals[self.currentCase['case'].get_mIDmic()].plot_spectrogram(stftName,ax, self.tShift)
         self.micSignals[self.currentCase['case'].get_mIDmic()]=micSn
+        self.CollectionSTFT=self.kgControl.SelectAxis.collections
         self.plot_finish()
+        
     
     def plot_signal(self,ax):
         micSn=self.get_current_signal()
@@ -1206,13 +1284,11 @@ class MainCaseWidget():
         #attributes
         self.case = self.currentCase['case']
         #update buttons
-        self.both_visibles = True
-        self.kgControl.cb.setChecked(self.both_visibles)
-        self.current_noise = 'Z'
-        self.kgControl.SOIcombo.setCurrentIndex(self.NoiseTypes.index(self.current_noise))
+    
+        self.noise()
+
         self.chg_color_on_save()#changes the color (function active only if it is redefined)
         #set SOI and update Canvas
-        self.set_noise_type('Z')
         #plot
         #self.plot()
         #Set mediafile
@@ -1222,8 +1298,10 @@ class MainCaseWidget():
         #self.timer.start()
         self.kgControl.grabKeyboard()
         self.change_quality_displayed(self.case.get_quality())
-        self.kgControl.SpecificationsLabel=self.case.get_today()
+        self.kgControl.DateLabel=self.case.get_today()
         self.kgControl.show_author_int()
+        #self.plot()
+        #self.set_currentplottype()
     
     def set_currentplottype(self):
         self.currentplottype='LAfast'
@@ -1254,12 +1332,7 @@ class MainCaseWidget():
         self.kgControl.vBox.addLayout(hca)
                 
     def set_noise_type(self, index):
-        if isinstance(index,int):
-            self.current_noise = self.NoiseTypes[index]
-        else:
-            self.current_noise = index
-        self.SOI = self.case.get_SOI(self.current_noise)
-        self.update_stay_rect()
+        pass
         
     def set_quality(self):
         for q,rb in zip( ['good','medium','bad'],self.kgControl.Qradios):
@@ -1309,6 +1382,7 @@ class MainCaseWidget():
                     cas=keys[random.randint(0,ncmax)]
                     if cas not in self.casesKeys:
                         self.casesKeys.append(cas)
+        return(list(self.casesKeys))
     
     def show_compare(self):
         pass 
@@ -1368,12 +1442,16 @@ class MainCaseWidget():
             if not hide:
                 if nT == self.current_noise:
                     self.CS.set_stay_rects_x_bounds(self.SOI.tolist(),index)
+                    self.CS2.set_stay_rects_x_bounds(self.SOI.tolist(),index)
                 elif self.both_visibles:
                     self.CS.set_stay_rects_x_bounds(self.case.get_SOI(nT).tolist(), index)
+                    self.CS2.set_stay_rects_x_bounds(self.case.get_SOI(nT).tolist(), index)
                 else:
                     self.CS.set_stay_rect_visible(False, index)
+                    self.CS2.set_stay_rect_visible(False, index)
             else:
                 self.CS.set_stay_rects_x_bounds([], index)
+                self.CS2.set_stay_rects_x_bounds([], index)
     
     def update_time(self,t):
         self.t = t/1000 + self.tShift
@@ -1404,23 +1482,12 @@ class CaseAnalyserWidget(MainCaseWidget):
     def __init__(self,kgControl, mesPath, Paths=None):
         super(CaseAnalyserWidget, self).__init__(kgControl, mesPath,Paths)
         self.authors=[]
-        self.authors.append('admin')
         #import cases
         #algorithms
         self.algorithmsTypes={'Z2':{'classname':'ZischenDetetkt2','attributes':'Z2_fc_threshold_dt'}}
         #gets number of cases to analyse
-        self.asks_for_ncases()
-        #self.generate_authors()
-        newdictionary={}
-        for k in self.casesKeys:
-            newdictionary[k]=self.casesToAnalyze[k]
-        #select a spare case (just in case ;))
-        self.sparecase=None
-        for k,v in self.casesToAnalyze.items():
-            if k not in self.casesKeys:
-                self.sparecase=(k,v)
-                break
-        self.casesToAnalyze=newdictionary
+
+
         #self.generate_authors_cases()
 
         #self.author=self.authors[0]
@@ -1428,6 +1495,7 @@ class CaseAnalyserWidget(MainCaseWidget):
         #add connections
         self.connections()
         self.micSignals={}
+        self.both_visibles=False
     
     def add_to_authors(self, ga):
         """adds the author ga if it is not already in authors"""
@@ -1473,18 +1541,42 @@ class CaseAnalyserWidget(MainCaseWidget):
                 keeponasking=False
             
         if askforcases or len(listofpaths)==0:
-            self.setup_cases()
+            listofnames=self.setup_cases()
+            #self.load_cases(listofnames, True)
+            self.PrimaryListOfCases=listofnames
         elif len(listofpaths)>0:
             listofcase=[]
             self.casesToAnalyze={}
             self.load_cases(listofpaths)
+        self.kgControl.add_to_cases()
         self.kgControl.grabKeyboard()
     
     def _basic_widgets(self):
         self.kgControl.add_widgets_admin()
-        self.load_author(-1)
+        self.asks_for_ncases()
+        newdictionary={}
+        for k in self.casesKeys:
+            newdictionary[k]=self.casesToAnalyze[k]
+        #select a spare case (just in case ;))
+        self.sparecase=None
+        for k,v in self.casesToAnalyze.items():
+            if k not in self.casesKeys:
+                self.sparecase=(k,v)
+                break
+        self.casesToAnalyze=newdictionary
+        self.generate_authors()
+        self.generate_authors_cases()
+        self.set_current_case(self.casesKeys[0])
+        self.load_author(0)
         ##todo place comboAuthors as Action in the menu and place a label instead.
         self.kgControl.ComboAuthors.setCurrentIndex(-1)
+    
+    def change_quality_displayed(self, quality):
+        if quality in ['good','medium','bad']:
+            try:
+                self.kgControl.SpecificationsLabel.setText('Quality : '+str(quality)+"; Type : "+str(self.currentAlgorithm.get_Type()))
+            except:
+                self.kgControl.SpecificationsLabel.setText('Quality : '+str(quality))
     
     def chg_folder(self):
         """change the directory where to save the data"""
@@ -1521,21 +1613,20 @@ class CaseAnalyserWidget(MainCaseWidget):
     def generate_authors_cases(self):
         self.AuthorCases={}
         for auth in self.authors:
-            if auth=='admin':
-                self.AuthorCases['admin']=self.casesToAnalyze
+            self.author=auth
+            self.AuthorCases[auth]={}
+            try:
+                listofsaved=self.checkSavedCases()
+            except:
+                pass
             else:
-                self.author=auth
-                self.AuthorCases[auth]={}
-                try:
-                    listofsaved=self.checkSavedCases()
-                except:
-                    pass
-                else:
-                    for i in listofsaved:
-                        try:
-                            self.AuthorCases[auth][i]=copy.deepcopy(self.casesToAnalyze[i])
-                        except:
-                            pass
+                for i in listofsaved:
+                    try:
+                        self.AuthorCases[auth][i]=copy.deepcopy(self.casesToAnalyze[i])
+                    except:
+                        pass
+                for case in self.AuthorCases[auth]:
+                    self.AuthorCases[auth][case]['case'].set_author(auth)
         self.author=self.authors[0]
         self.casesToAnalyze=self.AuthorCases[self.author]
     
@@ -1543,23 +1634,44 @@ class CaseAnalyserWidget(MainCaseWidget):
         """loads the algorithm selected"""
         self.currentAlgorithm=self.Algorithms[self.kgControl.ComboAlgorithms.currentText()]
         self.currentplottype=self.PlotTypes[0]
-        self.plot()
+        self.kgControl.SpecificationsLabel.setText("Type : "+self.currentAlgorithm.get_Type())
+        self.current_noise=self.currentAlgorithm.get_Type()
+        #self.plot()
     
     def load_author(self, index):
         """loads the saved intervals of an author"""
         self.author=self.authors[index]
         self.casesToAnalyze=self.AuthorCases[self.author]
-        self.kgControl.CaseCombo.clear()
-        #self.currentplottype=self.PlotTypes[0]
-        self.casesKeys=sorted(list(self.casesToAnalyze.keys()))
-        for j in self.casesKeys:
-            self.kgControl.CaseCombo.addItem(j)
-        self.TurnTheSavedGreen()
+        #self.TurnTheSavedGreen()
         #self.chg_type()
-        
+    
+    def load_author_list(self):
+        self.kgControl.ComboAuthors.clear()
+        self.currentlistofauthors=[]
+        for author in self.authors:
+            if self.case.get_mIDmic() in list(self.AuthorCases[author].keys()):
+                self.kgControl.ComboAuthors.addItem(author)
+                self.currentlistofauthors.append(author)
+        if len(self.currentlistofauthors)==0:
+            self.currentlistofauthors.append('admin')
+            self.kgControl.ComboAuthors.addItem('admin')
+        if self.author in self.currentlistofauthors:
+            self.kgControl.ComboAuthors.setCurrentIndex(self.currentlistofauthors.index(self.author))
+        else:
+            self.kgControl.ComboAuthors.setCurrentIndex(0)
+            self.author=self.kgControl.ComboAuthors.currentText()
+        #self.show_compare()
+    
+    def noise(self):
+        """instead of displaying the noise type. In admin mode we need to be sure that the loaded case was analyzed by the current author. We also need to update the AuthorCombo to include only the authors who analyzed this case. In the situation where the author has not done the case then we move to an other one"""
+        self.load_author_list()
+    
     def _on_case_change(self):
-        self.currentplottype=self.PlotTypes[0]
+        #self.currentplottype=self.PlotTypes[0]
+        self.load_author_list()
         self.plot()
+        self.show_compare()
+    
     
     def plot_spec(self, ax, decalage=None):
         self.kgControl.statusBar().showMessage("Computing spec. Long process, please wait.")
@@ -1569,16 +1681,19 @@ class CaseAnalyserWidget(MainCaseWidget):
         self.kgControl.statusBar().showMessage("Done")
         self.plot_finish()
     
+    def set_noise_type(self):
+        self.current_noise= self.currentAlgorithm.get_Type()
+    
     def set_currentplottype(self):
         self.currentplottype=''
+        self.kgControl.plotselect.setCurrentIndex(0)
+        #self.plot()
     
     def __str__(self):
         return('Analysis')
         
-    def show_compare(self,ax=None):
+    def show_compare(self):
         """will show or remove the comparison between current author /current case and the current algorithm"""
-        if not ax:
-            ax=self.kgControl.SelectAxis
         if True:
             self.kgControl.statusBar().showMessage("Computing results")
             self.hide_rect()
@@ -1597,11 +1712,22 @@ class CaseAnalyserWidget(MainCaseWidget):
                     self.casesToAnalyze[ID+'_'+str(mic)]['stftName']=stftname
             if MicSnObj:
                 MicSnObj.calc_kg(self.currentAlgorithm)
+                self.kgControl.statusBar().showMessage("Plotting image.")
+                self.kgControl.remove_Fill_Between()
+                self.kgControl.statusBar().showMessage("Finished plotting.")
+                self.kgControl.statusBar().showMessage("Getting KG results.")
                 alg_res = MicSnObj.get_KG_results(self.currentAlgorithm)['result']
-                if self.author!='admin':
-                    self.case.plot_compare(ax, alg_res['result'], alg_res['t'], noiseType = self.currentAlgorithm.noiseType)
+                self.kgControl.statusBar().showMessage("Comparing with current Case.")
+                self.case.plot_compare(self.kgControl.SecondAxis, alg_res['result'], alg_res['t'], noiseType = self.currentAlgorithm.noiseType)
+                if self.kgControl.showAuthorsInts and self.author!='admin':
+                    self.TurnTheSavedGreen()
+                    self.kgControl.statusBar().showMessage("Plotting author intervals")
+                    self.kgControl.show_author_int()
+                    self.kgControl.AlgAuthLabel.setText('Author Intervals')
                 else:
-                    MicSnObj.plot_KG(self.currentAlgorithm, ax, color = '#984ea3')
+                    self.kgControl.statusBar().showMessage("Plotting algorithm intervals.")
+                    MicSnObj.plot_KG(self.currentAlgorithm, self.kgControl.SelectAxis, color = '#984ea3')
+                    self.kgControl.AlgAuthLabel.setText('Algorithm Intervals')
                 for ca in self.canvas:
                     ca.draw()
             
@@ -1694,7 +1820,8 @@ class CaseCreatorWidget(MainCaseWidget):
     def _barplay(self, truth):
         """tells what to do if audio is playing or not"""
         self.barplay=truth
-        self.CS.setUpdateOnExtEvent(truth) 
+        self.CS.setUpdateOnExtEvent(truth)
+        self.CS2.setUpdateOnExtEvent(truth) 
         
     def _basic_widgets(self):
         self.kgControl.add_widgets_creator()
@@ -1712,12 +1839,24 @@ class CaseCreatorWidget(MainCaseWidget):
                 self.sparecase=(k,v)
                 break
         self.casesToAnalyze=newdictionary
-        self.kgControl.CaseCombo.addItems(self.casesKeys)
+        self.kgControl.add_to_cases()
         self.TurnTheSavedGreen()#set caseCombo
         
     def change_quality(self, quality):
         if quality in ['good','medium','bad']:
             self.case.set_quality(quality)
+            if quality=='good':
+                curr=self.kgControl.Qradios[0].isChecked()
+                self.kgControl.Qradios[0].setChecked(not curr)
+            elif quality=='medium':
+                curr=self.kgControl.Qradios[1].isChecked()
+                self.kgControl.Qradios[1].setChecked(not curr)
+            else:
+                curr=self.kgControl.Qradios[2].isChecked()
+                self.kgControl.Qradios[2].setChecked(not curr)
+    
+    def change_quality_displayed(self, quality):
+        if quality in ['good','medium','bad']:
             if quality=='good':
                 curr=self.kgControl.Qradios[0].isChecked()
                 self.kgControl.Qradios[0].setChecked(not curr)
@@ -1760,6 +1899,13 @@ class CaseCreatorWidget(MainCaseWidget):
     def _connections(self):
         """connects the buttons/combobox to the methods to be applied"""
         pass
+    
+    def noise(self):
+        self.both_visibles = True
+        self.kgControl.cb.setChecked(self.both_visibles)
+        self.current_noise = 'Z'
+        self.kgControl.SOIcombo.setCurrentIndex(self.NoiseTypes.index(self.current_noise))
+        self.set_noise_type('Z')
     
     def onclick(self,x):
         #remove Interval
@@ -1816,7 +1962,15 @@ class CaseCreatorWidget(MainCaseWidget):
             currentIndex= self.casesKeys.index(str(self.kgControl.CaseCombo.currentText()))
             self.kgControl.CaseCombo.setItemData(currentIndex,QtGui.QColor('#a6dba0'),QtCore.Qt.BackgroundRole)
             #self.AnalysedCases.append(self.casesKeys[currentIndex])
-
+            
+    def set_noise_type(self, index):
+        if isinstance(index,int):
+            self.current_noise = self.NoiseTypes[index]
+        else:
+            self.current_noise = index
+        self.SOI = self.case.get_SOI(self.current_noise)
+        self.update_stay_rect()
+        
     def unsave(self):
         """get back to unsaved status"""
         if self.currentCase['case'].get_saved:

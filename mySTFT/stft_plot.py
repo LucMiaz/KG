@@ -37,9 +37,9 @@ def plot_spectrogram(X, param, ax, colorbar = False, title = 'Spectrogram', dB= 
     
     # plotting
     ax.set_title(title, fontsize = 10)
-    cmap = brewer2mpl.get_map('RdPu', 'Sequential', 9).mpl_colormap
-    #colormap=['#ffffe0','#ffc7c4', '#f98d9f', '#e35875', '#bf2543', '#8b0000']
-    #cmap=LinearSegmentedColormap.from_list('YeOrRe',colormap)
+    #cmap = brewer2mpl.get_map('RdPu', 'Sequential', 9).mpl_colormap
+    colormap=['#fff7f3','#fde0dd','#fcc5c0','#fa9fb5','#f768a1','#dd3497','#ae017e','#7a0177','#49006a']
+    cmap=LinearSegmentedColormap.from_list('YeOrRe',colormap)
     
     #cmap=LinearSegmentedColormap('RdPu',cmap)
     if dBMax==None:
