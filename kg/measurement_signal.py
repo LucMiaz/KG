@@ -72,8 +72,15 @@ class measuredSignal():
             try:
                 y = np.ravel(loadmat(path, variable_names = arrN)[arrN])
             except FileNotFoundError as e:
-                print(e)
-                raise(Exception('Class instance is invalid: ID ' + self.ID + ' is missing'))
+                try:
+                    print('trying with adding .mat')
+                    y=np.ravel(loadmat(path,variable_names = arrN, appendmat=True)[arrn])
+                except FileNotFoundError as e :
+                    print('-/-')
+                    print(e)
+                    raise(Exception('Class instance is invalid: ID ' + self.ID + ' is missing'))
+                else:
+                    print('  .')
             #load t vector
             path = str(dataPath.joinpath(time['fileName'])).replace('ID',self.ID)
             arrN = self.ID + '_X'

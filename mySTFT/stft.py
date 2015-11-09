@@ -68,6 +68,7 @@ def pad_for_invertible(x,M,R):
     x = np.pad(x, (before,after), 'constant', constant_values = 0)
     return(x, before, after)
     
+
 def stft(x, M, N = None , R = None, overlap = 2, sR = 1, window = 'hann', invertible = True):
     """Calculate short time fourier transform of x
     param:
@@ -153,7 +154,7 @@ def stft(x, M, N = None , R = None, overlap = 2, sR = 1, window = 'hann', invert
              'R':R, 'window':window, '0-pad': padN, 'invertible': invertible,\
              'normCOLA':normCOLA,'hoop_added':hoop_added }
             )
-    
+
 def istft(X, param):
         """
         parameter: 

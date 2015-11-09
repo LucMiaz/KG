@@ -135,7 +135,14 @@ class measuredValues():
         all the ID with calculated LAF
         """
         return(ID in list(self.micValues['LAmax']['values'].keys()))
-        
+    def get_path(self):
+        try:
+            return(self.path.as_posix())
+        except:
+            try:
+                return(str(self.path))
+            except:
+                return('could not return the path')
     def get_IDs(self, evaluated = False):
         return(list(self.micValues['LAmax']['values'].keys()))
         
@@ -182,7 +189,7 @@ class measuredValues():
         else:
             return(dict)
     
-    def set_kg_values(self, algorithm, ID, mic, result ):
+    def set_kg_values(self, algorithm, ID, mic, result, **kwargs ):
         """
         set algorithm information in self.kgValues['algorithm'] 
 

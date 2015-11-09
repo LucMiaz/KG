@@ -54,7 +54,23 @@ if __name__ == "__main__":
     else:
         for fc, threshold, dt in itertools.product(FC,Treshold,DT):
             algorithms.append(ZischenDetetkt2(fc, threshold,dt,Rexport=True))
-        
+    
+    algorithms=[]
+    algorithms.append(ZischenDetetkt2(4500,0.676518927494837,0.02,Rexport=True))
+    algorithms.append(ZischenDetetkt2(4500,0.726743716026382,0.1,Rexport=True))
+    algorithms.append(ZischenDetetkt2(4500,0.730582921048284,0.05,Rexport=True))
+    algorithms.append(ZischenDetetkt2(4000,0.913411063022725,0.02,Rexport=True))
+    algorithms.append(ZischenDetetkt2(3500,1.04742936463208,0.02,Rexport=True))
+    algorithms.append(ZischenDetetkt2(4000,1.38839908900027,0.05,Rexport=True))
+    algorithms.append(ZischenDetetkt2(3000,1.76704138977899,0.02,Rexport=True))
+    algorithms.append(ZischenDetetkt2(3500,1.79087764593783,0.05,Rexport=True))
+    algorithms.append(ZischenDetetkt2(4000,1.81104574253084,0.1,Rexport=True))
+    algorithms.append(ZischenDetetkt2(3500,1.99828945412812,0.1,Rexport=True))
+    algorithms.append(ZischenDetetkt2(3000,2.22468607016445,0.05,Rexport=True))
+    algorithms.append(ZischenDetetkt2(3000,2.57727672753696,0.1,Rexport=True))
+    algorithms.append(ZischenDetetkt2(2000,2.89499961394424,0.02,Rexport=True))
+    algorithms.append(ZischenDetetkt2(2000,3.23479771056204,0.05,Rexport=True))
+    algorithms.append(ZischenDetetkt2(2000,3.52850682557497,0.1,Rexport=True))
     #load cases
     # todo: if necessary serialize on mesVal
     mesValues = measuredValues.from_json(mesPath)

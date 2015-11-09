@@ -115,7 +115,7 @@ class kgControlWidget(QMainWindow):
         hcb=QtGui.QHBoxLayout()
         self.SpecificationsLabel=QtGui.QLabel('Quality and noise Type')
         self.DateLabel=QtGui.QLabel('Date')
-        self.AlgAuthLabel=QtGui.QLabel('None')
+        self.AlgAuthLabel=QtGui.QLabel('Algorithm Ints')
         hcb.addWidget(self.SpecificationsLabel)
         hcb.addWidget(self.DateLabel)
         hcb.addWidget(self.AlgAuthLabel)
@@ -209,20 +209,20 @@ class kgControlWidget(QMainWindow):
         fig = Figure((15,10))
         fig.set_dpi(110)#default 110
         ax = fig.add_subplot(211)
-        ca = FigureCanvas(fig)
+        
         self.SelectAxis = ax
         axbgcolor='#272822'
         fig.set_facecolor(axbgcolor)
         axs =fig.add_subplot(212, sharex=self.SelectAxis)
         fig.subplots_adjust(hspace=0.1)
         self.SecondAxis=axs
-        
+        ca = FigureCanvas(fig)
         #case Selector
         self.CaseWidget.CS = CaseSelector(self.SelectAxis, self.CaseWidget.onselect, self.CaseWidget.onclick, 
                                 nrect = [50,50], update_on_ext_event = True , 
                                 minspan = self.CaseWidget.minspan )
         self.CaseWidget.CS2=CaseSelector(self.SecondAxis,self.CaseWidget.onselect, self.CaseWidget.onclick, nrect=[50,50], update_on_ext_event=True, minspan=self.CaseWidget.minspan)
-        canvas['selector'] = {'animate':True,'bar':True, 'canvas':ca , 'axHandle': self.CaseWidget.CS}
+        canvas['selector'] = {'animate':True,'bar':True, 'canvas':ca , 'axHandle': [self.CaseWidget.CS, self.CaseWidget.CS2]}
         
         #set canvas
         self.CaseWidget.set_mpl(canvas)
@@ -441,7 +441,7 @@ class kgControlWidget(QMainWindow):
         except:
             pass
         else:
-            if pathsave.isdir():
+            if pathsave.is_dir():
                 self.savePlotFolder=pathsave
     def chgSavePlotType(self):
         self.releaseKeyboard()
@@ -863,8 +863,9 @@ class kgControlWidget(QMainWindow):
             self._barplay(False)
     
     def toggleAuthAlg(self):
+        authalg={'True':'Authors ints', 'False':'Algorithm ints'}
         self.showAuthorsInts=not self.showAuthorsInts
-        self.AlgAuthLabel.setText(str(self.showAuthorsInts))
+        self.AlgAuthLabel.setText(authalg[str(self.showAuthorsInts)])
     
     def update_time(self,t):
         self.CaseWidget.update_time(t)
@@ -925,6 +926,7 @@ class MainCaseWidget():
         self.NoiseTypes = ['Z','KG']
         self.current_noise=self.NoiseTypes[0]
         self.SOI=SetOfIntervals()
+        self.PrimaryListOfCases=[]
     
     def add_author(self, ga):
         pass    
@@ -1010,7 +1012,10 @@ class MainCaseWidget():
         # todo: plot stft band
         # append Case Dict to  dict
         self.casesToAnalyze[ID+'_'+mic]=caseDict
-        self.add_author(caseDict['case'].get_author())
+        if caseDict['case'].get_author():
+            self.add_author(caseDict['case'].get_author())
+            self.AuthorCases[gauthor][ID+'_'+mic]=caseDict
+        self.AuthorCases['admin'][ID+'_'+mic]=caseDict
         
     def case_up(self):
         """changes case to the previous one"""
@@ -1043,7 +1048,7 @@ class MainCaseWidget():
     
     def change_current_case(self, index):
         #self.set_currentplottype()
-        key = self.casesKeys[index]
+        key = self.PrimaryListOfCases[index]
         #self.currentCase.get('saved',False):
         self.set_current_case(key)
         #self.update_canvas()
@@ -1130,7 +1135,7 @@ class MainCaseWidget():
         
         Boolean names is there to tell whether one is passing names or filepaths
         """
-        self.PrimaryListOfCases=[]
+        
         for pathtofile in listofpaths:#listofpaths contains Windows paths
             if not names:
                 filename, extension =pathtofile.name.split('.')
@@ -1165,9 +1170,11 @@ class MainCaseWidget():
                 pass
             if mesPath:
                 self.case_to_analyse(ID,mic,mesPath, gauthor)
-                self.add_to_authors(gauthor)
+                if gauthor:
+                    self.add_to_authors(gauthor)
             else:
                 print("file not found")
+        
         self.casesKeys = sorted(list(self.casesToAnalyze.keys()))#list of name of cases
     
     def noise(self):
@@ -1481,6 +1488,7 @@ class CaseAnalyserWidget(MainCaseWidget):
     """
     def __init__(self,kgControl, mesPath, Paths=None):
         super(CaseAnalyserWidget, self).__init__(kgControl, mesPath,Paths)
+        self.AuthorCases={}
         self.authors=[]
         #import cases
         #algorithms
@@ -1596,14 +1604,16 @@ class CaseAnalyserWidget(MainCaseWidget):
             try:
                 self.casesToAnalyze=self.AuthorCases[self.author]
             except:
-                self.generate_authors()
+                self.load_author_list()#loads authors for this precise case
                 self.casesToAnalyze=self.AuthorCases[self.author]
             return(list(self.casesToAnalyze.keys())[0])
         else:
             try:
                 self.author=self.kgControl.ComboAuthors[0]
             except:
-                print('No ComboAuthors defined. Problem in deal_with_missing_key function of class CaseAnalyserWidget')
+                self.author='admin'
+                self.authors=['admin']
+                self.kgControl.add_to_authors()
             else:
                 self.kgControl.ComboAuthors.setCurrentIndex(0)
                 return(self.caseToAnalyze['case'].get_mID())
@@ -1611,6 +1621,7 @@ class CaseAnalyserWidget(MainCaseWidget):
         for dir in os.listdir(self.savefolder.joinpath('test_cases').as_posix()):
             self.add_to_authors(str(dir))
     def generate_authors_cases(self):
+        pass
         self.AuthorCases={}
         for auth in self.authors:
             self.author=auth
@@ -1649,9 +1660,12 @@ class CaseAnalyserWidget(MainCaseWidget):
         self.kgControl.ComboAuthors.clear()
         self.currentlistofauthors=[]
         for author in self.authors:
-            if self.case.get_mIDmic() in list(self.AuthorCases[author].keys()):
-                self.kgControl.ComboAuthors.addItem(author)
-                self.currentlistofauthors.append(author)
+            try:
+                if self.case.get_mIDmic() in list(self.AuthorCases[author].keys()):
+                    self.kgControl.ComboAuthors.addItem(author)
+                    self.currentlistofauthors.append(author)
+            except:
+                pass
         if len(self.currentlistofauthors)==0:
             self.currentlistofauthors.append('admin')
             self.kgControl.ComboAuthors.addItem('admin')
@@ -1718,6 +1732,7 @@ class CaseAnalyserWidget(MainCaseWidget):
                 self.kgControl.statusBar().showMessage("Getting KG results.")
                 alg_res = MicSnObj.get_KG_results(self.currentAlgorithm)['result']
                 self.kgControl.statusBar().showMessage("Comparing with current Case.")
+                self.author=self.kgControl.ComboAuthors.currentText()
                 self.case.plot_compare(self.kgControl.SecondAxis, alg_res['result'], alg_res['t'], noiseType = self.currentAlgorithm.noiseType)
                 if self.kgControl.showAuthorsInts and self.author!='admin':
                     self.TurnTheSavedGreen()
