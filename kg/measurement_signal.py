@@ -34,8 +34,7 @@ class measuredSignal():
                 if ret:
                     if prms:
                         self.read_signal('prms'+ str(mic))
-                    self.initialized=True
-        
+                    self.initialized=True    
         
     def list_signals(self):
         data = []
@@ -59,9 +58,8 @@ class measuredSignal():
         dataPath = self.path.joinpath('raw_signals')
         try:
             signal = measuredSignal._SIGNALS[channel]
-        except KeyError:
-            print( 'Channel' +channel+ 'is missing')
-            raise e
+        except:
+            return False
         
         if not channel in self.signals.keys():
             signal = measuredSignal._SIGNALS[channel]
@@ -73,7 +71,6 @@ class measuredSignal():
                 y = np.ravel(loadmat(path, variable_names = arrN)[arrN])
             except FileNotFoundError as e:
                 try:
-                    print('trying with adding .mat')
                     y=np.ravel(loadmat(path,variable_names = arrN, appendmat=True)[arrn])
                 except FileNotFoundError as e :
                     print('-/-')
@@ -119,6 +116,9 @@ class measuredSignal():
             signal = copy.deepcopy(self.signals[channel])
         return(signal['y'],signal['t'],signal['sR'],)
     
+    def is_initialized(self):
+        return self.initialized
+	
     @classmethod
     def setup(cls, mesPath):
         #mesPath = pathlib.Path(mesPath)
