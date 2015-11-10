@@ -1,5 +1,5 @@
 import sys
-sys.path.append('D:\GitHub\myKG')
+sys.path.append('Documents/TRAVAIL/SBB_KG/KG')
 import os, pathlib
 import numpy as np
 import json
@@ -15,13 +15,17 @@ from tqdm import tqdm
 # Todo: separate evaluation in block such thatif analysis stop  the correct we don't lost all the evaluated data
 mesPath = pathlib.Path('').absolute()
 if __name__ == "__main__":  
-    Paths=[pathlib.Path('E:/Biel1Vormessung'),pathlib.Path('E:/Biel2Vormessung'), pathlib.Path('E:/ZugVormessung')]
+    #Paths=[pathlib.Path('E:/Biel1Vormessung'),pathlib.Path('E:/Biel2Vormessung'), pathlib.Path('E:/ZugVormessung')]
     #Paths=[pathlib.Path('E:/Biel1Vormessung')]
-    
+    Paths=[pathlib.Path('Data/Biel1'), pathlib.Path('Data/Biel2'), pathlib.Path('Data/Zug')]
     # setup algorithms
     algorithms =[ZischenDetetkt2(4500,0.7267437,0.1), ZischenDetetkt2(3500,1.0474294,0.02)]
     print(repr(algorithms[0]))
-    
+    for path in Paths:
+        try:
+            path.is_dir()
+        except:
+            raise('path not found')
     # get list of valid ID
     savingPaths=[]
     #for testing
@@ -43,24 +47,32 @@ if __name__ == "__main__":
             if id.is_file():
                 file_n, ext=id.as_posix().split('.')
                 if ext=='mat':
-                    if file_n.split('/')[-1][0]!='zrd':
+                    if not file.split('/')[-1].match(zrd_**):
                         file=file_n.split('/')[-1]
                         validID2.append(file)
-        
         clipped = set()
         print('Case cases:')
         print('----------------------')
         for file in tqdm(validID2):
+            ID=file.split('_')[0:-1]
+            id=ID[0]
+            for i in range(1,len(ID)):
+                id+='_'+ID[i]
+            ID=id
+            mic=file.split('_')[-1]
+            #print('('+ID+', '+str(mic)+')', end = '; ')
+            # read the signal
             try:
-                ID=file.split('_')[0:-1]
-                id=ID[0]
-                for i in range(1,len(ID)):
-                    id+='_'+ID[i]
-                ID=id
-                mic=file.split('_')[-1]
-                #print('('+ID+', '+str(mic)+')', end = '; ')
-                # read the signal
-                mS = measuredSignal(ID,mic)
+				mS = measuredSignal(ID,mic)
+			except KeyError:
+                print('Key not found : ')
+                try:
+                    print(str(file))
+                except:
+                    print('Not able to print file name')
+            except:
+                pass
+            else:
                 y, t, sR = mS.get_signal(mic)
                 ch_info = mS.channel_info(mic)
                 # get the values from measuredValues to initiate MicSignal and Case
@@ -79,20 +91,6 @@ if __name__ == "__main__":
                     micSn.calc_kg(alg)
                     # set results in mesVal
                     mesVal.set_kg_values(alg,**micSn.get_KG_results(alg))
-            except KeyError:
-                print('Key not found : ')
-                try:
-                    print(str(file))
-                except:
-                    print('Not able to print file name')
-            except:
-                try:
-                    mesVal.kg_values_to_json()
-                except:
-                    try:
-                        print(str(mesVal))
-                    except:
-                        print('Could not save to json')
         print(str(cupath)+'/'+str(npaths)+'100%| Done')
         print('saving to json')
         mesVal.kg_values_to_json()

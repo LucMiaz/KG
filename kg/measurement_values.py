@@ -214,7 +214,7 @@ class measuredValues():
         export['Description']= '''
                     This file contains the Results of KG processing'''
         export.update({ 'date': dateTime.strftime( "%d-%m-%Y"),
-                        'time':dateTime.strftime( "%H:%M:%S"),
+                        'time':dateTime.strftime( "%H-%M"),
                         'location': self.location,
                         'measurement': self.measurement})
         export.update(copy.deepcopy(self.kgValues))
