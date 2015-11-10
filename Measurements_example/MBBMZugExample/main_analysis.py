@@ -1,6 +1,5 @@
 import sys
-sys.path.append('C:/lucmiaz/KG_dev_branch/kg')
-sys.path.append('C:/lucmiaz/KG_dev_branch/mySTFT')
+sys.path.append('/Users/lucmiaz/Documents/TRAVAIL/SBB_KG/KG/Measurements_examples/MBBMZugExample')
 import os, pathlib
 import numpy as np
 import json
@@ -20,10 +19,10 @@ def split_list(alist, wanted_parts=1):
     return [ alist[i*length // wanted_parts: (i+1)*length // wanted_parts] for i in range(wanted_parts) ]
 
 if __name__ == "__main__":
-    blocks_size=10#specifies the size of the sublists we want to break validID2 in.
+    blocks_size=1000#specifies the size of the sublists we want to break validID2 in.
     #Paths=[pathlib.Path('E:/Biel1Vormessung'),pathlib.Path('E:/Biel2Vormessung'), pathlib.Path('E:/ZugVormessung')]
     #Paths=[pathlib.Path('E:/ZugVormessung')]
-    Paths=[pathlib.Path('Documents/TRAVAIL/SBB_KG/KG/Data/Biel1'),pathlib.Path('Documents/TRAVAIL/SBB_KG/KG/Data/Biel2'),pathlib.Path('Documents/TRAVAIL/SBB_KG/KG/Data/Zug')]
+    Paths=[pathlib.Path('/Users/lucmiaz/Documents/TRAVAIL/SBB_KG/KG/Data/Biel1'),pathlib.Path('/Users/lucmiaz/Documents/TRAVAIL/SBB_KG/KG/Data/Biel2'),pathlib.Path('/Users/lucmiaz/Documents/TRAVAIL/SBB_KG/KG/Data/Zug')]
     # setup algorithms
     algorithms =[ZischenDetetkt2(4500,0.7267437,0.1), ZischenDetetkt2(3500,1.0474294,0.02)]
     print(repr(algorithms[0]))
@@ -47,14 +46,15 @@ if __name__ == "__main__":
             mbbmmics=mesVal.mic
         except:
             break
-        else:
-            validID2=[]
-            for mid in mbbmids:
+        validID2=[]
+        for mid in mbbmids:
+            if mid[0]=='m':
                 for mic in mbbmmics:
                     validID2.append(mid+'_'+str(mic))
         validID2.sort()
         clipped = set()
         validlength=len(validID2)
+        print(str(validlength))
         nblists=validlength//blocks_size
         splitvalidID=split_list(validID2,nblists)
         print('Path '+str(cupath)+' of '+str(npaths))
