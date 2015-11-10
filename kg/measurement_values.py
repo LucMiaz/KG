@@ -166,7 +166,7 @@ class measuredValues():
                         values = self.idValues[var].get('values')[id]
                     except KeyError as e:
                         dict[id]=None
-                        print('ID '+id +' not found.')
+                        print('ID '+id +' not found in method get_variable_values of mesurement_values.py in if block.')
                         break
                     dict.setdefault(id,{})[var] = val
                 elif var in self.micValues.keys():
@@ -174,7 +174,7 @@ class measuredValues():
                         values = self.micValues[var].get('values')[id]
                     except KeyError as e:
                         dict[id]=None
-                        print('ID '+id +' not found.')
+                        print('ID '+id +' not found in method get_variable of measurement_values.py in elif block.')
                         break
                     val = copy.deepcopy(values)
                     if isinstance(mic,list):

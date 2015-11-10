@@ -7,15 +7,11 @@ __pycache__/
 #html
 .html
 Data/
+*.json
 #R
-
-
-#
 old/
 /TODO
-kg/widgets.py
-kg/intervals.py
-Measurements_example/MBBMZugExample/wav/m_0104_mic_6.wav
+Measurements_example/MBBMZugExample/wav/
 *.wav
 AppCS/icons/icon2.ico
 *.ico
@@ -23,5 +19,5 @@ caseToAnalyze.json
 AppCS/firstcases.list
 info.html
 *.mat
-*.json
-*.json
+
+
