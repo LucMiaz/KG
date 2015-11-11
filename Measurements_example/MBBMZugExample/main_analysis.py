@@ -100,7 +100,7 @@ if __name__ == "__main__":
                                 continue
                             for alg in algorithms:
                                 # calc KG
-                                micSn.calc_kg(alg)
+                                micSn.calc_kg(alg, complete=False)
                                 # set results in mesVal
                                 mesVal.set_kg_values(alg,**micSn.get_KG_results(alg))
                         else:
