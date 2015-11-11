@@ -34,5 +34,5 @@ for resPath in Paths:
 				timenoise=np.sum(idmicresult[mask])*dt
 				Result[location][id][mic][algorithm]={'dt':dt,'tNoise':timenoise}
 				Result[location][id]['tEval'] = np.sum(mask)*dt
-with open((Paths[0].parent.parent.parent.joinpath('ResultAgregate.json')).as_posix(),'w') as output:
+with open((Paths[0].parent.parent.parent.joinpath('ResultAggregate.json')).as_posix(),'w') as output:
 	json.dump(Result,output)
