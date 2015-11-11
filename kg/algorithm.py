@@ -6,8 +6,8 @@ import copy
 import datetime
 import collections
 import json
-from PySide import QtGui, QtCore
-from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
+#from PySide import QtGui, QtCore
+#from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.pyplot as plt
 
 from kg.mpl_widgets import Bar
