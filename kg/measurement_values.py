@@ -174,7 +174,7 @@ class measuredValues():
                         values = self.micValues[var].get('values')[id]
                     except KeyError as e:
                         dict[id]=None
-                        print('ID '+id +' not found in method get_variable of measurement_values.py in elif block.')
+                        print('\n var '+str(var)+' ID '+id +' not found in method get_variable of measurement_values.py in elif block.\n ')
                         break
                     val = copy.deepcopy(values)
                     if isinstance(mic,list):
@@ -227,7 +227,12 @@ class measuredValues():
         #         pass
         with resultsPath.open('w+') as file:
             json.dump(serialize(export),file)
-        
+    
+    def to_db(self, dbname):
+        """saves self to the database dbname"""
+        from pymongo import MongoClient
+        pass
+	
     @classmethod
     def from_json(cls, mesPath):
         #dataPath = pathlib.Path(mesPath)
