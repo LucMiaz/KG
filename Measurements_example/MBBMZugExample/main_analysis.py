@@ -26,7 +26,11 @@ if __name__ == "__main__":
     # setup algorithms
     algorithms =[ZischenDetetkt2(4500,0.7267437,0.1), ZischenDetetkt2(3500,1.0474294,0.02)]
     print(repr(algorithms[0]))
-    
+    for path in Paths:
+        try:
+            path.is_dir()
+        except:
+            raise('path not found')
     # get list of valid ID
     savingPaths=[]
     #for testing
