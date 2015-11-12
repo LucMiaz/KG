@@ -13,6 +13,7 @@ Data/
 old/
 /TODO
 Measurements_example/MBBMZugExample/wav/
+Measurements_example/MBBMZugExample/test_cases/
 *.wav
 AppCS/icons/icon2.ico
 *.ico
