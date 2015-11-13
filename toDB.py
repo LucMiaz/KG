@@ -30,7 +30,7 @@ inputname='ResultAggregate.json'
 outputname='ResultAggregate_byAlg.json'
 listofmicprop={'TEL':'TEL','Tb':'Tb','Te':'Te','Tp_e':'Tp_e','Tp_b':'Tp_b'}#micValues to take from MBBM_mes_values.json 
 #idValues to take from MBBM_mes_values.json
-listofidprop={'Temperature':'Temp','trainType':'trainType','trainLength':'trainLenght','dir->':'direction','rain':'rain','Platform':'Gleis','Humidity':'humidity','Wind':'wind','mTime':'mTime','mDate':'mDate','v1':'v1','v2':'v2','axleProLength':'axleProLenght'}
+listofidprop={'Temperature':'Temp','trainType':'trainType','trainLength':'trainLenght','direction':'direction','rain':'rain','Track':'Gleis','Humidity':'humidity','Wind':'wind','mTime':'mTime','mDate':'mDate','v1':'v1','v2':'v2','axleProLength':'axleProLenght'}
 outputname='ResultAggregate_byAlg.json'
 #loads json files for each path in Paths
 neolocations={}
@@ -53,7 +53,7 @@ for resPath in Paths:
 		dictjs=json.load(js)
 	location=dictjs['location']
 	neolocations[location]=(graph.merge_one('Location',property_key='Name', property_value=location))
-	
+	measurement=dictjs['measurement']
 	for algorithm in dictjs['algorithms'].keys():
 		if algorithm not in algorithms.keys():
 			algorithms[algorithm]=copy.deepcopy(dictjs['algorithms'][algorithm])
@@ -72,6 +72,7 @@ for resPath in Paths:
 		#read values from mbbm_mes_values
 		dictidvalues={}
 		neomid=graph.merge_one('Passing',property_key='id',property_value=mid)
+		neomid.properties['Measurement']=measurement
 		for idv in listofidprop.keys():
 			dictidvalues[str(idv)]=mbbm[ort]['idValues'][listofidprop[idv]]['values'][mid]
 			neomid.properties[str(idv)]=dictidvalues[str(idv)]
@@ -83,13 +84,16 @@ for resPath in Paths:
 				dictidvalues[str(idv)]=mbbm[ort]['idValues'][listofidprop[idv]]['values'][mid]
 				neomid.properties[str(idv)]=dictidvalues[str(idv)]
 				train=dictidvalues[str(idv)]
+			elif idv=='Track':
+				traintrack=mbbm[ort]['idValues'][listofidprop[idv]]['values'][mid]
+			elif idv=='mDate':
+				mDate=mbbm[ort]['idValues'][listofidprop[idv]]['values'][mid]
+			elif idv=='mTime':
+				mTime=mbbm[ort]['idValues'][listofidprop[idv]]['values'][mid]
 			else:
 				dictidvalues[str(idv)]=mbbm[ort]['idValues'][listofidprop[idv]]['values'][mid]
 				neomid.properties[str(idv)]=dictidvalues[str(idv)]
-		thistrain=graph.merge_one('Train', property_key='id', property_value=(train+str(trainLength)))
-		thistrain.properties['Length']=trainLength
-		thistrain.properties['Name']=train
-		thistrain.push()
+		thistrain=graph.merge_one('TrainType', property_key='Name', property_value=train)
 		neomics[mid]={}
 		##evaluation of microphones (check path to it)
 		maxtN=0
@@ -116,8 +120,8 @@ for resPath in Paths:
 				graph.create(pn.Relationship(neomics[mid][mic],'ISANEVALOF',neomid))
 				graph.create(pn.Relationship(neomics[mid][mic],'WASEVALWITH',neoalgorithms[alg]))
 
-		graph.create(pn.Relationship(neomics[mid][mic],'OF',thistrain))
-		graph.create(pn.Relationship(neomics[mid][mic],'IN',neolocations[location]))
+		graph.create(pn.Relationship(neomics[mid][mic],'OF',thistrain, TrainLength=trainLength, Track=traintrack, Date=mDate, Time=mTime))
+		graph.create(pn.Relationship(neomics[mid][mic],'IN',neolocations[location],Track=traintrack, Date=mDate, Time=mTime))
 		neomids[mid]=neomid#store the reference to this node with key id
 		neomid.push()
 		graph.push()
