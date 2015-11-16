@@ -5,14 +5,70 @@ from tqdm import tqdm
 import numpy as np
 import scipy as sp
 import py2neo as pn
+
+#-------------------------------------------------#
+#-------------------------------------------------#
+#------------VERIFY PATHS TO THE DATA,------------#
+#------------TO THE DATABASE AND TO   ------------#
+#------------THE EXTERNAL HARDDRIVE   ------------#
+#------------CONTAINING THE DATA      ------------#
+#------------OBTAINED WITH main_analysis.py ------#
+#-------------------------------------------------#
+#-------------------------------------------------#
+
+
 ##setting up neo4j:
-##Please start a server first and modify the following path accordingly (first is the username:password)
+##Please start a server first and modify the following path accordingly (first is the username:password) (THE DATABASE I MADE IS LIKE THIS neo4j:admin (i.e. neo4j is the username and admin the password)
 neopath='http://neo4j:admin@localhost:7474/db/data'
 graph=pn.Graph(neopath)
-#pathtoext_withdata=pathlib.Path('/users/lucmiaz/Documents/TRAVAIL/SBB_KG/KG/Data')
+
+
+#---------Give the path to the external harddrive that contains the raw data ---------#
 pathtoext_withdata=pathlib.Path('E:/')
 ####
 
+
+	
+#------------------------------------------------------------------------#
+#---------Give the paths to the results of main_analysis.py--------------#
+#---------THEY MUST BE INSIDE A FOLDER results---------------------------#
+#------------------------------------------------------------------------#
+
+#Paths=[pathlib.Path('/Users/lucmiaz/Documents/TRAVAIL/SBB_KG/KG/Data/Biel1Vormessung/results/results_11-11-2015.json'),pathlib.Path('/Users/lucmiaz/Documents/TRAVAIL/SBB_KG/KG/Data/Biel2Vormessung/results/results_11-11-2015.json'),pathlib.Path('/Users/lucmiaz/Documents/TRAVAIL/SBB_KG/KG/Data/ZugVormessung/results/results_11-11-2015.json')]
+Paths=[pathlib.Path('E:/Biel1Vormessung/results/results_11-11-2015.json')]
+Paths.append(pathlib.Path('E:/Biel2Vormessung/results/results_11-11-2015.json'))
+Paths.append(pathlib.Path('E:/ZugVormessung/results/results_11-11-2015.json'))
+
+#---------------------------------------------------------------------------------#
+#--------Give a list of tuples that gives location and name of the folder---------#
+#--------for this location -------------------------------------------------------#
+#---------------------------------------------------------------------------------#
+ORTS=[['Biel','Biel1Vormessung'], ['Biel2','Biel2Vormessung'],['Zug','ZugVormessung']]#
+
+#-----------------------------------------------------------------------------------------#
+#--------Give the name of the variables (they will be taken from MBBM_mes_values.json ----#
+#-------- in the path : ------------------------------------------------------------------#
+#-------- pathtoext_withdata/ORTS[x][1]/'measurement_values'/MBBM_mes_values.json --------#
+#-------- if a variable is not found, it will not be imported and the analysis will go on-#
+#-----------------------------------------------------------------------------------------#
+
+
+
+listofmicprop={'TEL':'TEL','Tb':'Tb','Te':'Te','Tp_e':'Tp_e','Tp_b':'Tp_b'}#micValues to take from MBBM_mes_values.json 
+#idValues to take from MBBM_mes_values.json
+listofidprop={'Temperature':'Temp','trainType':'trainType','trainLength':'trainLenght','direction':'direction','rain':'rain','Track':'Gleis','Humidity':'humidity','Wind':'wind','mTime':'mTime','mDate':'mDate','v1':'v1','v2':'v2','axleProLength':'axleProLenght'}
+#loads json files for each path in Paths
+
+
+
+#------------------THAT'S IT ----------------------------#
+#--------------------------------------------------------#
+##todo: change this to cope with different algorithms attributes !!!
+algparams=['fc','fmax','overlap','dt','threshold','fmin']
+
+
+#-------------------------------------------------#
+#-------------------------------------------------#
 def get_mask(t, tlim = None):
 	'''
 	calculate mask for time vector according tlim,
@@ -25,26 +81,14 @@ def get_mask(t, tlim = None):
 	else:
 		tb,te = tlim
 	return(np.logical_and(t >= tb,t <= te))
-#Paths=[pathlib.Path('/Users/lucmiaz/Documents/TRAVAIL/SBB_KG/KG/Data/Biel1Vormessung/results/results_11-11-2015.json'),pathlib.Path('/Users/lucmiaz/Documents/TRAVAIL/SBB_KG/KG/Data/Biel2Vormessung/results/results_11-11-2015.json'),pathlib.Path('/Users/lucmiaz/Documents/TRAVAIL/SBB_KG/KG/Data/ZugVormessung/results/results_11-11-2015.json')]
-Paths=[pathlib.Path('E:/Biel1Vormessung/results/results_11-11-2015.json')]
-Paths.append(pathlib.Path('E:/Biel2Vormessung/results/results_11-11-2015.json'))
-Paths.append(pathlib.Path('E:/ZugVormessung/results/results_11-11-2015.json'))
 Result={}
-inputname='ResultAggregate.json'
-listofmicprop={'TEL':'TEL','Tb':'Tb','Te':'Te','Tp_e':'Tp_e','Tp_b':'Tp_b'}#micValues to take from MBBM_mes_values.json 
-#idValues to take from MBBM_mes_values.json
-listofidprop={'Temperature':'Temp','trainType':'trainType','trainLength':'trainLenght','direction':'direction','rain':'rain','Track':'Gleis','Humidity':'humidity','Wind':'wind','mTime':'mTime','mDate':'mDate','v1':'v1','v2':'v2','axleProLength':'axleProLenght'}
-#loads json files for each path in Paths
 neolocations={}
 neoalgorithms={}
 algorithms={}
 mbbm={}
-for ort,measurementtype in [['Biel','Vormessung'], ['Biel2','Vormessung'],['Zug','Vormessung']]:
-	if ort=='Biel':
-		ortd='Biel1'
-	else:
-		ortd=ort
-	pathtoext=pathtoext_withdata.joinpath(ortd+measurementtype+'/measurement_values/MBBM_mes_values.json')
+log=''
+for ort,ortpath in ORTS:
+	pathtoext=pathtoext_withdata.joinpath(ortpath+'/measurement_values/MBBM_mes_values.json')
 	with open(pathtoext.as_posix(),'r') as mbbmvalues:
 		mbbmdict=json.load(mbbmvalues)
 	mbbm[ort]=copy.deepcopy(mbbmdict)
@@ -61,8 +105,7 @@ for resPath in Paths:
 			algorithms[algorithm]=copy.deepcopy(dictjs['algorithms'][algorithm])
 			neoalg=graph.merge_one('Algorithm',property_key='Name',property_value=str(algorithm))
 			asc=algorithms[algorithm]
-			params=['fc','fmax','overlap','dt','threshold','fmin']
-			for par in params:
+			for par in algparams:
 				neoalg.properties[par]=asc['param'][par]
 			neoalg.properties['class']=asc['class']
 			neoalg.properties['noiseType']=asc['noiseType']

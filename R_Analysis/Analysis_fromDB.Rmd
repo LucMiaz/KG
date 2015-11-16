@@ -4,24 +4,26 @@ author: "lucmiaz"
 date: "13 novembre 2015"
 output: pdf_document
 ---
-
+The following calculations are done by calling data stored in a neo4j graph database. To insert data in this database, first use `main_analysis.py` to generate a  please use the code `toDB.py` after changing the paths to the data you want to import. 
+```{r, include FALSE}
+library(RNeo4j)
+graph=startGraph('http://localhost:7474/db/data', username='neo4j', password='admin')
+query='
+MATCH (a:Algorithm)
+RETURN a.Name'
+a<-cypher(graph, query)#list of algorithms names
+```
 
 ```{r, include=FALSE}
 graph=startGraph('http://localhost:7474/db/data', username='neo4j', password='admin')
 query='
 MATCH (a:Algorithm)
-MATCH (c)-[:WASEVALWITH]->(a)
-AND (c)-[:ISANEVALOF]->(b)
-WHERE b.
-RETURN c.tNoise, b.tEval
+WHERE a.Name=namealg1
+MATCH (b)<-[s:ISANEVALOF]-(c)-[:WASEVALWITH]->(a)
+AND (t)<-[r:SAW]-(b)
+RETURN a.Name, c.tNoisemasked, c.tNoise, s.tEval, s.tEvalmasked, t.Name, r.trainLength, r.Track
 '
-q<-cypher(graph,query)#takes all the info on time vs 
+q<-cypher(graph,query,namealg1=a[0])#takes the info of each MicMes for one algorithm
 ```
 
-You can also embed plots, for example:
 
-```{r, echo=FALSE}
-plot(cars)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
