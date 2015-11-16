@@ -73,18 +73,15 @@ for resPath in Paths:
 		ort=dictjs['location']
 		#read values from mbbm_mes_values
 		dictidvalues={}
-		neomid=pn.Node('Passing',id=mid, Location=ort, Measurement=measurement)
+		neomid=pn.Node('Passing',Name=mid, Location=ort, Measurement=measurement)
 		graph.create(neomid)
 		for idv in listofidprop.keys():
 			dictidvalues[str(idv)]=mbbm[ort]['idValues'][listofidprop[idv]]['values'][mid]
-			neomid.properties[str(idv)]=dictidvalues[str(idv)]
 			if idv=='trainLength':
 				dictidvalues[str(idv)]=int(float(mbbm[ort]['idValues'][listofidprop[idv]]['values'][mid])+0.5)
-				neomid.properties[str(idv)]=dictidvalues[str(idv)]
 				trainLength=dictidvalues[str(idv)]
 			elif idv=='trainType':
 				dictidvalues[str(idv)]=mbbm[ort]['idValues'][listofidprop[idv]]['values'][mid]
-				neomid.properties[str(idv)]=dictidvalues[str(idv)]
 				train=dictidvalues[str(idv)]
 			elif idv=='Track':
 				traintrack=mbbm[ort]['idValues'][listofidprop[idv]]['values'][mid]
@@ -96,13 +93,14 @@ for resPath in Paths:
 				dictidvalues[str(idv)]=mbbm[ort]['idValues'][listofidprop[idv]]['values'][mid]
 				neomid.properties[str(idv)]=dictidvalues[str(idv)]
 		thistrain=graph.merge_one('TrainType', property_key='Name', property_value=train)
+		
 		neomics[mid]={}
 		##evaluation of microphones (check path to it)
 		maxtN=0
 		for alg in algorithms.keys():
 			alg_props=algorithms[alg]['id']+algorithms[alg]['prop']
 			for mic in dictjs['results'][mid].keys():
-				neomics[mid][mic]=pn.Node('MicMes', id=(mid+'_'+str(mic)+'_'+str(alg_props)), location=ort)
+				neomics[mid][mic]=pn.Node('MicMes', Name=mid+'_'+str(mic), Location=ort)
 				graph.create(neomics[mid][mic])
 				dictmicvalues={}
 				for micv in listofmicprop:
@@ -112,19 +110,20 @@ for resPath in Paths:
 				mask = get_mask(t, (dictmicvalues['Tb'],dictmicvalues['Te']))
 				idmicresult=np.array(dictjs['results'][mid][mic][algorithm]['result']['py/numpy.ndarray']['values'], dtype=bool)
 				dt=float(dictjs['results'][mid][mic][algorithm]['dt'])
-				timenoise=np.sum(idmicresult[mask])*dt
-				neomics[mid][mic].properties['tNoise']=np.sum(idmicresult)*dt
+				timenoise=float(int(np.sum(idmicresult[mask])*dt*100+0.5)/100)
+				neomics[mid][mic].properties['tNoise']=float(int(np.sum(idmicresult)*dt*100+0.5)/100)
 				neomics[mid][mic].properties['dt']=dt
 				neomics[mid][mic].properties['tNoisemasked']=timenoise
 				neomics[mid][mic].properties['micN']=mic
 				neomics[mid][mic].push()
-				if mic==1 or mic=='1':
-					neomid.properties['tEval']= np.sum(mask)*dt
-				graph.create(pn.Relationship(neomics[mid][mic],'ISANEVALOF',neomid))
+				tevalmask= float(int(np.sum(mask)*dt*100+0.5)/100)
+				teval=float(int(np.sum(t)*dt*100+0.5)/100)
+				graph.create(pn.Relationship(neomics[mid][mic],'ISANEVALOF',neomid, tEvalmasked=tevalmask, tEval=teval))
 				graph.create(pn.Relationship(neomics[mid][mic],'WASEVALWITH',neoalgorithms[alg]))
 
-		graph.create(pn.Relationship(neomics[mid][mic],'OF',thistrain, TrainLength=trainLength, Track=traintrack, Date=mDate, Time=mTime))
-		graph.create(pn.Relationship(neomics[mid][mic],'IN',neolocations[location],Track=traintrack, Date=mDate, Time=mTime))
+				#graph.create(pn.Relationship(neomics[mid][mic],'OF',thistrain, TrainLength=trainLength, Track=traintrack, Date=mDate, Time=mTime))
+		graph.create(pn.Relationship(neomid,'SAW',thistrain,TrainLength=trainLength, Track=traintrack, Date=mDate, Time=mTime))
+		graph.create(pn.Relationship(neomid,'IN',neolocations[location],Track=traintrack, Date=mDate, Time=mTime))
 		neomids[mid]=neomid#store the reference to this node with key id
 		neomid.push()
 		graph.push()
