@@ -9,7 +9,8 @@ import py2neo as pn
 ##Please start a server first and modify the following path accordingly (first is the username:password)
 neopath='http://neo4j:admin@localhost:7474/db/data'
 graph=pn.Graph(neopath)
-pathtoext_withdata=pathlib.Path('/users/lucmiaz/Documents/TRAVAIL/SBB_KG/KG/Data')
+#pathtoext_withdata=pathlib.Path('/users/lucmiaz/Documents/TRAVAIL/SBB_KG/KG/Data')
+pathtoext_withdata=pathlib.Path('E:/')
 ####
 
 def get_mask(t, tlim = None):
@@ -24,14 +25,15 @@ def get_mask(t, tlim = None):
 	else:
 		tb,te = tlim
 	return(np.logical_and(t >= tb,t <= te))
-Paths=[pathlib.Path('/Users/lucmiaz/Documents/TRAVAIL/SBB_KG/KG/Data/Biel1Vormessung/results/results_11-11-2015.json'),pathlib.Path('/Users/lucmiaz/Documents/TRAVAIL/SBB_KG/KG/Data/Biel2Vormessung/results/results_11-11-2015.json'),pathlib.Path('/Users/lucmiaz/Documents/TRAVAIL/SBB_KG/KG/Data/ZugVormessung/results/results_11-11-2015.json')]
+#Paths=[pathlib.Path('/Users/lucmiaz/Documents/TRAVAIL/SBB_KG/KG/Data/Biel1Vormessung/results/results_11-11-2015.json'),pathlib.Path('/Users/lucmiaz/Documents/TRAVAIL/SBB_KG/KG/Data/Biel2Vormessung/results/results_11-11-2015.json'),pathlib.Path('/Users/lucmiaz/Documents/TRAVAIL/SBB_KG/KG/Data/ZugVormessung/results/results_11-11-2015.json')]
+Paths=[pathlib.Path('E:/Biel1Vormessung/results/results_11-11-2015.json')]
+Paths.append(pathlib.Path('E:/Biel2Vormessung/results/results_11-11-2015.json'))
+Paths.append(pathlib.Path('E:/ZugVormessung/results/results_11-11-2015.json'))
 Result={}
 inputname='ResultAggregate.json'
-outputname='ResultAggregate_byAlg.json'
 listofmicprop={'TEL':'TEL','Tb':'Tb','Te':'Te','Tp_e':'Tp_e','Tp_b':'Tp_b'}#micValues to take from MBBM_mes_values.json 
 #idValues to take from MBBM_mes_values.json
 listofidprop={'Temperature':'Temp','trainType':'trainType','trainLength':'trainLenght','direction':'direction','rain':'rain','Track':'Gleis','Humidity':'humidity','Wind':'wind','mTime':'mTime','mDate':'mDate','v1':'v1','v2':'v2','axleProLength':'axleProLenght'}
-outputname='ResultAggregate_byAlg.json'
 #loads json files for each path in Paths
 neolocations={}
 neoalgorithms={}
@@ -71,8 +73,8 @@ for resPath in Paths:
 		ort=dictjs['location']
 		#read values from mbbm_mes_values
 		dictidvalues={}
-		neomid=graph.merge_one('Passing',property_key='id',property_value=mid)
-		neomid.properties['Measurement']=measurement
+		neomid=pn.Node('Passing',id=mid, Location=ort, Measurement=measurement)
+		graph.create(neomid)
 		for idv in listofidprop.keys():
 			dictidvalues[str(idv)]=mbbm[ort]['idValues'][listofidprop[idv]]['values'][mid]
 			neomid.properties[str(idv)]=dictidvalues[str(idv)]
@@ -100,7 +102,8 @@ for resPath in Paths:
 		for alg in algorithms.keys():
 			alg_props=algorithms[alg]['id']+algorithms[alg]['prop']
 			for mic in dictjs['results'][mid].keys():
-				neomics[mid][mic]=graph.merge_one('MicMes', property_key='id',property_value=(mid+'_'+str(mic)+str(alg_props)))
+				neomics[mid][mic]=pn.Node('MicMes', id=(mid+'_'+str(mic)+'_'+str(alg_props)), location=ort)
+				graph.create(neomics[mid][mic])
 				dictmicvalues={}
 				for micv in listofmicprop:
 					dictmicvalues[str(micv)]=mbbm[ort]['micValues'][listofmicprop[micv]]['values'][mid][mic]
