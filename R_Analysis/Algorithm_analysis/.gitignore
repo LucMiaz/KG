@@ -1,0 +1,5 @@
+results/
+.Rhistory
+*.json
+*.pdf
+jupyter/.ipynb_checkpoints/

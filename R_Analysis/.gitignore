@@ -1,0 +1,7 @@
+﻿*.bbl
+*.bcf
+*.log
+*.synctex.gz
+*.toc
+*.sty
+img/
