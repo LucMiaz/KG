@@ -2,7 +2,14 @@
 \usepackage{fontspec}
 \setmainfont[Ligatures=TeX]{Georgia}\newfontfamily\Georgia{Georgia}\setsansfont{Helvetica Neue}\newfontfamily\Helvetica{Helvetica Neue}
 \setmonofont{Courier New}
-
+%format des sections et sous-sections
+\usepackage{sectsty}
+\allsectionsfont{\sffamily}
+\usepackage{titlesec}
+\renewcommand{\thesection}{\sffamily\arabic{section}}
+\renewcommand{\thesubsection}{\thesection.\arabic{subsection}}
+\renewcommand{\thesubsubsection}{\thesubsection.\arabic{subsubsection}}
+\renewcommand{\theparagraph}{\alph{paragraph}.}\titleformat*{\section}{\Large\bfseries}
 
 %font
 %\usepackage{newcent}%\usepackage{yfonts}%\usepackage{amsfonts}%\usepackage{MnSymbol}
@@ -18,7 +25,7 @@
 \renewcommand{\headrulewidth}{.25pt}
 \renewcommand\headheight{14pt}}
 
-
+\usepackage{calc}
 \usepackage[a4paper,left=2.5cm,width=16.5cm,right=2.5cm, top=2.5cm, bottom=2.5cm]{geometry}
 \usepackage{amsmath}
 
@@ -29,14 +36,23 @@
 \usepackage{booktabs, colortbl}
 %french quotes
 \usepackage{csquotes}
+
 %ajoute des couleurs
 \usepackage{xcolor}
 \definecolor{bleurusse}{HTML}{5A8BBA}
-\definecolor{bleu}{HTML}{5A8BBA}
+\definecolor{bleu}{HTML}{D8B365}
 \definecolor{orangerusse}{HTML}{E84E0F}
-\definecolor{rouge}{HTML}{E84E0F}
+\definecolor{rouge2}{HTML}{E84E0F}
 \definecolor{orangebrewer}{RGB}{226,115,0}
-\definecolor{gris}{HTML}{a5a5a5}
+\definecolor{gris}{HTML}{F5F5F5}
+\definecolor{orange}{HTML}{E66101}
+\definecolor{vert}{HTML}{7DE023}
+\definecolor{violette}{HTML}{7B3294}
+\definecolor{brun}{HTML}{5AB4AC}
+\definecolor{rouge}{HTML}{D14316}
+\definecolor{jaune}{HTML}{FFFF33}
+\definecolor{darkgrey}{HTML}{272822}
+
 
 %change la marge des légendes:
 \usepackage{caption, xcolor,tabu}
@@ -71,9 +87,10 @@
 
 %importation
 \usepackage{listings}
-%instantiation des options style général
-\lstset{ %
-  backgroundcolor=\color{white},   % couleur de fond
+
+%then use \begin{lstlisting}[style=mypython]
+\lstdefinestyle{mypython}{ %
+  backgroundcolor=\color{brun},   % couleur de fond
   basicstyle=\footnotesize\ttfamily,,     % taille et police
   belowcaptionskip=3mm,            % modifie la distance entre la légende et le listing
   breakatwhitespace=true,          % coupure uniquement aux espaces
@@ -107,15 +124,15 @@
   xleftmargin=1pt,                 % modifie la marge de gauche
   xrightmargin=1pt,                % modifie la marge de droite
 }
-%then use \begin{lstlisting}[style=myR]
-\lstdefinestyle{myR}{ %
+%instantiation des options style général
+\lstdefinestyle{Rstyle}{ %
   backgroundcolor=\color{white},   % couleur de fond
-  basicstyle=\footnotesize\ttfamily,,     % taille et police
+  basicstyle=\small\ttfamily,,     % taille et police
   belowcaptionskip=3mm,            % modifie la distance entre la légende et le listing
   breakatwhitespace=true,          % coupure uniquement aux espaces
   breaklines=true,                % retour à la ligne automatique
   captionpos=t,                    % position de la légende
-  commentstyle=\color{vert},       % couleur des commentaires
+  commentstyle=\color{brun},       % couleur des commentaires
   extendedchars=true,              % permets l'affichage de caractères non ASCII
   framerule=0.25pt,				  % épaisseur du cadre
   framesep=1pt,                    % définit la distance entre le cadre et le texte
@@ -129,16 +146,16 @@
   linewidth=\linewidth,
   numbers=left,                    % emplacement des numéros de ligne
   numbersep=5pt,                   % marge entre les numéros de ligne et le code
-  numberstyle=\tt\tiny\color{gris},  % style pour les numéros de ligne
+  numberstyle=\tt\tiny\color{darkgrey},  % style pour les numéros de ligne
   resetmargins=false,			  % remet ou non les marges à 0 si dans une liste
-  rulecolor=\color{bleu},          % couleur du cadre
+  rulecolor=\color{violette},          % couleur du cadre
   rulesep=1pt,                     % définit la distance entre les lignes du cadre
   %rulesepcolor=\color{bleu!50},   % couleur de remplissage entre les doubles lignes du cadre
   showspaces=false,                % ne pas souligner tous les espaces
   showstringspaces=false,          % ne pas souligner les espaces
   showtabs=false,                  % Ne pas indiquer les tabulations dans un string
   stepnumber=1,                    % degré de numérotation des lignes (1 = numérote toutes les lignes)
-  stringstyle=\color{orange!50},   % style des éléments 'string'
+  stringstyle=\color{orange},   % style des éléments 'string'
   tabsize=4,                       % taille des tabulations en espace
   xleftmargin=1pt,                 % modifie la marge de gauche
   xrightmargin=1pt,                % modifie la marge de droite
@@ -153,17 +170,6 @@
 \makeatother
 
 
-% change la marge et la couleur des légendes:
-\usepackage{float}
-\usepackage{caption,tabu}
-%\captionsetup[table]{name=Tableau}% modifie le titre donné aux légendes des 'table'
-\floatstyle{boxed}\restylefloat{figure}%ajoute un cadre aux figures
-\captionsetup{%modifie l'affichage des légendes des Floats, notamment en colorant le titre du float en bleu.
-  font=footnotesize,
-  format=hang,
-  singlelinecheck=false,
-  labelfont={bf,sf, color=rouge}
-}
 
 %change la numérotation des sous-figures
 \renewcommand{\thesubfigure}{\roman{subfigure}.}
@@ -174,15 +180,14 @@
 
 % change les légendes des listings
 \DeclareCaptionFont{white}{\color{white}}
-\DeclareCaptionFormat{listing}{{\colorbox{vert}{\parbox{\linewidth-6pt}{\hspace{5pt}#1#2#3}}}}
+\DeclareCaptionFormat{listing}{{\colorbox{violette!50}{\parbox{\linewidth-6pt}{\hspace{5pt}#1#2#3}}}}
 \captionsetup[lstlisting]{format=listing,labelfont=white,textfont=white, singlelinecheck=false, indention=0pt, margin=0pt, font={bf,sf,small}}
+
+
 
 % changement du préfixe du float lstlisting (défaut=listing)
 \renewcommand{\lstlistingname}{Code} % préfixe dans les légendes de listing
 \renewcommand{\lstlistlistingname}{Codes} % préfixe dans les listes de listing
-
-% création d'une commande formattant un élément donné comme une variable dans le code scilab
-\newcommand{\code}[1]{{\tt\bf\color{brown}{#1}}}
 
 %gestion des commentaires
 \usepackage{comment} %use \begin{comment} commentaire \end{comment}
@@ -191,7 +196,7 @@
 
 \usepackage{rotating,tabularx,booktabs}
 \usepackage{tikz}\usepackage{tikz-qtree}\usetikzlibrary{decorations.pathreplacing}
-\usepackage{pdflscape,geometry,scrpage2,titling}
+\usepackage{pdflscape, geometry, titling}
 %\usepackage{draftwatermark}
 \usepackage{translator}
 %
@@ -207,3 +212,5 @@ range-phrase = { -- }
 \DeclareSIUnit[number-unit-product = \;]\CHF{ CHF }
 \DeclareSIPrefix\Mio{Mio }{6}
 \IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+
+ \pgfplotsset{compat=1.12}

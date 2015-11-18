@@ -1,29 +1,129 @@
 ---
-title: "Messung_analyse"
-author: "lucmiaz"
-date: "13 novembre 2015"
 output: pdf_document
 ---
-The following calculations are done by calling data stored in a neo4j graph database. To insert data in this database, first use `main_analysis.py` to generate a  please use the code `toDB.py` after changing the paths to the data you want to import. 
-```{r, include FALSE}
-library(RNeo4j)
-graph=startGraph('http://localhost:7474/db/data', username='neo4j', password='admin')
-query='
-MATCH (a:Algorithm)
-RETURN a.Name'
-a<-cypher(graph, query)#list of algorithms names
-```
+\documentclass{article}
+\usepackage{import}
+\subimport*{}{packages/Bericht_Hoch.tex}
+\subimport*{}{packages/colors.tex}
+\usepackage{graphicx}
+%% for inline R code: if the inline code is not correctly parsed, you will see a message
+\newcommand{\rinline}[1]{SOMETHING WRONG WITH knitr}
+%% begin.rcode setup, include=FALSE
+% library(knitr)
+% opts_chunk$set(fig.path='figure/latex-', cache.path='cache/latex-')
+%% end.rcode
+\newcommand{\rcode}[1]{\texttt{#1}}
+\begin{document}
+\section{Analysis of rail lubrification}
+\subsection{Reproducing the calculations}
+The following calculations are done by calling data stored in a neo4j graph database from R. To insert data in this database, first use \rcode{main_analysis.py} to generate a serie of json file containing all the useful info on your new data. Then use the code \rcode{toDB.py} to import these data in the neo4j database -- before running the script, please read the head lines and make the necessary changes described there.
 
-```{r, include=FALSE}
-graph=startGraph('http://localhost:7474/db/data', username='neo4j', password='admin')
-query='
-MATCH (a:Algorithm)
-WHERE a.Name=namealg1
-MATCH (b)<-[s:ISANEVALOF]-(c)-[:WASEVALWITH]->(a)
-AND (t)<-[r:SAW]-(b)
-RETURN a.Name, c.tNoisemasked, c.tNoise, s.tEval, s.tEvalmasked, t.Name, r.trainLength, r.Track
-'
-q<-cypher(graph,query,namealg1=a[0])#takes the info of each MicMes for one algorithm
-```
+In R, the database is called as follows -- don't forget to launch the neo4j interface and start the local server if necessary :
+
+%% begin.rcode
+%library(RNeo4j)#call RNeo4j package
+%graph=startGraph('http://localhost:7474/db/data', username='neo4j', %password='admin')#open a port to the db, 
+%#with username 'neo4j' and password 'admin'
+%% end.rcode
+
+\subsection{Structure of the database}
+
+The databases in Neo4j are graphs, containing nodes and relationships between these nodes. Nodes and relationships have types (or labels). This will differentiate between Passings and Algorithms, in the case of Nodes, and between the relation of seeing (Passing saw this type of train) and the relation of taking place there (Passing took place here).
+
+We have structured our database - as depicted on figure -- to contain the following Node Types -- Properties names are in {\it italic}:
+
+\begin{itemize}
+\item {\bf Algorithms}
+  \begin{itemize}
+  \item {\it Name}
+  \item {\it class}
+  \item {\it dt} for delta time used in discretisation
+  \item {\it ovelap} used in the STFT
+  \item {\it fmin} lower bound for low band
+  \item {\it fmax} upper bound for high band
+  \item {\it fc} threshold between low and high bands
+  \item {\it noiseType} (detected by the algorithm)
+  \item {\it threshold} applied to low/high band ratio
+\end{itemize}
+ \item {\bf Passings} (i.e. measurement characteristics of one train passage)
+\begin{itemize}
+  \item {\it Name}
+  \item {\it Measurement}
+  \item {\it Temperature}
+  \item {\it Humidity}
+  \item {\it direction}
+  \item {\it rain}
+  \item {\it Wind}
+  \item {\it axleProLength}
+  \item {\it Location}
+  \item {\it v1}
+  \item {\it v2}
+\end{itemize}
+\item {\bf MicMes} (i.e. the measurements values recorded by one microphone at one passing)
+\begin{itemize}
+  \item {\it Name}
+  \item {\it micN} number of this microphone    
+  \item {\it dt}
+  \item {\it Tb} start time
+  \item {\it Te} end time
+  \item {\it Tp_b} start time masked
+  \item {\it Tp_e} end time masked
+  \item {\it tNoise} Period in s. where noise was detected
+  \item {\it tNoisemasked} Period in s. where noise was detected (masked between Tp_ b and Tp_e)
+    \item {\it TEL}
+    \item {\it Location}
+\end{itemize}
+\item {\bf TrainType}
+  \begin{itemize}
+  \item {\it Name}
+\end{itemize}
+\item {\bf Location}
+\begin{itemize}
+  \item {\it Name}
+\end{itemize}
+It contains the following Relationships -- the example is the canonical use of the relationship :
+\begin{itemize}
+\item {\bf IN} (a Passing took place IN a Location)
+  \begin{itemize}
+  \item {\it Time}
+  \item {\it Date}
+  \item {\it Track}
+\end{itemize}
+\item {\bf SAW} (a Passing SAW a TrainType)
+\begin{itemize}
+  \item {\it Time}
+  \item {\it Date}
+  \item {\it TrainLength}
+  \item {\it Track}
+\end{itemize}
+\item {\bf ISANEVALOF} (a MicMes is an evaluation of a Passing)
+\begin{itemize}
+  \item {\it tEvalmasked* total length of the masked recording
+  \item {\it tEval* total length of the recording
+\end{itemize}
+\item {\bf WASEVALWITH} (a MicMes was evaluated with an Algorithm)
+\item {\bf NEAR} (two Locations are NEAR, e.g. Biel and Biel2)
+\end{itemize}
+
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth]{img/graph.pdf}
+\label{graphneo4j}
+\caption{Illustration of the nodes and relationships types in the Neo4j database.}
+\end{figure}
+
+\subsectino{Getting started in R}
+
+We will import the measurements for all the algorithms. RNeo4j accepts \rcode{data.frames} as input, so we will give it that. In the following R-code, we will call all evaluations made with the algorithms in the database, all Passings attached to those evaluations and all trains types of those Passings.
+
+%% begin.rcode
+%query='
+%MATCH (a:Algorithm)
+%MATCH (b)<-[s:ISANEVALOF]-(c)-[:WASEVALWITH]->(a)//the relationship s contains the %specific lengths of time (masked and not) of the microphone signal (c)
+%MATCH (t)<-[r:SAW]-(b)//the relationship r contains info in the train of this Passing (lenght and track)
+%RETURN a.Name, c.tNoisemasked, c.tNoise, s.tEval, s.tEvalmasked, t.Name, %r.trainLength, r.Track
+%'
+%q<-cypher(graph,query)#takes the info of each MicMes for one algorithm
+%% end.rcode
 
 
