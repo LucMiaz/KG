@@ -329,8 +329,6 @@ class ZischenDetetkt2(Algorithm):
             bandPower[k]= PSD_i.sum(axis = 1)
         # 3:build ratio and compare to threshold
         avBPR = moving_average(bandPower['high']/(1+bandPower['low']))
-        if 2<3:
-            pass
         decision = 10 * np.log10(1 + avBPR) > par['threshold']
         # at least 1 neighborr has to be 1 
         avDecision = np.logical_and(moving_average(decision) > 0.5 , decision)

@@ -5,3 +5,6 @@
 *.toc
 *.sty
 img/
+cache/
+*.xml
+figures/

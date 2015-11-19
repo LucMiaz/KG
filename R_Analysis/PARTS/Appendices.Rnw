@@ -1,0 +1,137 @@
+\subsection{\label{ssec:app:authorstables}Best thresholds for each author}
+The following tables show the best algorithms (i.e. proto-algorithm + threshold) for the four authors.
+<<bestesrtable, echo=FALSE, results='asis',warning=FALSE>>=
+tabesr <- xtable(bestesr, digits=c(0,3,3,0,0,3,3,0,2),caption='Best thresholds for the fifteen algorithms obtained while considering all the authors together')
+print(tabesr,type="latex")
+@
+<<bestPHFtable, echo=FALSE, results='asis',warning=FALSE>>=
+tabphf <- xtable(bestPHF, digits=c(0,3,3,0,0,3,3,0,2),caption='Best thresholds for the fifteen algorithms obtained while considering author PHF')
+print(tabphf,type="latex")
+@
+<<bestluctable, echo=FALSE, results='asis',warning=FALSE>>=
+tabluc <- xtable(bestluc, digits=c(0,3,3,0,0,3,3,0,2),caption='Best thresholds for the fifteen algorithms obtained while considering author luc')
+print(tabluc,type="latex")
+@
+<<bestPhCtable, echo=FALSE, results='asis',warning=FALSE>>=
+tabphc <- xtable(bestPhC, digits=c(0,3,3,0,0,3,3,0,2),caption='Best thresholds for the fifteen algorithms obtained while considering author PhC')
+print(tabphc,type="latex")
+@
+\subsection{\label{ssec:app:roc}ROC plot for other authors}
+In the following figures, the ROC plot for each of the four authors of section \ref{sec:algtest} are depicted.
+<<bestesrplot, echo=TRUE, fig.cap='ROC plot of the algorithms with their best threshold, tested on author esr. The plot represents the True Positive Rate over the False Positive Rate.', fig.lab='fig:rocesr',warning=FALSE>>=
+rocplotesr <- ggplot(bestesr, aes(bestesr$FPR,bestesr$TPR,color=bestesr$algorithm, title="Algorithms - esr"))+  geom_segment(aes(x =0, y = 0, xend = 1, yend = 1), colour="#a5a5a5")+
+    scale_colour_manual(values=rep(brewer.pal(12,"Paired"),times=2),name="Algorithms")+
+    scale_shape_manual(values=rep(c(15,16,3,17,18,19),each=3),name="Algorithms")+
+    geom_point(aes(shape=bestesr$algorithm,label=bestesr$algorithm),size=2)+
+    xlab("False Positive Rate") + ylab("True Positive Rate")+
+    labs("ROC")
+rocplotesr
+@
+<<bestPHFplot, echo=FALSE, fig.cap='ROC plot of the algorithms with their best threshold, tested on author PHF. The plot represents the True Positive Rate over the False Positive Rate.', fig.lab='fig:rocPHF',warning=FALSE>>=
+rocplotPHF <- ggplot(bestPHF, aes(bestPHF$FPR,bestPHF$TPR,color=bestPHF$algorithm, title="Algorithms - PHF"))+  geom_segment(aes(x =0, y = 0, xend = 1, yend = 1), colour="#a5a5a5")+
+    scale_colour_manual(values=rep(brewer.pal(12,"Paired"),times=2),name="Algorithms")+
+    scale_shape_manual(values=rep(c(15,16,3,17,18,19),each=3),name="Algorithms")+
+    geom_point(aes(shape=bestPHF$algorithm,label=bestPHF$algorithm),size=2)+
+    xlab("False Positive Rate") + ylab("True Positive Rate")+
+    labs("ROC")
+rocplotPHF
+@
+<<bestlucplot, echo=FALSE, fig.cap='ROC plot of the algorithms with their best threshold, tested on author luc. The plot represents the True Positive Rate over the False Positive Rate.', fig.lab='fig:rocluc',warning=FALSE>>=
+rocplotluc <- ggplot(bestluc, aes(bestLuc$FPR,bestluc$TPR,color=bestluc$algorithm, title="Algorithms - luc"))+  geom_segment(aes(x =0, y = 0, xend = 1, yend = 1), colour="#a5a5a5")+
+    scale_colour_manual(values=rep(brewer.pal(12,"Paired"),times=2),name="Algorithms")+
+    scale_shape_manual(values=rep(c(15,16,3,17,18,19),each=3),name="Algorithms")+
+    geom_point(aes(shape=bestluc$algorithm,label=bestluc$algorithm),size=2)+
+    xlab("False Positive Rate") + ylab("True Positive Rate")+
+    labs("ROC")
+rocplotluc
+@
+<<bestPhCplot, echo=FALSE, fig.cap='ROC plot of the algorithms with their best threshold, tested on author PhC. The plot represents the True Positive Rate over the False Positive Rate.', fig.lab='fig:rocPhC', warning=FALSE>>=
+rocplotphc <- ggplot(bestPhC, aes(bestPhC$FPR,bestPhC$TPR,color=bestPhC$algorithm, title="Algorithms - PhC"))+  geom_segment(aes(x =0, y = 0, xend = 1, yend = 1), colour="#a5a5a5")+
+    scale_colour_manual(values=rep(brewer.pal(12,"Paired"),times=2),name="Algorithms")+
+    scale_shape_manual(values=rep(c(15,16,3,17,18,19),each=3),name="Algorithms")+
+    geom_point(aes(shape=bestPhC$algorithm,label=bestPhC$algorithm),size=2)+
+    xlab("False Positive Rate") + ylab("True Positive Rate")+
+    labs("ROC")
+rocplotphc
+@
+\subsection{Structure of the Graph Database}
+We detail here the characteristics of our Graph Database. It is constructed with {\it Neo4j}, its query language {\it Cypher} and its python interface {\it Py2Neo}. The 
+
+\subsubsection{Nodes}
+We have structured our database to contain the following Node Types -- Properties names are in {\it italic}:
+
+\begin{itemize}
+\item {\bf Algorithms}
+  \begin{itemize}
+    \item {\it Name}
+    \item {\it class}
+    \item {\it dt} for delta time used in discretisation
+    \item {\it ovelap} used in the STFT
+    \item {\it fmin} lower bound for low band
+    \item {\it fmax} upper bound for high band
+    \item {\it fc} threshold between low and high bands
+    \item {\it noiseType} (detected by the algorithm)
+    \item {\it threshold} applied to low/high band ratio
+  \end{itemize}
+\item {\bf Passings} (i.e. measurement characteristics of one train passage)
+  \begin{itemize}
+    \item {\it Name}
+    \item {\it Measurement}
+    \item {\it Temperature}
+    \item {\it Humidity}
+    \item {\it direction}
+    \item {\it rain}
+    \item {\it Wind}
+    \item {\it axleProLength}
+    \item {\it Location}
+    \item {\it v1}
+    \item {\it v2}
+  \end{itemize}
+\item {\bf MicMes} (i.e. the measurements values recorded by one microphone at one passing)
+  \begin{itemize}
+    \item {\it Name}
+    \item {\it micN} number of this microphone    
+    \item {\it dt}
+    \item {\it Tb} start time
+    \item {\it Te} end time
+    \item {\it Tp\_ b} start time masked
+    \item {\it Tp\_ e} end time masked
+    \item {\it tNoise} Period in s. where noise was detected
+    \item {\it tNoisemasked} Period in s. where noise was detected (masked between Tp\_ b and Tp\_ e)
+    \item {\it TEL}
+    \item {\it Location}
+  \end{itemize}
+\item {\bf TrainType}
+  \begin{itemize}
+    \item {\it Name}
+  \end{itemize}
+\item {\bf Location}
+  \begin{itemize}
+    \item {\it Name}
+  \end{itemize}
+\end{itemize}
+\subsubsection{Relationships} 
+The database contains the following Relationships -- the example is the canonical use of the relationship :
+\begin{itemize}
+\item {\bf IN} (a Passing took place IN a Location)
+  \begin{itemize}
+    \item {\it Time}
+    \item {\it Date}
+    \item {\it Track}
+  \end{itemize}
+\item {\bf SAW} (a Passing SAW a TrainType)
+  \begin{itemize}
+    \item {\it Time}
+    \item {\it Date}
+    \item {\it TrainLength}
+    \item {\it Track}
+  \end{itemize}
+\item {\bf ISANEVALOF} (a MicMes is an evaluation of a Passing)
+  \begin{itemize}
+    \item {\it tEvalmasked} total length of the masked recording
+    \item {\it tEval} total length of the recording
+  \end{itemize}
+\item {\bf WASEVALWITH} (a MicMes was evaluated with an Algorithm)
+\item {\bf NEAR} (two Locations are NEAR, e.g. Biel and Biel2)
+\end{itemize}
+\end{document}

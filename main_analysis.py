@@ -20,9 +20,7 @@ if __name__ == "__main__":
     blocks_size=1000#specifies the size of the sublists we want to break validID2 in.
 	###Choose the Paths to the data
 	##1. Make sure that there is a file called 
-    #Paths=[pathlib.Path('E:/Biel1Vormessung'),pathlib.Path('E:/Biel2Vormessung'), pathlib.Path('E:/ZugVormessung')]
-    #Paths=[pathlib.Path('E:/ZugVormessung')]
-    Paths=[pathlib.Path('/Users/lucmiaz/Documents/TRAVAIL/SBB_KG/KG/Data/Biel1'),pathlib.Path('/Users/lucmiaz/Documents/TRAVAIL/SBB_KG/KG/Data/Biel2'),pathlib.Path('/Users/lucmiaz/Documents/TRAVAIL/SBB_KG/KG/Data/Zug')]
+    Paths=[pathlib.Path('E:/Biel1Vormessung'),pathlib.Path('E:/Biel2Vormessung'), pathlib.Path('E:/ZugVormessung')]
     # setup algorithms
     algorithms =[ZischenDetetkt2(4500,0.7267437,0.1), ZischenDetetkt2(3500,1.0474294,0.02)]
     print(repr(algorithms[0]))

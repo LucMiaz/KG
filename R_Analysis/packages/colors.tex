@@ -1,5 +1,6 @@
 %change main font with XeLaTeX
 \usepackage{fontspec}
+\usepackage[table]{xcolor}
 \setmainfont[Ligatures=TeX]{Georgia}\newfontfamily\Georgia{Georgia}\setsansfont{Helvetica Neue}\newfontfamily\Helvetica{Helvetica Neue}
 \setmonofont{Courier New}
 %format des sections et sous-sections
@@ -36,11 +37,9 @@
 \usepackage{booktabs, colortbl}
 %french quotes
 \usepackage{csquotes}
-
 %ajoute des couleurs
-\usepackage{xcolor}
 \definecolor{bleurusse}{HTML}{5A8BBA}
-\definecolor{bleu}{HTML}{D8B365}
+\definecolor{brun}{HTML}{D8B365}
 \definecolor{orangerusse}{HTML}{E84E0F}
 \definecolor{rouge2}{HTML}{E84E0F}
 \definecolor{orangebrewer}{RGB}{226,115,0}
@@ -48,14 +47,20 @@
 \definecolor{orange}{HTML}{E66101}
 \definecolor{vert}{HTML}{7DE023}
 \definecolor{violette}{HTML}{7B3294}
-\definecolor{brun}{HTML}{5AB4AC}
+\definecolor{bleuclair}{HTML}{E4FCFF}
 \definecolor{rouge}{HTML}{D14316}
 \definecolor{jaune}{HTML}{FFFF33}
 \definecolor{darkgrey}{HTML}{272822}
-
+\rowcolors{2}{bleurusse!4}{white}
+\let\originaltabular\tabular
+\let\endoriginaltabular\endtabular
+\renewenvironment{tabular}[1]{%
+  \originaltabular{#1}
+  \rowcolor{bleurusse}}
+  {\endoriginaltabular}  
 
 %change la marge des légendes:
-\usepackage{caption, xcolor,tabu}
+\usepackage{caption, tabu}
 \colorlet{captionlabel}{bleurusse}
 
 \captionsetup{
@@ -71,7 +76,7 @@
 \renewcommand{\labelitemii}{$\cdot$}
 \renewcommand{\labelitemiv}{$\ast$}
 %
-\renewcommand{\labelenumi}{(\arabic{enumi}.}
+\renewcommand{\labelenumi}{\arabic{enumi}.}
 \renewcommand{\labelenumii}{\alph{enumii})}
 \usepackage[hang,nooneline]{subfigure}
 
@@ -90,7 +95,7 @@
 
 %then use \begin{lstlisting}[style=mypython]
 \lstdefinestyle{mypython}{ %
-  backgroundcolor=\color{brun},   % couleur de fond
+  backgroundcolor=\color{bleuclair},   % couleur de fond
   basicstyle=\footnotesize\ttfamily,,     % taille et police
   belowcaptionskip=3mm,            % modifie la distance entre la légende et le listing
   breakatwhitespace=true,          % coupure uniquement aux espaces
@@ -112,7 +117,7 @@
   numbersep=5pt,                   % marge entre les numéros de ligne et le code
   numberstyle=\tt\tiny\color{gris},  % style pour les numéros de ligne
   resetmargins=false,			  % remet ou non les marges à 0 si dans une liste
-  rulecolor=\color{bleu},          % couleur du cadre
+  rulecolor=\color{brun},          % couleur du cadre
   rulesep=1pt,                     % définit la distance entre les lignes du cadre
   %rulesepcolor=\color{bleu!50},   % couleur de remplissage entre les doubles lignes du cadre
   showspaces=false,                % ne pas souligner tous les espaces
@@ -132,7 +137,7 @@
   breakatwhitespace=true,          % coupure uniquement aux espaces
   breaklines=true,                % retour à la ligne automatique
   captionpos=t,                    % position de la légende
-  commentstyle=\color{brun},       % couleur des commentaires
+  commentstyle=\color{violette},       % couleur des commentaires
   extendedchars=true,              % permets l'affichage de caractères non ASCII
   framerule=0.25pt,				  % épaisseur du cadre
   framesep=1pt,                    % définit la distance entre le cadre et le texte
@@ -141,12 +146,12 @@
   framexleftmargin=0pt,            % modifie la marge de gauche du contour
   framexrightmargin=0pt,           % modifie la marge de droite du contour
   keepspaces=true,                 % garde les espaces dans le code (indentation)
-  keywordstyle=\bfseries\color{bleu},       % style des mots clefs R
+  keywordstyle=\color{bleurusse},       % style des mots clefs R
   language=R,                 % langage
   linewidth=\linewidth,
   numbers=left,                    % emplacement des numéros de ligne
   numbersep=5pt,                   % marge entre les numéros de ligne et le code
-  numberstyle=\tt\tiny\color{darkgrey},  % style pour les numéros de ligne
+  numberstyle=\tt\tiny\color{violette},  % style pour les numéros de ligne
   resetmargins=false,			  % remet ou non les marges à 0 si dans une liste
   rulecolor=\color{violette},          % couleur du cadre
   rulesep=1pt,                     % définit la distance entre les lignes du cadre
@@ -155,12 +160,46 @@
   showstringspaces=false,          % ne pas souligner les espaces
   showtabs=false,                  % Ne pas indiquer les tabulations dans un string
   stepnumber=1,                    % degré de numérotation des lignes (1 = numérote toutes les lignes)
-  stringstyle=\color{orange},   % style des éléments 'string'
+  stringstyle=\color{orangerusse},   % style des éléments 'string'
   tabsize=4,                       % taille des tabulations en espace
   xleftmargin=1pt,                 % modifie la marge de gauche
   xrightmargin=1pt,                % modifie la marge de droite
 }
-
+\lstdefinestyle{Routstyle}{ %
+  backgroundcolor=\color{bleurusse!1},   % couleur de fond
+  basicstyle=\small\ttfamily,,     % taille et police
+  belowcaptionskip=3mm,            % modifie la distance entre la légende et le listing
+  breakatwhitespace=true,          % coupure uniquement aux espaces
+  breaklines=true,                % retour à la ligne automatique
+  captionpos=t,                    % position de la légende
+  commentstyle=\color{violette},       % couleur des commentaires
+  extendedchars=true,              % permets l'affichage de caractères non ASCII
+  framerule=0.25pt,				  % épaisseur du cadre
+  framesep=1pt,                    % définit la distance entre le cadre et le texte
+  frameshape={YYY}{y}{y}{YYY},     % ajoute un cadre autour du code (single, trblTRBL) {<top>}{<left>}{<right>}{<bottom>}, avec Y, N ou R (pour arrondi) pour top et bottom, 3 lettres par étage, lu depuis le centre; y ou n pour left et right, une lettre par étage. Cf listing package doc p. 34.
+  framexbottommargin=0pt,          % modifie la marge du bas du contour
+  framexleftmargin=0pt,            % modifie la marge de gauche du contour
+  framexrightmargin=0pt,           % modifie la marge de droite du contour
+  keepspaces=true,                 % garde les espaces dans le code (indentation)
+  keywordstyle=\color{bleurusse},       % style des mots clefs R
+  language=R,                 % langage
+  linewidth=\linewidth,
+  numbers=left,                    % emplacement des numéros de ligne
+  numbersep=5pt,                   % marge entre les numéros de ligne et le code
+  numberstyle=\tt\tiny\color{bleurusse},  % style pour les numéros de ligne
+  resetmargins=false,			  % remet ou non les marges à 0 si dans une liste
+  rulecolor=\color{bleurusse},          % couleur du cadre
+  rulesep=1pt,                     % définit la distance entre les lignes du cadre
+  %rulesepcolor=\color{bleu!50},   % couleur de remplissage entre les doubles lignes du cadre
+  showspaces=false,                % ne pas souligner tous les espaces
+  showstringspaces=false,          % ne pas souligner les espaces
+  showtabs=false,                  % Ne pas indiquer les tabulations dans un string
+  stepnumber=1,                    % degré de numérotation des lignes (1 = numérote toutes les lignes)
+  stringstyle=\color{orangerusse},   % style des éléments 'string'
+  tabsize=4,                       % taille des tabulations en espace
+  xleftmargin=1pt,                 % modifie la marge de gauche
+  xrightmargin=1pt,                % modifie la marge de droite
+}
 % le patch suivant corrige un bug concernant la parenthèse fermante et l'option "breaklines"
 % source cf. http://tex.stackexchange.com/q/69472   
 \usepackage{etoolbox}
@@ -191,8 +230,8 @@
 
 %gestion des commentaires
 \usepackage{comment} %use \begin{comment} commentaire \end{comment}
-%\input{bibliographie.tex}
-%\bibliography{SBBbib.bib}
+\subimport{}{packages/bibliographie.tex}
+\bibliography{bibliography.bib}
 
 \usepackage{rotating,tabularx,booktabs}
 \usepackage{tikz}\usepackage{tikz-qtree}\usetikzlibrary{decorations.pathreplacing}

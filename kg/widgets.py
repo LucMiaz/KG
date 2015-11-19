@@ -1,5 +1,4 @@
 import sys
-sys.path.append('D:\GitHub\myKG')
 import os, pathlib
 import numpy as np
 import collections
@@ -47,18 +46,8 @@ class kgControlWidget(QMainWindow):
         self.menu_bar()
         self.boolaudio=False
         self.initialized=False
-        #self.mainLayout=QtGui.QVBoxLayout()
-        
-        #TAB
-        #self.TabWidget=QtGui.QTabWidget()
-        #self.mainTab=QtGui.QWidget()
-        #self.vBox = QtGui.QVBoxLayout(self.mainTab)
-        #self.TabWidget.addTab(self.mainTab,'Main')
-        #self.mainLayout.addWidget(self.TabWidget)
-        #self.show_info()
         self.showAuthorsInts=False
         self.vBox=QtGui.QVBoxLayout()
-        #self.setLayout(self.mainLayout)
         self.setLayout(self.vBox)
         self.toCleanOnNew=[]
         self.savePlotFolder=pathlib.Path('')
@@ -201,6 +190,7 @@ class kgControlWidget(QMainWindow):
             #layout
             self.vBox.addWidget(self.seeker)
             self.modifiers= None
+            self.boolaudio=True
     
     def add_widgets_basic(self):
         #Figure Canvas
@@ -297,6 +287,7 @@ class kgControlWidget(QMainWindow):
             self.buttonChgSave.setStyleSheet("background-color: #a6dba0")
             self.hlab.setText("Selected directory : "+str(self.CaseWidget.savefolder))
         hBox.addWidget(groupBox)
+        self.toCleanOnNew.append(CreatorBox)
         self.toCleanOnNew.append(hBox)
         self.vBox.addLayout(CreatorBox)
         self.vBox.addLayout(hBox)
@@ -1119,10 +1110,24 @@ class MainCaseWidget():
         self.update_stay_rect(True)
         self.update_canvas()
     
-    def import_cases(self):
+    def import_cases(self, nameoffilecase='caseToAnalyze.json'):
         """performs the basic import of cases"""
-        with self.mesPath.joinpath('caseToAnalyze.json').open('r+') as input:
-            self.casesToAnalyze = json.load(input)
+        try:
+            with open(self.mesPath.joinpath(nameoffilecase).as_posix(),'r+') as input:
+                self.casesToAnalyze = json.load(input)
+        except:
+            newPath=str(QFileDialog.getOpenFileName(self.kgControl,"Please select the 'caseToAnalyze.json' you would like to use.", filter='JSON file (*.json)'))
+            newPath=newPath.split("'")[1]
+            if not newPath:
+                print('cancelled')
+                return
+            else:
+                newPath=pathlib.Path(newPath)
+                print(newPath.as_posix())
+                self.mesPath=newPath.parent
+                print(self.mesPath.as_posix())
+                self.import_cases(newPath.name)
+            return
         for k,v in self.casesToAnalyze.items():
             v['case']['author']=self.author
             v['case']= Case(**v['case'])
@@ -1365,6 +1370,8 @@ class MainCaseWidget():
         self.ncases=len(self.casesKeys)
         #asking for number of cases to treat
         ncases, ok = QtGui.QInputDialog.getInt(self.kgControl,"Number of cases to analyse", ("Please insert the number of cases \n you would like to analyse.\n \n (You are not forced to do all \n of the proposed cases). \n \n \n Maximum : "+str(self.ncases)+" : "),  value=min(20, self.ncases), min=1, max=self.ncases, step=1)
+        firstcaseskeys=[]
+        firstcaseslist=[]
         if ok and ncases <= self.ncases:
             self.ncases = ncases
             print("Thank you. Preparing "+str(self.ncases)+" cases.")
@@ -1379,16 +1386,16 @@ class MainCaseWidget():
         else:
             firstcaseskeys=[('m_'+i[0]+'_'+str(i[1])) for i in firstcaseslist]
             print("first: "+str(firstcaseskeys))
-            if self.ncases <len(firstcaseslist)+1:
-                self.casesKeys=[firstcaseskeys[i] for i in range(0,self.ncases)]
-            else:
-                self.casesKeys=firstcaseskeys
-                keys=list(self.casesToAnalyze.keys())
-                ncmax=len(keys)
-                while len(self.casesKeys) < min(ncases, ncmax):
-                    cas=keys[random.randint(0,ncmax)]
-                    if cas not in self.casesKeys:
-                        self.casesKeys.append(cas)
+        if self.ncases <len(firstcaseslist)+1:
+            self.casesKeys=[firstcaseskeys[i] for i in range(0,self.ncases)]
+        else:
+            self.casesKeys=firstcaseskeys
+            keys=list(self.casesToAnalyze.keys())
+            ncmax=len(keys)
+            while len(self.casesKeys) < min(ncases, ncmax):
+                cas=keys[random.randint(0,ncmax)]
+                if cas not in self.casesKeys:
+                    self.casesKeys.append(cas)
         return(list(self.casesKeys))
     
     def show_compare(self):
