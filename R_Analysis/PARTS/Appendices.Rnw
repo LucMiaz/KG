@@ -17,7 +17,7 @@ tabphc <- xtable(bestPhC, digits=c(0,3,3,0,0,3,3,0,2),caption='Best thresholds f
 print(tabphc,type="latex")
 @
 \subsection{\label{ssec:app:roc}ROC plot for other authors}
-In the following figures, the ROC plot for each of the four authors of section \ref{sec:algtest} are depicted.
+In the following figures, the ROC plot for each of the four authors of section {\ref{sec:algtest}} are depicted.
 <<bestesrplot, echo=TRUE, fig.cap='ROC plot of the algorithms with their best threshold, tested on author esr. The plot represents the True Positive Rate over the False Positive Rate.', fig.lab='fig:rocesr',warning=FALSE>>=
 rocplotesr <- ggplot(bestesr, aes(bestesr$FPR,bestesr$TPR,color=bestesr$algorithm, title="Algorithms - esr"))+  geom_segment(aes(x =0, y = 0, xend = 1, yend = 1), colour="#a5a5a5")+
     scale_colour_manual(values=rep(brewer.pal(12,"Paired"),times=2),name="Algorithms")+
@@ -54,7 +54,7 @@ rocplotphc <- ggplot(bestPhC, aes(bestPhC$FPR,bestPhC$TPR,color=bestPhC$algorith
     labs("ROC")
 rocplotphc
 @
-\subsection{Structure of the Graph Database}
+\subsection{\label{ssec:app:neo4jstruct}Structure of the Graph Database}
 We detail here the characteristics of our Graph Database. It is constructed with {\it Neo4j}, its query language {\it Cypher} and its python interface {\it Py2Neo}. The 
 
 \subsubsection{Nodes}

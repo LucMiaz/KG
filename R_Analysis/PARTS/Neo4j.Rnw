@@ -11,15 +11,13 @@ graph=startGraph('http://localhost:7474/db/data', username='neo4j', password='ad
 
 \subsubsection{Structure of the database}
 
-The databases in Neo4j are graphs, containing nodes and relationships between these nodes. Nodes and relationships have types (or labels). This will differentiate between Passings and Algorithms, in the case of Nodes, and between the relation of seeing (Passing saw this type of train) and the relation of taking place there (Passing took place here).
-
-
+The databases in Neo4j are graphs, containing nodes and relationships between these nodes. Nodes and relationships have types (or labels). This will differentiate between Passings and Algorithms, in the case of Nodes, and between the relation of seeing (Passing saw this type of train) and the relation of taking place there (Passing took place here). To gain insight of this database please look at figure \ref{fig:neo4jdb} and at the structure in appendice {\ref{ssec:app:neo4jstruct}} on page {\pageref{ssec:app:neo4jstruct}}.
 
 \begin{figure}
 \centering
 \includegraphics[width=\textwidth]{img/graph.pdf}
 \label{graphneo4j}
-\caption{Illustration of the nodes and relationships types in the Neo4j database.}
+\caption{\label{fig:neo4jdb}Illustration of the nodes and relationships types in the Neo4j database.}
 \end{figure}
 
 \subsection{Getting started in R}

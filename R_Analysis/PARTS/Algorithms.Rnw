@@ -66,7 +66,6 @@ find_best<-function(tff, authors=list(), qualities=list(),fixedthreshold=FALSE, 
 This gave us the following table for our four authors -- the output give the name of the authors and the qualities selected, from 1 (bad) to 3 (good):
 
 <<kablebest, include=FALSE>>=
-require(tidyr)
 bestfull<-find_best(tf, qualities=c(3,2))
 best<-mutate(bestfull, algorithm=paste(alg,algprop,sep="_"))
 best<-select(best, one_of(c('TPR','FPR','totP','totF','thd','dist_ax','algorithm','dif')))
@@ -103,30 +102,35 @@ rocplot
 
 The accuracy of each algorithm with the optimised threshold depends on the author that selected the intervals. The choices of two of our authors (esr and PHF) could be approximated fairly well by an algorithm -- the distance to the main diagonal was over 0.40\footnote{See Appendice \ref{ssec:app:roc} on page \pageref{ssec:app:roc} to see the respective ROC plots}. However, to take into account the other authors, we selected all combinations of algorithm-threshold-author that were distant from the diagonal by over 0.35 and added it to the list of the algorithm-threshold. For each algorithm, we took the mean of the thresholds available (i.e. if there was an other threshold from author esr or PHF, we took the mean of these thresholds with the threshold of all authors). Then we computed the TPR, TNR, FPR and FNR for all authors and globally. This was done like this:
 <<walloffame, results='asis',echo=1:3>>=
-walloffame<- rbind(cbind(best, author='all'), cbind(bestesr,author='esr'), cbind(bestluc,author='luc'), cbind(bestPhC,author='PhC'), cbind(bestPHF,author='PHF')) #group the best algorithms from all authors
-walloffamest<-filter(walloffame, walloffame$dist_ax>0.45 | (walloffame$author=='all' & walloffame$dist_ax>0.35)) #select a subset of walloffame with best thresholds
-compressed<-walloffamest %>% group_by(algorithm) %>% summarise( avgthres=mean(thd)) %>% arrange(avgthres) #summarise walloffamest by taking the mean threshold for every duplicate algorithm (if such duplicate exists)
+walloffame<- rbind(cbind(best, author='all'), cbind(bestesr,author='esr'), cbind(bestluc,author='luc'), cbind(bestPhC,author='PhC'), cbind(bestPHF,author='PHF'))#group the best algorithms from all authors
+walloffamest<-filter(walloffame, walloffame$dist_ax>0.45 | (walloffame$author=='all' & walloffame$dist_ax>0.35))#select a subset of walloffame with best thresholds
+compressed<-walloffamest %>% group_by(algorithm) %>% summarise( avgthres=mean(thd)) %>% arrange(avgthres)#summarise walloffamest by taking the mean threshold for every duplicate algorithm (if such duplicate exists)
 tabcomp <- xtable(compressed, digits=c(2),caption='Best thresholds for the fifteen algorithms obtained while considering all the authors together', label='tab:comp')
 print(tabcomp,type="latex")
 @
-Table \ref{tab:comp} shows that the two best\footnote{For our mode of selection.} algorithms are\footnote{The properties of the algorithm ZischenDetetkt2 are presented in this order : fc, threshold, dt.} \lstinline[style=mypython]{ZischenDetetkt2(4500,0.7267437,0.1)} and \lstinline[style=mypython]{ZischenDetetkt2(3500,1.0474294,0.02)}. We ran {\tt main\_ analysis.py} for these two algorithms on the whole set of hand selected cases and as before merged them in one csv with {\tt commuter.py}. This gave us one file that we called {\tt Datamous2.csv}.
+We ran {\tt main\_ analysis.py} for the proto-algorithms with their respective average threshold on the whole set of hand selected cases and as before merged them in one csv with {\tt commuter.py}. This gave us one file that we called {\tt Datamous2.csv}. The performance of these average algorithms is illustrated in figure \ref{fig:datamaous2}. The full results being in table \ref{tab:submaous}.
 
-<<datamaous2, include=FALSE, fig.cap='ROC graph of the selected two algorithms. The results depends on the author(s).', fig.lab='fig:datamaous'>>=
+<<datamaous2, include=FALSE, fig.cap='ROC graph of the selected two algorithms. The results depends on the author(s).', fig.lab='fig:datamaous2'>>=
 setwd('C:/LucMiaz/KG_dev_branch/KG/R_Analysis/Algorithm_analysis')
 Datamaous2<-read.csv('WallofFame/Datamaous_2.csv')
-rocplotdatamaous <- ggplot(Datamaous2, aes(Datamaous2$FPR,Datamaous2$TPR,color=Datamaous2$X, title="Algorithms - datamaous"))+  geom_segment(aes(x =0, y = 0, xend = 1, yend = 1), colour="#a5a5a5")+
+Datamaous2<-mutate(Datamaous2, algorithm=paste(alg,algprop, sep='_'))
+rocplotdatamaous <- ggplot(Datamaous2, aes(Datamaous2$FPR,Datamaous2$TPR,color=Datamaous2$algorithm, title="Algorithms - datamaous"))+  geom_segment(aes(x =0, y = 0, xend = 1, yend = 1), colour="#a5a5a5")+
     scale_colour_manual(values=rep(brewer.pal(12,"Paired"),times=2),name="Algorithms")+
     scale_shape_manual(values=rep(c(15,16,3,17,18,19),each=4),name="Algorithms")+
-    geom_point(aes(shape=Datamaous2$X,label=Datamaous2$X),size=3)+
+    geom_point(aes(shape=Datamaous2$algorithm,label=Datamaous2$algorithm),size=3)+
     xlab("False Positive Rate") + ylab("True Positive Rate")+
     labs("ROC")
 rocplotdatamaous
 @
 <<submaous, include=FALSE, results='asis'>>=
-submaous<-select(Datamaous2, dist_ax, esr_dist_ax, luc_dist_ax, PHF_dist_ax, PhC_dist_ax, X, X.1)
-submaous<-mutate(submaous, tot_dist=(dist_ax+esr_dist_ax+luc_dist_ax+PHF_dist_ax+PhC_dist_ax)/5)
+submaous<-select(Datamaous2, dist_ax, esr_dist_ax, luc_dist_ax, PHF_dist_ax, PhC_dist_ax, algorithm, thd)
+submaous<-mutate(submaous, dist_tot=(dist_ax+esr_dist_ax+luc_dist_ax+PHF_dist_ax+PhC_dist_ax)/5)
 write.csv(submaous, 'WallofFame/datamaous_dist.csv')
 tabsubmaous <- xtable(submaous, digits=c(2),caption='The results of the two algorithms.', label='tab:submaous')
 print(tabsubmaous,type="latex")
 @
-Table \ref{tab:submaous} sums up the performance of the two algorithms.
+Looking a table \ref{tab:submaous} we chose two algorithms that seemed to fit fairly everyone. This resulted in the following selection\footnote{The properties of the algorithm ZischenDetetkt2 are presented in this order : fc, threshold, dt.}:
+\begin{itemize}
+\item \lstinline[style=mypython]{ZischenDetetkt2(4500,0.7267437,0.1)} : it is the farthest (0.3905650) from the diagonal when we consider all authors separately and then sum them up (dist_tot);
+\item \lstinline[style=mypython]{ZischenDetetkt2(3500,1.0474294,0.02)} : it is the farthest (0.3911725) from the diagonal when we consider all authors together (dist_ax);
+\end{itemize}

@@ -39,8 +39,8 @@ theme_set(theme_bw())
 \section{Analysing the data}
 <<Neo4j, child='PARTS/Neo4j.Rnw'>>=
 @
-\section*{\label{sec:app}Appendices}
+\section{\label{sec:app}Appendices}
 <<Appendices, child='PARTS/Appendices.Rnw'>>=
 @
-\section*{Bibliography}
-\printbibliography
+\newpage
+\printbibliography 
