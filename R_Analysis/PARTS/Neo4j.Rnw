@@ -33,3 +33,22 @@ RETURN a.Name, c.tNoisemasked, c.tNoise, s.tEval, s.tEvalmasked, t.Name, r.train
 '
 q<-cypher(graph,query)#takes the info of each MicMes for one algorithm
 @
+<<arrage, include=FALSE>>=
+q<- q %>% arrange(a.Name)
+@
+<<Evalsummary, include=FALSE, results='asis'>>=
+tabqEval <- xtable(q %>% summary(s.tEval), digits=c(0,3,3,0,0,3,3,0,2),caption='Summary of the evaluated time.', label='tab:Eval')
+print(tabqEval,type="latex")
+@
+<<Noisesummary, include=FALSE, results='asis'>>=
+tabqNoise <- xtable(q %>% summary(c.tNoise), digits=c(0,3,3,0,0,3,3,0,2),caption='Summary of the Noise time.', label='tab:Noise')
+print(tabqNoise,type="latex")
+@
+<<Evalmaskedsummary, include=FALSE, results='asis'>>=
+tabqmaskedEval <- xtable(q %>% summary(s.tEvalmasked), digits=c(0,3,3,0,0,3,3,0,2),caption='Summary of the evaluated time masked.', label='tab:Evalmasked')
+print(tabqmaskedEval,type="latex")
+@
+<<Noisemaskedsummary, include=FALSE, results='asis'>>=
+tabqNoisemasked <- xtable(q %>% summary(c.tNoise), digits=c(0,3,3,0,0,3,3,0,2),caption='Summary of the Noise time on the masked subrange.', label='tab:Noisemasked')
+print(tabqNoisemasked,type="latex")
+@

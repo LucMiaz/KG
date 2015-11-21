@@ -25,11 +25,12 @@ For each now-complete algorithm, we selected the best one, that is - for us - th
 
 This is how we proceeded:
 
-<<themelibraryset,include=FALSE>>=
-setwd("C:/LucMiaz/KG_dev_branch/KG/R_Analysis/Algorithm_analysis")#were our data was stored
-csv_file="Datamaous.csv"
+<<themelibraryset>>=
+library('dplyr')
+csv_file="../Algorithm_analysis/Datamaous.csv"
 tf<-read.csv(csv_file)
-source('R/find_best.R')#load the functions inside find_best.R
+tf<-tf %>% mutate(algorithm=paste(alg,algprop,sep="_"))
+source('../Algorithm_analysis/R/find_best.R')#load the functions inside find_best.R
 @
 
 {\tt find\_ best.R} contains two functions that basically do this:
@@ -67,22 +68,22 @@ This gave us the following table for our four authors -- the output give the nam
 
 <<kablebest, include=FALSE>>=
 bestfull<-find_best(tf, qualities=c(3,2))
-best<-mutate(bestfull, algorithm=paste(alg,algprop,sep="_"))
-best<-select(best, one_of(c('TPR','FPR','totP','totF','thd','dist_ax','algorithm','dif')))
+bestfull<-bestfull %>% mutate(algorithm=paste(alg,algprop,sep="_"))
+best<-select(bestfull, one_of(c('TPR','FPR','totP','totF','thd','dist_ax','algorithm','dif')))
 @
 <<kablebestauthors,include=FALSE,echo=FALSE>>=
 bestPHFfull <-find_best(tf, authors=c('PHF'),qualities=c(2,3))
-bestPHF<-mutate(bestPHFfull, algorithm=paste(alg,algprop,sep="_"))
-bestPHF<-select(bestPHF, one_of(c('TPR','FPR','totP','totF','thd','dist_ax','algorithm','dif')))
+bestPHFfull<-bestPHFfull %>% mutate(algorithm=paste(alg,algprop,sep="_"))
+bestPHF<-select(bestPHFfull, one_of(c('TPR','FPR','totP','totF','thd','dist_ax','algorithm','dif')))
 bestlucfull <-find_best(tf, authors=c('luc'),qualities=c(2,3))
-bestluc<-mutate(bestlucfull, algorithm=paste(alg,algprop,sep="_"))
-bestluc<-select(bestluc, one_of(c('TPR','FPR','totP','totF','thd','dist_ax','algorithm','dif')))
+bestlucfull<-bestlucfull %>% mutate(algorithm=paste(alg,algprop,sep="_"))
+bestluc<-select(bestlucfull, one_of(c('TPR','FPR','totP','totF','thd','dist_ax','algorithm','dif')))
 bestesrfull <-find_best(tf, authors=c('esr'),qualities=c(2,3))
-bestesr<-mutate(bestesrfull, algorithm=paste(alg,algprop,sep="_"))
-bestesr<-select(best, one_of(c('TPR','FPR','totP','totF','thd','dist_ax','algorithm','dif')))
+bestesrfull<-bestesrfull %>% mutate(algorithm=paste(alg,algprop,sep="_"))
+bestesr<-select(bestesrfull, one_of(c('TPR','FPR','totP','totF','thd','dist_ax','algorithm','dif')))
 bestPhCfull <-find_best(tf, authors=c('PhC'),qualities=c(2,3))
-bestPhC<-mutate(bestPhCfull, algorithm=paste(alg,algprop,sep="_"))
-bestPhC<-select(bestPhC, one_of(c('TPR','FPR','totP','totF','thd','dist_ax','algorithm','dif')))
+bestPhCfull<-bestPhCfull %>% mutate(algorithm=paste(alg,algprop,sep="_"))
+bestPhC<-select(bestPhCfull, one_of(c('TPR','FPR','totP','totF','thd','dist_ax','algorithm','dif')))
 @
 <<tablebestall,echo=FALSE,results='asis'>>=
 tab <- xtable(best, digits=c(0,3,3,0,0,3,3,0,2),caption='Best thresholds for the fifteen algorithms obtained while considering all the authors together')
@@ -111,8 +112,7 @@ print(tabcomp,type="latex")
 We ran {\tt main\_ analysis.py} for the proto-algorithms with their respective average threshold on the whole set of hand selected cases and as before merged them in one csv with {\tt commuter.py}. This gave us one file that we called {\tt Datamous2.csv}. The performance of these average algorithms is illustrated in figure \ref{fig:datamaous2}. The full results being in table \ref{tab:submaous}.
 
 <<datamaous2, include=FALSE, fig.cap='ROC graph of the selected two algorithms. The results depends on the author(s).', fig.lab='fig:datamaous2'>>=
-setwd('C:/LucMiaz/KG_dev_branch/KG/R_Analysis/Algorithm_analysis')
-Datamaous2<-read.csv('WallofFame/Datamaous_2.csv')
+Datamaous2<-read.csv('../Algorithm_analysis/WallofFame/Datamaous_2.csv')
 Datamaous2<-mutate(Datamaous2, algorithm=paste(alg,algprop, sep='_'))
 rocplotdatamaous <- ggplot(Datamaous2, aes(Datamaous2$FPR,Datamaous2$TPR,color=Datamaous2$algorithm, title="Algorithms - datamaous"))+  geom_segment(aes(x =0, y = 0, xend = 1, yend = 1), colour="#a5a5a5")+
     scale_colour_manual(values=rep(brewer.pal(12,"Paired"),times=2),name="Algorithms")+
@@ -125,12 +125,12 @@ rocplotdatamaous
 <<submaous, include=FALSE, results='asis'>>=
 submaous<-select(Datamaous2, dist_ax, esr_dist_ax, luc_dist_ax, PHF_dist_ax, PhC_dist_ax, algorithm, thd)
 submaous<-mutate(submaous, dist_tot=(dist_ax+esr_dist_ax+luc_dist_ax+PHF_dist_ax+PhC_dist_ax)/5)
-write.csv(submaous, 'WallofFame/datamaous_dist.csv')
+write.csv(submaous, '../Algorithm_analysis/WallofFame/datamaous_dist.csv')
 tabsubmaous <- xtable(submaous, digits=c(2),caption='The results of the two algorithms.', label='tab:submaous')
 print(tabsubmaous,type="latex")
 @
 Looking a table \ref{tab:submaous} we chose two algorithms that seemed to fit fairly everyone. This resulted in the following selection\footnote{The properties of the algorithm ZischenDetetkt2 are presented in this order : fc, threshold, dt.}:
 \begin{itemize}
-\item \lstinline[style=mypython]{ZischenDetetkt2(4500,0.7267437,0.1)} : it is the farthest (0.3905650) from the diagonal when we consider all authors separately and then sum them up (dist_tot);
-\item \lstinline[style=mypython]{ZischenDetetkt2(3500,1.0474294,0.02)} : it is the farthest (0.3911725) from the diagonal when we consider all authors together (dist_ax);
+\item \lstinline[style=mypython]{ZischenDetetkt2(4500,0.7267437,0.1)} : it is the farthest (0.3905650) from the diagonal when we consider all authors separately and then sum them up (dist\_ tot);
+\item \lstinline[style=mypython]{ZischenDetetkt2(3500,1.0474294,0.02)} : it is the farthest (0.3911725) from the diagonal when we consider all authors together (dist\_ ax);
 \end{itemize}

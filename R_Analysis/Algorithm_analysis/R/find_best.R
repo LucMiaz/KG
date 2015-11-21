@@ -41,7 +41,6 @@ find_best<-function(tff, authors=list(), qualities=list(),fixedthreshold=FALSE, 
       for (i in thresholds){
           tpfp=TPFP_func(algtf, i)
           sums[nrow(sums)+1,]<-tpfp
-          
       }
       thresmax<-which.max(sums$dist_ax)
 #       filtre<-filter(sums, thd!=sums$thd[thresmax])

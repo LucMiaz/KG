@@ -16,7 +16,6 @@
 \subimport*{}{packages/title.tex}
 <<setup, include=FALSE, cache=FALSE>>=
 library(knitr)
-library(Cairo)
 opts_chunk$set(cache=TRUE, autodep=TRUE,fig.width=8, fig.height=6,fig.path='figures/theme-', cache.path='cache/theme-',out.width='\\textwidth', split=TRUE)
 render_listings()
 library(ggplot2)
@@ -26,21 +25,20 @@ library(RColorBrewer)
 library(extrafont)
 library(xtable)
 loadfonts()
-setwd("C:/LucMiaz/KG_dev_branch/KG/R_Analysis/Algorithm_analysis")#were our data was stored
 theme_bw<-theme_update(text=element_text(size=14, family="Helvetica Neue"), axis.text=element_text(family="Helvetica Neue"),legend.background=element_rect(fill="#f5f5f5"))
 theme_set(theme_bw())
 @
 \tableofcontents
 \newpage
 \section{Analysis of rail lubrification : Introduction}
-<<Algorithms, child='PARTS/Algorithms.Rnw'>>=
+<<child='PARTS/Algorithms.Rnw'>>=
 @
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Analysing the data}
-<<Neo4j, child='PARTS/Neo4j.Rnw'>>=
+<<child='PARTS/Neo4j.Rnw'>>=
 @
 \section{\label{sec:app}Appendices}
-<<Appendices, child='PARTS/Appendices.Rnw'>>=
+<<child='PARTS/Appendices.Rnw'>>=
 @
 \newpage
 \printbibliography 
