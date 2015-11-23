@@ -103,6 +103,7 @@ given that the true probability of allergic persons is $P(z=1)= pz = 0.01$ and $
 The script `run_CaseCreatorWidget.py` call the GUI to select intervals where one hears flanging or squealing noise.
 Make sure there are the following files in the same path : 
 - `caseToAnalyze.json` : Contains the mID to be analysed. Each entry looks like the following:
+```{json}
 "m_00403_4" : {
 		"case" : {
 			"location" : "Biel",
@@ -119,8 +120,8 @@ Make sure there are the following files in the same path :
 		},
 		"tmax" : 21.203105926513672,
 		"tmin" : -7.999987602233887
-	},
-
+	}
+```
 - `AppCS` folder containing the `info.html` and `info.css` files for the information page. It also contains the icon, the images for the html page, and so on.
 	
 - `firstcases.json` (optional) : contains the first cases to evaluate from the `caseToAnalyze` list.
