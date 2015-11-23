@@ -5,7 +5,7 @@ import json
 from PySide import QtGui, QtCore
 
 from kg.case import Case
-from kg.widgets import CaseCreatorWidget
+from kg.widgets2 import kgControlWidget
 import itertools
 import matplotlib
 from matplotlib.font_manager import FontProperties
@@ -64,7 +64,7 @@ if __name__ == "__main__":
         matplotlib.rc('font',**font)  
 
     app=QtGui.QApplication(sys.argv)
-    W = CaseCreatorWidget(mesPath)
+    W = kgControlWidget(mesPath)
     if changecolors:
         W.setPalette(palette)
         W.setFont(QtGui.QFont('HelveticaNeue',11))

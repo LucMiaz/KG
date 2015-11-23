@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+#run "python cxsetup.py build"
 # http://venkateshwaranloganathan.com/2013/11/01/distribute-your-python-programs-at-ease/
 from cx_Freeze import setup, Executable
 import sys
@@ -7,9 +8,9 @@ if sys.platform == "win32":
 build_exe_options = {
                     "icon":'AppCS/icons/icon3.ico',
                     "compressed":True,
-                    "zip_includes":['kg','mySTFT'],
+                    "zip_includes":['../kg','../mySTFT'],
                     'packages':['scipy'],
-                    'build_exe':'../build/',
+                    'build_exe':'../../build/',
                     }
 
 setup(name = "KG Detection",

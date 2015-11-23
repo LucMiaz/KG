@@ -29,11 +29,16 @@ class measuredSignal():
             if not isinstance(mics,list):
                 mics=[mics]
             for mic in mics:
-                ret=self.read_signal(mic)
-                if ret:
-                    if prms:
-                        self.read_signal('prms'+ str(mic))
-                    self.initialized=True    
+                try:
+                    ret=self.read_signal(mic)
+                except:
+                    pass
+                else:
+                    if ret:
+                        if prms:
+                            self.read_signal('prms'+ str(mic))
+                        self.initialized=True
+                        self.MBBMtested=True
         
     def list_signals(self):
         data = []

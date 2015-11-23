@@ -535,15 +535,6 @@ class kgControlWidget(QMainWindow):
             self.stopAction = QtGui.QAction('&Stop', self)        
             self.stopAction.setShortcut('Ctrl+SPACE')
             self.stopAction.setStatusTip('Stops the audio')
-            self.stopAction.triggered.connect(self.media.stop)            #media
-            self.playPauseAction = QtGui.QAction('&Play/Pause', self)        
-            self.playPauseAction.setShortcut('SPACE')
-            self.playPauseAction.setStatusTip('Play or pause the audio')
-            self.playPauseAction.triggered.connect(self.playPause)
-            
-            self.stopAction = QtGui.QAction('&Stop', self)        
-            self.stopAction.setShortcut('Ctrl+SPACE')
-            self.stopAction.setStatusTip('Stops the audio')
             self.stopAction.triggered.connect(self.media.stop)
             
             #change cases
