@@ -135,7 +135,14 @@ class measuredValues():
         all the ID with calculated LAF
         """
         return(ID in list(self.micValues['LAmax']['values'].keys()))
-        
+    def get_path(self):
+        try:
+            return(self.path.as_posix())
+        except:
+            try:
+                return(str(self.path))
+            except:
+                return('could not return the path')
     def get_IDs(self, evaluated = False):
         return(list(self.micValues['LAmax']['values'].keys()))
         
@@ -159,7 +166,7 @@ class measuredValues():
                         values = self.idValues[var].get('values')[id]
                     except KeyError as e:
                         dict[id]=None
-                        print('ID '+id +' not found.')
+                        print('ID '+id +' not found in method get_variable_values of mesurement_values.py in if block.')
                         break
                     dict.setdefault(id,{})[var] = val
                 elif var in self.micValues.keys():
@@ -167,7 +174,7 @@ class measuredValues():
                         values = self.micValues[var].get('values')[id]
                     except KeyError as e:
                         dict[id]=None
-                        print('ID '+id +' not found.')
+                        print('\n var '+str(var)+' ID '+id +' not found in method get_variable of measurement_values.py in elif block.\n ')
                         break
                     val = copy.deepcopy(values)
                     if isinstance(mic,list):
@@ -182,7 +189,7 @@ class measuredValues():
         else:
             return(dict)
     
-    def set_kg_values(self, algorithm, ID, mic, result ):
+    def set_kg_values(self, algorithm, ID, mic, result, **kwargs ):
         """
         set algorithm information in self.kgValues['algorithm'] 
 
@@ -207,7 +214,7 @@ class measuredValues():
         export['Description']= '''
                     This file contains the Results of KG processing'''
         export.update({ 'date': dateTime.strftime( "%d-%m-%Y"),
-                        'time':dateTime.strftime( "%H:%M:%S"),
+                        'time':dateTime.strftime( "%H-%M"),
                         'location': self.location,
                         'measurement': self.measurement})
         export.update(copy.deepcopy(self.kgValues))
@@ -220,7 +227,12 @@ class measuredValues():
         #         pass
         with resultsPath.open('w+') as file:
             json.dump(serialize(export),file)
-        
+    
+    def to_db(self, dbname):
+        """saves self to the database dbname"""
+        from pymongo import MongoClient
+        pass
+	
     @classmethod
     def from_json(cls, mesPath):
         #dataPath = pathlib.Path(mesPath)

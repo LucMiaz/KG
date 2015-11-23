@@ -73,7 +73,7 @@ class SetOfIntervals(object):
                     self.append(Interval(listofduples[inter][0], listofduples[inter][1]))
                 return True
         else:
-            print("empty list")
+            #print("empty list")
             return False
     
     def sort(self):

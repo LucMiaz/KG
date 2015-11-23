@@ -48,6 +48,9 @@ class _SelectorWidget(AxesWidget):
         # `release` can call a draw event even when `ignore` is True.
         if self.useblit:
             self.background = self.canvas.copy_from_bbox(self.ax.bbox)
+    
+    def new_background(self):
+        self.background=self.canvas.copy_from_bbox(self.ax.bbox)
 
     def connect_default_events(self):
         """Connect the major canvas events to methods."""
@@ -109,6 +112,10 @@ class _SelectorWidget(AxesWidget):
         else:
             self.canvas.draw_idle()
         return False
+    
+    def restore_background(self):
+        self.canvas.restore_region(self.background)
+        
 
     def _get_data(self, event):
         """Get the xdata and ydata for event, with limits"""

@@ -1,0 +1,255 @@
+%change main font with XeLaTeX
+\usepackage{fontspec}
+\usepackage[table]{xcolor}
+\setmainfont[Ligatures=TeX]{Georgia}\newfontfamily\Georgia{Georgia}\setsansfont{Helvetica Neue}\newfontfamily\Helvetica{Helvetica Neue}
+\setmonofont{Courier New}
+%format des sections et sous-sections
+\usepackage{sectsty}
+\allsectionsfont{\sffamily}
+\usepackage{titlesec}
+\renewcommand{\thesection}{\sffamily\arabic{section}}
+\renewcommand{\thesubsection}{\thesection.\arabic{subsection}}
+\renewcommand{\thesubsubsection}{\thesubsection.\arabic{subsubsection}}
+\renewcommand{\theparagraph}{\alph{paragraph}.}\titleformat*{\section}{\Large\bfseries}
+
+%font
+%\usepackage{newcent}%\usepackage{yfonts}%\usepackage{amsfonts}%\usepackage{MnSymbol}
+ 
+%en-têtes et pieds de page
+\usepackage{fancyhdr}
+\fancypagestyle{body}{
+\fancyhead[L]{Analysis of Rail Lubrification}
+\fancyhead[R]{\thepage}
+\fancyhead[C]{}
+\fancyfoot[R]{}
+\fancyfoot[C]{}
+\renewcommand{\headrulewidth}{.25pt}
+\renewcommand\headheight{14pt}}
+
+\usepackage{calc}
+\usepackage[a4paper,left=2.5cm,width=16.5cm,right=2.5cm, top=2.5cm, bottom=2.5cm]{geometry}
+\usepackage{amsmath}
+
+%entêtetitre
+\fancypagestyle{title}{\fancyhead[L]{}\fancyhead[R]{}\fancyfoot[R]{}\fancyfoot[C]{}\fancyhead[C]{}\renewcommand{\headrulewidth}{0pt}}
+%import csv as table
+\usepackage{pgfplotstable}
+\usepackage{booktabs, colortbl}
+%french quotes
+\usepackage{csquotes}
+%ajoute des couleurs
+\definecolor{bleurusse}{HTML}{5A8BBA}
+\definecolor{brun}{HTML}{D8B365}
+\definecolor{orangerusse}{HTML}{E84E0F}
+\definecolor{rouge2}{HTML}{E84E0F}
+\definecolor{orangebrewer}{RGB}{226,115,0}
+\definecolor{gris}{HTML}{F5F5F5}
+\definecolor{orange}{HTML}{E66101}
+\definecolor{vert}{HTML}{7DE023}
+\definecolor{violette}{HTML}{7B3294}
+\definecolor{bleuclair}{HTML}{E4FCFF}
+\definecolor{rouge}{HTML}{D14316}
+\definecolor{jaune}{HTML}{FFFF33}
+\definecolor{darkgrey}{HTML}{272822}
+\rowcolors{2}{bleurusse!4}{white}
+\let\originaltabular\tabular
+\let\endoriginaltabular\endtabular
+\renewenvironment{tabular}[1]{%
+  \originaltabular{#1}
+  \rowcolor{bleurusse}}
+  {\endoriginaltabular}  
+
+%change la marge des légendes:
+\usepackage{caption, tabu}
+\colorlet{captionlabel}{bleurusse}
+
+\captionsetup{
+  font=footnotesize,
+  format=hang,
+  singlelinecheck=false,
+  labelfont={bf, color=captionlabel}
+}
+
+%signes et style de listes et enumerations
+\renewcommand{\labelitemi}{$\bullet$}
+\renewcommand{\labelitemiii}{$\diamond$}
+\renewcommand{\labelitemii}{$\cdot$}
+\renewcommand{\labelitemiv}{$\ast$}
+%
+\renewcommand{\labelenumi}{\arabic{enumi}.}
+\renewcommand{\labelenumii}{\alph{enumii})}
+\usepackage[hang,nooneline]{subfigure}
+
+%contols float placements: \FloatBarrier to ensure all floats for a section appear before the next \section 
+\usepackage{placeins}
+
+%gestion des éléments graphiques
+\usepackage{graphicx}\newcommand{\HRule}{\rule{\linewidth}{0.25pt}}
+%-----------------------------------%
+%----------listings :---------------%
+%------affichage du code-----%
+%-----------------------------------%
+
+%importation
+\usepackage{listings}
+
+%then use \begin{lstlisting}[style=mypython]
+\lstdefinestyle{mypython}{ %
+  backgroundcolor=\color{bleuclair},   % couleur de fond
+  basicstyle=\footnotesize\ttfamily,,     % taille et police
+  belowcaptionskip=3mm,            % modifie la distance entre la légende et le listing
+  breakatwhitespace=true,          % coupure uniquement aux espaces
+  breaklines=true,                % retour à la ligne automatique
+  captionpos=t,                    % position de la légende
+  commentstyle=\color{vert},       % couleur des commentaires
+  extendedchars=true,              % permets l'affichage de caractères non ASCII
+  framerule=0.25pt,				  % épaisseur du cadre
+  framesep=1pt,                    % définit la distance entre le cadre et le texte
+  frameshape={NNN}{n}{n}{YYY},     % ajoute un cadre autour du code (single, trblTRBL) {<top>}{<left>}{<right>}{<bottom>}, avec Y, N ou R (pour arrondi) pour top et bottom, 3 lettres par étage, lu depuis le centre; y ou n pour left et right, une lettre par étage. Cf listing package doc p. 34.
+  framexbottommargin=0pt,          % modifie la marge du bas du contour
+  framexleftmargin=0pt,            % modifie la marge de gauche du contour
+  framexrightmargin=0pt,           % modifie la marge de droite du contour
+  keepspaces=true,                 % garde les espaces dans le code (indentation)
+  keywordstyle=\bfseries\color{rouge},       % style des mots clefs scilab
+  language=Python,                 % langage
+  linewidth=\linewidth,
+  numbers=left,                    % emplacement des numéros de ligne
+  numbersep=5pt,                   % marge entre les numéros de ligne et le code
+  numberstyle=\tt\tiny\color{gris},  % style pour les numéros de ligne
+  resetmargins=false,			  % remet ou non les marges à 0 si dans une liste
+  rulecolor=\color{brun},          % couleur du cadre
+  rulesep=1pt,                     % définit la distance entre les lignes du cadre
+  %rulesepcolor=\color{bleu!50},   % couleur de remplissage entre les doubles lignes du cadre
+  showspaces=false,                % ne pas souligner tous les espaces
+  showstringspaces=false,          % ne pas souligner les espaces
+  showtabs=false,                  % Ne pas indiquer les tabulations dans un string
+  stepnumber=1,                    % degré de numérotation des lignes (1 = numérote toutes les lignes)
+  stringstyle=\color{orange!50},   % style des éléments 'string'
+  tabsize=4,                       % taille des tabulations en espace
+  xleftmargin=1pt,                 % modifie la marge de gauche
+  xrightmargin=1pt,                % modifie la marge de droite
+}
+%instantiation des options style général
+\lstdefinestyle{Rstyle}{ %
+  backgroundcolor=\color{white},   % couleur de fond
+  basicstyle=\small\ttfamily,,     % taille et police
+  belowcaptionskip=3mm,            % modifie la distance entre la légende et le listing
+  breakatwhitespace=true,          % coupure uniquement aux espaces
+  breaklines=true,                % retour à la ligne automatique
+  captionpos=t,                    % position de la légende
+  commentstyle=\color{violette},       % couleur des commentaires
+  extendedchars=true,              % permets l'affichage de caractères non ASCII
+  framerule=0.25pt,				  % épaisseur du cadre
+  framesep=1pt,                    % définit la distance entre le cadre et le texte
+  frameshape={NNN}{n}{n}{YYY},     % ajoute un cadre autour du code (single, trblTRBL) {<top>}{<left>}{<right>}{<bottom>}, avec Y, N ou R (pour arrondi) pour top et bottom, 3 lettres par étage, lu depuis le centre; y ou n pour left et right, une lettre par étage. Cf listing package doc p. 34.
+  framexbottommargin=0pt,          % modifie la marge du bas du contour
+  framexleftmargin=0pt,            % modifie la marge de gauche du contour
+  framexrightmargin=0pt,           % modifie la marge de droite du contour
+  keepspaces=true,                 % garde les espaces dans le code (indentation)
+  keywordstyle=\color{bleurusse},       % style des mots clefs R
+  language=R,                 % langage
+  linewidth=\linewidth,
+  numbers=left,                    % emplacement des numéros de ligne
+  numbersep=5pt,                   % marge entre les numéros de ligne et le code
+  numberstyle=\tt\tiny\color{violette},  % style pour les numéros de ligne
+  resetmargins=false,			  % remet ou non les marges à 0 si dans une liste
+  rulecolor=\color{violette},          % couleur du cadre
+  rulesep=1pt,                     % définit la distance entre les lignes du cadre
+  %rulesepcolor=\color{bleu!50},   % couleur de remplissage entre les doubles lignes du cadre
+  showspaces=false,                % ne pas souligner tous les espaces
+  showstringspaces=false,          % ne pas souligner les espaces
+  showtabs=false,                  % Ne pas indiquer les tabulations dans un string
+  stepnumber=1,                    % degré de numérotation des lignes (1 = numérote toutes les lignes)
+  stringstyle=\color{orangerusse},   % style des éléments 'string'
+  tabsize=4,                       % taille des tabulations en espace
+  xleftmargin=1pt,                 % modifie la marge de gauche
+  xrightmargin=1pt,                % modifie la marge de droite
+}
+\lstdefinestyle{Routstyle}{ %
+  backgroundcolor=\color{bleurusse!1},   % couleur de fond
+  basicstyle=\small\ttfamily,,     % taille et police
+  belowcaptionskip=3mm,            % modifie la distance entre la légende et le listing
+  breakatwhitespace=true,          % coupure uniquement aux espaces
+  breaklines=true,                % retour à la ligne automatique
+  captionpos=t,                    % position de la légende
+  commentstyle=\color{violette},       % couleur des commentaires
+  extendedchars=true,              % permets l'affichage de caractères non ASCII
+  framerule=0.25pt,				  % épaisseur du cadre
+  framesep=1pt,                    % définit la distance entre le cadre et le texte
+  frameshape={YYY}{y}{y}{YYY},     % ajoute un cadre autour du code (single, trblTRBL) {<top>}{<left>}{<right>}{<bottom>}, avec Y, N ou R (pour arrondi) pour top et bottom, 3 lettres par étage, lu depuis le centre; y ou n pour left et right, une lettre par étage. Cf listing package doc p. 34.
+  framexbottommargin=0pt,          % modifie la marge du bas du contour
+  framexleftmargin=0pt,            % modifie la marge de gauche du contour
+  framexrightmargin=0pt,           % modifie la marge de droite du contour
+  keepspaces=true,                 % garde les espaces dans le code (indentation)
+  keywordstyle=\color{bleurusse},       % style des mots clefs R
+  language=R,                 % langage
+  linewidth=\linewidth,
+  numbers=left,                    % emplacement des numéros de ligne
+  numbersep=5pt,                   % marge entre les numéros de ligne et le code
+  numberstyle=\tt\tiny\color{bleurusse},  % style pour les numéros de ligne
+  resetmargins=false,			  % remet ou non les marges à 0 si dans une liste
+  rulecolor=\color{bleurusse},          % couleur du cadre
+  rulesep=1pt,                     % définit la distance entre les lignes du cadre
+  %rulesepcolor=\color{bleu!50},   % couleur de remplissage entre les doubles lignes du cadre
+  showspaces=false,                % ne pas souligner tous les espaces
+  showstringspaces=false,          % ne pas souligner les espaces
+  showtabs=false,                  % Ne pas indiquer les tabulations dans un string
+  stepnumber=1,                    % degré de numérotation des lignes (1 = numérote toutes les lignes)
+  stringstyle=\color{orangerusse},   % style des éléments 'string'
+  tabsize=4,                       % taille des tabulations en espace
+  xleftmargin=1pt,                 % modifie la marge de gauche
+  xrightmargin=1pt,                % modifie la marge de droite
+}
+% le patch suivant corrige un bug concernant la parenthèse fermante et l'option "breaklines"
+% source cf. http://tex.stackexchange.com/q/69472   
+\usepackage{etoolbox}
+\makeatletter
+\patchcmd{\lsthk@SelectCharTable}{%
+  \lst@ifbreaklines\lst@Def{`)}{\lst@breakProcessOther)}\fi}{}{}{}
+\makeatother
+
+
+
+%change la numérotation des sous-figures
+\renewcommand{\thesubfigure}{\roman{subfigure}.}
+\makeatletter
+\renewcommand\p@subfigure{\thefigure\,}%ajoute un espace entre le numéro de la figure et celui de la sous-figure
+\makeatother
+%\captionsetup[subfigure]{labelfont={bf,sf,color=orange},labelformat=simple, labelsep=colon, textfont=normalfont, font=footnotesize}
+
+% change les légendes des listings
+\DeclareCaptionFont{white}{\color{white}}
+\DeclareCaptionFormat{listing}{{\colorbox{violette!50}{\parbox{\linewidth-6pt}{\hspace{5pt}#1#2#3}}}}
+\captionsetup[lstlisting]{format=listing,labelfont=white,textfont=white, singlelinecheck=false, indention=0pt, margin=0pt, font={bf,sf,small}}
+
+
+
+% changement du préfixe du float lstlisting (défaut=listing)
+\renewcommand{\lstlistingname}{Code} % préfixe dans les légendes de listing
+\renewcommand{\lstlistlistingname}{Codes} % préfixe dans les listes de listing
+
+%gestion des commentaires
+\usepackage{comment} %use \begin{comment} commentaire \end{comment}
+\subimport{}{packages/bibliographie.tex}
+\bibliography{bibliography.bib}
+
+\usepackage{rotating,tabularx,booktabs}
+\usepackage{tikz}\usepackage{tikz-qtree}\usetikzlibrary{decorations.pathreplacing}
+\usepackage{pdflscape, geometry, titling}
+%\usepackage{draftwatermark}
+\usepackage{translator}
+%
+\usepackage{siunitx}
+\sisetup{
+group-separator={\textquoteright}, 
+group-minimum-digits = 4,
+separate-uncertainty = true, 
+list-final-separator = { und }, 
+range-phrase = { -- }
+%output-decimal-marker={,}%group-digits=true,%group-four-digits=false,% default setting
+}
+\DeclareSIUnit[number-unit-product = \;]\CHF{ CHF }
+\DeclareSIPrefix\Mio{Mio }{6}
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+
+ \pgfplotsset{compat=1.12}

@@ -33,6 +33,7 @@ class Case(object):
                 "Z": SetOfIntervals(),#Zischen
                 "quality": None, #quality of the detection
                 "saved":False,
+                "saving-date":None
                 }
         self.case['caseID'] = str(self)
     
@@ -73,6 +74,9 @@ class Case(object):
         self.case['disc'+noiseType+str(t)] = self.case[noiseType].discretize(t)
         return self.case['disc'+noiseType+str(t)]
     
+    def set_author(self, author):
+        self.case['author']=author
+    
     def set_quality(self, quality):
         """
         set quality of generated case:
@@ -91,6 +95,7 @@ class Case(object):
         '''
         if self.case['quality']  == None:
             print('Warning: case quality has to be set')
+        self.set_saved(True)
         casePath = mesPath.joinpath('test_cases').joinpath(self.case['author'])
         os.makedirs(casePath.as_posix(), exist_ok = True)
         name = str(self) + '.json'
@@ -101,6 +106,8 @@ class Case(object):
     def set_saved(self, truth):
         if truth in [True, False]:
             self.case['saved']=truth
+    def get_author(self):
+        return(self.case['author'])
     def get_SOI(self, noiseType='Z'):
         return(self.case[noiseType])
     def set_SOI(self,listofSOI,noiseType='Z'):
@@ -132,6 +139,8 @@ class Case(object):
     def get_quality(self):
         """returns case quality"""
         return(self.case['quality'])
+    def get_today(self):
+        return self.case['saving-date']
     def get_saved(self):
         """tells if the case has been saved"""
         return(self.case['saved'])
@@ -168,13 +177,17 @@ class Case(object):
         ymin,ymax = ax.get_ylim()
         for k in ['TP','TN','FP','FN']:#blue green red yellow
             t,x = inter(resTF['t'], resTF[k])
-            ax.fill_between(t,ymin,ymax, where = x,alpha= 0.5, color = colors[k])
+            ax.fill_between(t,ymin,ymax, where = x,alpha= 0.8, color = colors[k])
         p1 = Rectangle((0, 0), 1, 1, fc=colors['TP'], alpha=0.5)
         p2 = Rectangle((0, 0), 1, 1, fc=colors['TN'],alpha=0.5)
         p3 = Rectangle((0, 0), 1, 1, fc=colors['FP'],alpha=0.5)
         p4 = Rectangle((0,0),1,1,fc=colors['FN'],alpha=0.5)
-        ax.legend((p1, p2, p3,p4), ('True positive','True negative','False positive', 'False negative'),loc='upper center', bbox_to_anchor=(0.5, -0.05), fancybox=True, shadow=False, ncol=4, prop=fontP)
+        ax.legend((p1, p2, p3,p4), ('True positive','True negative','False positive', 'False negative'),loc='upper right', bbox_to_anchor=(0.5, -0.05), fancybox=True, shadow=False, ncol=2, prop=fontP)
 
+    def today(self):
+        """sets date as today"""
+        self.case['saving-date']=time.strftime("%Y-%m-%d_%H:%M")
+    
     def __str__(self):
         """prints the name of the case"""
         return( "case_"+str(self.case['mID'])+"_"+str(self.case['mic'])+'_'+str(self.case['author']))
