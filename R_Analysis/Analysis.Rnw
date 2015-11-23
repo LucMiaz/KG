@@ -1,0 +1,44 @@
+\documentclass{article}
+\usepackage{import}
+%\subimport*{}{packages/Bericht_Hoch.tex}
+\subimport*{}{packages/colors.tex}
+\usepackage{graphicx}
+%% for inline R code: if the inline code is not correctly parsed, you will see a message
+\newcommand{\rinline}[1]{SOMETHING WRONG WITH knitr}
+%% begin.rcode setup, include=FALSE
+% library(knitr)
+% opts_chunk$set(fig.path='figure/latex-', cache.path='cache/latex-')
+%% end.rcode
+\author{e-sr \& lucmiaz}
+\date{\today}
+\title{Analysis of Rail Lubrification}
+\begin{document}
+\subimport*{}{packages/title.tex}
+<<setup, include=FALSE, cache=FALSE>>=
+library(knitr)
+opts_chunk$set(cache=TRUE, autodep=TRUE,fig.width=8, fig.height=6,fig.path='figures/theme-', cache.path='cache/theme-',out.width='\\textwidth', split=TRUE)
+render_listings()
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(RColorBrewer)
+library(extrafont)
+library(xtable)
+loadfonts()
+theme_bw<-theme_update(text=element_text(size=14, family="Helvetica Neue"), axis.text=element_text(family="Helvetica Neue"),legend.background=element_rect(fill="#f5f5f5"))
+theme_set(theme_bw())
+@
+\tableofcontents
+\newpage
+\section{Analysis of rail lubrification : Introduction}
+<<child='PARTS/Algorithms.Rnw'>>=
+@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Analysing the data}
+<<child='PARTS/Neo4j.Rnw'>>=
+@
+\section{\label{sec:app}Appendices}
+<<child='PARTS/Appendices.Rnw'>>=
+@
+\newpage
+\printbibliography 

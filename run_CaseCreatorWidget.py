@@ -71,4 +71,4 @@ if __name__ == "__main__":
         W.setPalette(palette)
         W.setFont(QtGui.QFont('HelveticaNeue',11))
     W.show()
-    #sys.exit(app.exec_())
+    sys.exit(app.exec_())

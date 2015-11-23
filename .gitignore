@@ -1,21 +1,17 @@
+Data/
 #python
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
 .ipynb_checkpoints/
-#html
 .html
-
+*.json
 #R
-
-
-#
 old/
 /TODO
-kg/widgets.py
-kg/intervals.py
-Measurements_example/MBBMZugExample/wav/m_0104_mic_6.wav
+Measurements_example/MBBMZugExample/wav/
+Measurements_example/MBBMZugExample/test_cases/
 *.wav
 AppCS/icons/icon2.ico
 *.ico
@@ -23,5 +19,6 @@ caseToAnalyze.json
 AppCS/firstcases.list
 info.html
 *.mat
-*.json
-*.json
+
+
+.Rproj.user

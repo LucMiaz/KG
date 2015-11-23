@@ -1,0 +1,10 @@
+﻿*.bbl
+*.bcf
+*.log
+*.synctex.gz
+*.toc
+*.sty
+img/
+cache/
+*.xml
+figures/
