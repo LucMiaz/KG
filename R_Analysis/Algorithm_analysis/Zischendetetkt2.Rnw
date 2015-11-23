@@ -1,0 +1,142 @@
+\documentclass[11pt,a4paper,DIV9,BCOR1.5mm,twoside]{scrartcl}
+\usepackage{import}
+\subimport*{}{packages/Bericht_Hoch.tex}
+\subimport*{}{packages/colors.tex}
+\begin{document}
+<<knitr_options, include=FALSE>>=
+opts_chunk$set(fig.width=12, fig.height=4, fig.path='RnwFigs/',
+               warning=FALSE, message=FALSE, tidy=FALSE)
+options(width=60)
+set.seed(53079239)
+@
+
+<<import_json_file>>=
+setwd("C:/lucmiaz/algorithms-analysis-report")
+setwd("~/Documents/TRAVAIL/SBB_KG/Algorithms-analysis-report")
+library(jsonlite)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(RColorBrewer)
+library(extrafont)
+require(tikzDevice)
+loadfonts()
+json_file="Datamaous.json"
+csv_file="Datamaous.csv"
+tf<-read.csv(csv_file)
+remove(json_file)
+source('R/find_best.R')
+ theme_bw<-theme_update(text=element_text(size=14, family="Helvetica Neue"), axis.text=element_text(family="Helvetica Neue"),legend.background=element_rect(fill="#f5f5f5"))
+theme_set(theme_bw())
+#clusters<-kmeans(tf$spec,1000)
+#tf[,'cluster']<-clusters$cluster
+#to do add clusters$cluster column to tf and then merge by groups...
+#tf<-cbind()
+@
+<<ggplot_init>>=
+@
+\begin{figure}
+<<barplot, out.height= '0.5\\textwidth',fig.height=8>>=
+#tikz('normal.tex', standAlone = TRUE, width=5, height=5)
+#barplot<-ggplot(data=subset(tf, cluster %in% arrange(cluster, desc(cluster))[1:4,]), aes(spec, fill=as.factor(cluster)))+
+barplot<-ggplot(data=filter(tf, tf$author!='esr' & tf$quality!=1), aes(disct, spec))+geom_violin()+
+#geom_histogram(binwidth=0.2,alpha = 0.4, position = 'identity')+
+  xlab("Element was selected as flanging") + ylab("BPR")+
+  coord_flip()+#rotates the graphic
+  facet_wrap(algprop~author)+#plots by author
+  scale_fill_brewer(type='div')#colorscale
+ggsave("figures/BPRAuthorAlgprops.pdf", plot=barplot,  width=20, height=20)
+barplot
+#dev.off()
+@
+\end{figure}
+\begin{figure}
+<<barplot>>=
+barplot<-ggplot(data=filter(tf,tf$quality!=1), aes(spec, fill=as.factor(disct)))+geom_histogram()+scale_fifill_brewer('Paired')+xlab("BPR") + ylab("Count")+facet_wrap(algprop~author, scale="free")
+ggsave("figures/barplot.pdf", plot=barplot,width=20,height=20)
+@
+\end{figure}
+
+<<>>=
+best<-find_best(tf, qualities=c(3,2))
+rocplot <- ggplot(best, aes(best$FPR,best$TPR,color=best$algprop, title="Algorithms - all authors"))+  geom_segment(aes(x =0, y = 0, xend = 1, yend = 1), colour="#a5a5a5")+
+    scale_colour_manual(values=rep(brewer.pal(12,"Paired"),times=2),name="Algorithms")+
+    scale_shape_manual(values=rep(c(15,16,3,17,18,19),each=5),name="Algorithms")+
+    geom_point(aes(shape=best$algprop,label=best$algprop),size=2)+
+    xlab("False Positive Rate") + ylab("True Positive Rate")+
+    labs("ROC")
+    ggsave('figures/ROC.pdf', plot=rocplot, width=8, height=6)
+@
+<<>>=
+bestesr <-find_best(tf, authors=c('esr'),qualities=c(2,3))
+rocplotesr <- ggplot(bestesr, aes(bestesr$FPR,bestesr$TPR,color=bestesr$algprop, title="Algorithms - esr"))+  geom_segment(aes(x =0, y = 0, xend = 1, yend = 1), colour="#a5a5a5")+
+    scale_colour_manual(values=rep(brewer.pal(12,"Paired"),times=2),name="Algorithms")+
+    scale_shape_manual(values=rep(c(15,16,3,17,18,19),each=3),name="Algorithms")+
+    geom_point(aes(shape=bestesr$algprop,label=bestesr$algprop),size=2)+
+    xlab("False Positive Rate") + ylab("True Positive Rate")+
+    labs("ROC")
+    ggsave('figures/esr.pdf', plot=rocplotesr, width=8, height=6)
+@
+<<>>=
+bestPHF <-find_best(tf, authors=c('PHF'),qualities=c(2,3))
+rocplotPHF <- ggplot(bestPHF, aes(bestPHF$FPR,bestPHF$TPR,color=bestPHF$algprop, title="Algorithms - PHF"))+  geom_segment(aes(x =0, y = 0, xend = 1, yend = 1), colour="#a5a5a5")+
+    scale_colour_manual(values=rep(brewer.pal(12,"Paired"),times=2),name="Algorithms")+
+    scale_shape_manual(values=rep(c(15,16,3,17,18,19),each=3),name="Algorithms")+
+    geom_point(aes(shape=bestPHF$algprop,label=bestPHF$algprop),size=2)+
+    xlab("False Positive Rate") + ylab("True Positive Rate")+
+    labs("ROC")
+    ggsave('figures/PHF.pdf', plot=rocplotPHF, width=8, height=6)
+@
+<<>>=
+bestLuc <- find_best(tf,authors=c('luc'), qualities=c(2,3))
+rocplotluc <- ggplot(bestLuc, aes(bestLuc$FPR,bestLuc$TPR,color=bestLuc$algprop, title="Algorithms - luc"))+  geom_segment(aes(x =0, y = 0, xend = 1, yend = 1), colour="#a5a5a5")+
+    scale_colour_manual(values=rep(brewer.pal(12,"Paired"),times=2),name="Algorithms")+
+    scale_shape_manual(values=rep(c(15,16,3,17,18,19),each=3),name="Algorithms")+
+    geom_point(aes(shape=bestLuc$algprop,label=bestLuc$algprop),size=2)+
+    xlab("False Positive Rate") + ylab("True Positive Rate")+
+    labs("ROC")
+    ggsave('figures/Luc.pdf', plot=rocplotluc, width=8, height=6)
+@
+<<>>=
+bestPhC <- find_best(tf,authors=c('PhC'), qualities=c(2,3))
+rocplotphc <- ggplot(bestPhC, aes(bestPhC$FPR,bestPhC$TPR,color=bestPhC$algprop, title="Algorithms - PhC"))+  geom_segment(aes(x =0, y = 0, xend = 1, yend = 1), colour="#a5a5a5")+
+    scale_colour_manual(values=rep(brewer.pal(12,"Paired"),times=2),name="Algorithms")+
+    scale_shape_manual(values=rep(c(15,16,3,17,18,19),each=3),name="Algorithms")+
+    geom_point(aes(shape=bestPhC$algprop,label=bestPhC$algprop),size=2)+
+    xlab("False Positive Rate") + ylab("True Positive Rate")+
+    labs("ROC")
+    ggsave('figures/PhC.pdf', plot=rocplotphc, width=8, height=6)
+@
+
+<<>>=
+best<-find_best(tf, qualities=c(3,2))
+best<-cbind(best, 'author'=rep('all',nrow(best)))
+for(author in unique(tf$author)){
+    author_best<-find_best(tf,authors=c(author), qualities=c(2,3))
+    best<- rbind(best, cbind(author_best,'author'=rep(author,length(author_best))))
+}    
+@
+
+<<>>=
+walloffame<- rbind(cbind(best, author='all'), cbind(bestesr,author='esr'),cbind(bestLuc,author='luc'),cbind(bestPhC,author='PhC'),cbind(bestPHF,author='PHF'))
+walloffamest<-filter(walloffame, walloffame$dist_ax>0.45 | (walloffame$author=='all' & walloffame$dist_ax>0.35))
+compressed<-walloffamest %>% group_by(algprop) %>% summarise( avgthres=mean(thd)) %>% arrange(avgthres)
+@
+
+
+<<>>=
+Datamaous2<-read.csv('WallofFame/Datamaous_2.csv')
+rocplotdatamaous <- ggplot(Datamaous2, aes(Datamaous2$FPR,Datamaous2$TPR,color=Datamaous2$X, title="Algorithms - datamaous"))+  geom_segment(aes(x =0, y = 0, xend = 1, yend = 1), colour="#a5a5a5")+
+    scale_colour_manual(values=rep(brewer.pal(12,"Paired"),times=2),name="Algorithms")+
+    scale_shape_manual(values=rep(c(15,16,3,17,18,19),each=4),name="Algorithms")+
+    geom_point(aes(shape=Datamaous2$X,label=Datamaous2$X),size=3)+
+    xlab("False Positive Rate") + ylab("True Positive Rate")+
+    labs("ROC")
+    ggsave('figures/datamaous.pdf', plot=rocplotdatamaous, width=8, height=6)
+@
+<<>>=
+submaous<-select(Datamaous2, dist_ax, esr_dist_ax, luc_dist_ax, PHF_dist_ax, PhC_dist_ax, X, X.1)
+submaous<-mutate(submaous, tot_dist=(dist_ax+esr_dist_ax+luc_dist_ax+PHF_dist_ax+PhC_dist_ax)/5)
+write.csv(submaous, 'WallofFame/datamaous_dist.csv')
+@
+\end{document}

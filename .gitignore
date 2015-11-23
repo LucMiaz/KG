@@ -5,9 +5,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 .ipynb_checkpoints/
-#html
 .html
-Data/
 *.json
 #R
 old/
@@ -23,3 +21,4 @@ info.html
 *.mat
 
 
+.Rproj.user
