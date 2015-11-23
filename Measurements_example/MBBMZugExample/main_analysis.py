@@ -21,7 +21,6 @@ def split_list(alist, wanted_parts=1):
 if __name__ == "__main__":
     blocks_size=1000#specifies the size of the sublists we want to break validID2 in.
     #Paths=[pathlib.Path('E:/Biel1Vormessung'),pathlib.Path('E:/Biel2Vormessung'), pathlib.Path('E:/ZugVormessung')]
-    #Paths=[pathlib.Path('E:/ZugVormessung')]
     Paths=[pathlib.Path('/Users/lucmiaz/Documents/TRAVAIL/SBB_KG/KG/Data/Biel1'),pathlib.Path('/Users/lucmiaz/Documents/TRAVAIL/SBB_KG/KG/Data/Biel2'),pathlib.Path('/Users/lucmiaz/Documents/TRAVAIL/SBB_KG/KG/Data/Zug')]
     # setup algorithms
     algorithms =[ZischenDetetkt2(4500,0.7267437,0.1), ZischenDetetkt2(3500,1.0474294,0.02)]
@@ -58,17 +57,11 @@ if __name__ == "__main__":
         validID2.sort()
         clipped = set()
         validlength=len(validID2)
-        print(str(validlength))
-        nblists=validlength//blocks_size
-        splitvalidID=split_list(validID2,nblists)
-        print('Path '+str(cupath)+' of '+str(npaths))
+        splitvalidID=split_list(validID2,validlength//blocks_size)
         print('Case cases in :')
         print(str(validID2[0])+', --- , '+str(validID2[-1])+' : '+str(len(validID2))+' items.')
         print('----------------------')
-        culist=1
-        
-        for validIDs in splitvalidID:
-            print('list '+str(culist)+' of '+str(nblists)+'\n')
+        for validIDs in tqdm(splitvalidID):
             for file in tqdm(validIDs):
                 ID=file.split('_')[0:-1]
                 id=ID[0]
@@ -100,7 +93,7 @@ if __name__ == "__main__":
                                 continue
                             for alg in algorithms:
                                 # calc KG
-                                micSn.calc_kg(alg)
+                                micSn.calc_kg(alg, complete=False)
                                 # set results in mesVal
                                 mesVal.set_kg_values(alg,**micSn.get_KG_results(alg))
                         else:

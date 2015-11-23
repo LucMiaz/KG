@@ -6,9 +6,8 @@ import numpy as np
 import pandas as pd
 import copy
 import json
-from PySide import QtGui, QtCore
-from PySide.QtGui import (QApplication, QMainWindow, QAction, QStyle,
-                          QFileDialog)
+#from PySide import QtGui, QtCore
+#from PySide.QtGui import (QApplication, QMainWindow, QAction, QStyle,QFileDialog)
 import csv
 import struct
 import itertools
