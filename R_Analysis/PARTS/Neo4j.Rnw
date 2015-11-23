@@ -28,8 +28,8 @@ We will import the measurements for all the algorithms. RNeo4j accepts {\tt data
 query='
 MATCH (a:Algorithm)
 MATCH (b)<-[s:ISANEVALOF]-(c)-[:WASEVALWITH]->(a)//the relationship s contains the specific lengths of time (masked and not) of the microphone signal (c)
-MATCH (t)<-[r:SAW]-(b)//the relationship r contains info on the train of this Passing (lenght and track)
-RETURN a.Name, c.tNoisemasked, c.tNoise, s.tEval, s.tEvalmasked, t.Name, r.trainLength, r.Track
+MATCH (t)<-[r:SAW]-(b)//the relationship r contains info on the train (t) of this Passing (b) (lenght and track)
+RETURN a.Name, b.Name, b.Measurement, c.tNoisemasked, c.tNoise, s.tEval, s.tEvalmasked, t.Name, r.trainLength, r.Track
 '
 q<-cypher(graph,query)#takes the info of each MicMes for one algorithm
 @
@@ -51,4 +51,18 @@ print(tabqmaskedEval,type="latex")
 <<Noisemaskedsummary, include=FALSE, results='asis'>>=
 tabqNoisemasked <- xtable(q %>% summary(c.tNoise), digits=c(0,3,3,0,0,3,3,0,2),caption='Summary of the Noise time on the masked subrange.', label='tab:Noisemasked')
 print(tabqNoisemasked,type="latex")
+@
+
+We will perform a calculation to see if train type is a factor of the noise length (only on the measures made without lubrification, i.e. {\it Vormessung})..
+
+<<trainfactor>>=
+library(RColorBrewer)
+qfilt<- filter(q,b.Measurement=='Vormessung')
+ggplot(qfilt, aes(t.Name,log(abs(c.tNoise/s.tEval)), color=a.Name))+geom_boxplot()+
+  xlab('Train Type')+
+  ylab('Ratio $\frac{Noise}{Total}$')+
+  title('Comparison of Noise length ratio for pre-measurements')+
+  coord_flip()+#rotates the graphic
+  scale_fill_manual(values=c("#66a61e", "#e6ab02"),name="Algorithms")+
+  theme(legend.position="bottom")
 @

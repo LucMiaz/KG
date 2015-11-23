@@ -11,7 +11,7 @@ The aim of this part of the project is to implement an algorithm capable of tell
 \subsection{Hand selection of intervals}
 We have selected by hands the intervals with noise on a small subset of samples (about twenty). We asked other people of our team to do the same. This gives us a subjective set of data to compare our algorithms. The {\bf subjective} part is very important as the perception of what an annoying noise is cannot be reduced solely to physical variables.
 
-The process of selection was performed on an interface in PyQt created for this project. The python file to call to start this interface is {\tt run\_ CaseCreatorWidget}. The interface has two shapes: the first one is the simplest and most stable, it is only designed to select the cases; the second is not fully stable but implements an administrator environment that allows to review the intervals selected by the authors, review the algorithms and see the spectogram of the stft -- it is a faily long process, so be patient if you call it. 
+The process of selection was performed on an interface in PyQt created for this project. The interface has two shapes: the first one is the simplest and most stable, it is only designed to select the cases. The python file to call to start this interface is {\tt run{\_}CaseCreatorWidget.py}; the second is not fully stable but implements an administrator environment -- aside the casecreator environment -- that allows to review the intervals selected by the authors, review the algorithms and see the spectogram of the stft -- it is a fairly long process, so be patient if you call it. It can be loaded with {\tt run{\_}AdminAlgorithmWidgets.py}. 
 
 \subsection{Development of a proto-algorithm} We have developped a simple algorithm for flanging noise based on the detection of steep change in band power ratio (BPR). The band power ratio is the relation of the low band frequencies to the high band frequencies taken on a small increment (dt) of the signal. This pattern leads to an algorithm with three variables: a delta time, a cutoff frequency (fc) and a threshold. This approach is described in general terms in Bullen and Jiang article for railways \citeyear{Bullen2010}\footnote{We found later that a similar algorithm was use for tonal bird sound recognition \autocite{Jancovic2011}}.
 
@@ -19,7 +19,7 @@ We computed the BPR for cutoff frequencies and delta times, first without worryi
 
 We noticed that one way to improve this algorithm would be to change the lower and upper bounds of the low and high bands (we noted them $fmin$ and $fmax$ in the code, especially in {\tt algorithm.py} from the {\tt kg} package). The default for {\tt Zischendetetkt2} was $fmin=100$. This could easily be raised to $300$. This would be one way to further improve our results. However this was not done at first and we shall use {\tt Z2} in the following article.
 
-\subsection{Optimisation of the proto-algorithm} For all the previously obtained proto-algorithms, we computed the True Positive Rate (i.e. the ratio of increments that were rightly selected by the algorithm as containing noise) and the False Positive Rate (i.e. the ratio of increments wrongly selected as containing noise) with 300 thresholds slip between the smallest and highest BPR. With this we will compute the so-called Receiving Operating Characteristic (ROC). More can be found on this method in Swets, Dawes and Monahan popularisation article (2000). This procedure was performed with the python code {\tt main\_ analysis.py}. Then we merged the multiple files created by {\tt main\_ analysis.py} together in a csv file we called {\tt datamaous.csv}. The rows of this file correspond to a delta time of the discretisation performed with {\tt main\_ analysis.py}. The merge was done with the python script {\tt commuter.py}.
+\subsection{Optimisation of the proto-algorithm} For all the previously obtained proto-algorithms, we computed the True Positive Rate (i.e. the ratio of increments that were rightly selected by the algorithm as containing noise) and the False Positive Rate (i.e. the ratio of increments wrongly selected as containing noise) with 300 thresholds slip between the smallest and highest BPR. With this we will compute the so-called Receiving Operating Characteristic (ROC). More can be found on this method in Swets, Dawes and Monahan popularisation article (2000). This procedure was performed with the python code {\tt main{\_}analysis.py}. Then we merged the multiple files created by {\tt main{\_}analysis.py} together in a csv file we called {\tt datamaous.csv}. The rows of this file correspond to a delta time of the discretisation performed with {\tt main{\_}analysis.py}. The merge was done with the python script {\tt commuter.py}.
 
 For each now-complete algorithm, we selected the best one, that is - for us - the one that is the farthest from the diagonal spanning from (0,0) to (1,1).,
 
@@ -33,9 +33,9 @@ tf<-tf %>% mutate(algorithm=paste(alg,algprop,sep="_"))
 source('../Algorithm_analysis/R/find_best.R')#load the functions inside find_best.R
 @
 
-{\tt find\_ best.R} contains two functions that basically do this:
+{\tt find{\_}best.R} contains two functions that basically do this:
 
-\begin{lstlisting}[style=Rstyle, caption={\tt find\_ best.R},label=code:findbest]
+\begin{lstlisting}[style=Rstyle, caption={\tt find{\_}best.R},label=code:findbest]
 TPFP_func<-function(df, threshold){
   #spec correspond to the BPR and disc to choise of the author : 1 is for flanging 0 for not flanging
   #tally function will count the TP, i.e. BPR is over the threshold and the author said it is flanging
@@ -109,7 +109,7 @@ compressed<-walloffamest %>% group_by(algorithm) %>% summarise( avgthres=mean(th
 tabcomp <- xtable(compressed, digits=c(2),caption='Best thresholds for the fifteen algorithms obtained while considering all the authors together', label='tab:comp')
 print(tabcomp,type="latex")
 @
-We ran {\tt main\_ analysis.py} for the proto-algorithms with their respective average threshold on the whole set of hand selected cases and as before merged them in one csv with {\tt commuter.py}. This gave us one file that we called {\tt Datamous2.csv}. The performance of these average algorithms is illustrated in figure \ref{fig:datamaous2}. The full results being in table \ref{tab:submaous}.
+We ran {\tt main{\_}analysis.py} for the proto-algorithms with their respective average threshold on the whole set of hand selected cases and as before merged them in one csv with {\tt commuter.py}. This gave us one file that we called {\tt Datamous2.csv}. The performance of these average algorithms is illustrated in figure \ref{fig:datamaous2}. The full results being in table \ref{tab:submaous}.
 
 <<datamaous2, include=FALSE, fig.cap='ROC graph of the selected two algorithms. The results depends on the author(s).', fig.lab='fig:datamaous2'>>=
 Datamaous2<-read.csv('../Algorithm_analysis/WallofFame/Datamaous_2.csv')
@@ -132,5 +132,5 @@ print(tabsubmaous,type="latex")
 Looking a table \ref{tab:submaous} we chose two algorithms that seemed to fit fairly everyone. This resulted in the following selection\footnote{The properties of the algorithm ZischenDetetkt2 are presented in this order : fc, threshold, dt.}:
 \begin{itemize}
 \item \lstinline[style=mypython]{ZischenDetetkt2(4500,0.7267437,0.1)} : it is the farthest (0.3905650) from the diagonal when we consider all authors separately and then sum them up (dist\_ tot);
-\item \lstinline[style=mypython]{ZischenDetetkt2(3500,1.0474294,0.02)} : it is the farthest (0.3911725) from the diagonal when we consider all authors together (dist\_ ax);
+\item \lstinline[style=mypython]{ZischenDetetkt2(3500,1.0474294,0.02)} : it is the farthest (0.3911725) from the diagonal when we consider all authors together (dist{\_}ax);
 \end{itemize}

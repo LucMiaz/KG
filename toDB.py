@@ -133,6 +133,10 @@ for resPath in Paths:
 				mDate=mbbm[ort]['idValues'][listofidprop[idv]]['values'][mid]
 			elif idv=='mTime':
 				mTime=mbbm[ort]['idValues'][listofidprop[idv]]['values'][mid]
+			elif idv=='v1':
+				v1=mbbm[ort]['idValues'][listofidprop[idv]]['values'][mid]
+			elif idv=='v2':
+				v2=mbbm[ort]['idValues'][listofidprop[idv]]['values'][mid]
 			else:
 				dictidvalues[str(idv)]=mbbm[ort]['idValues'][listofidprop[idv]]['values'][mid]
 				neomid.properties[str(idv)]=dictidvalues[str(idv)]
@@ -150,10 +154,10 @@ for resPath in Paths:
 				for micv in listofmicprop:
 					dictmicvalues[str(micv)]=mbbm[ort]['micValues'][listofmicprop[micv]]['values'][mid][mic]
 					neomics[mid][mic].properties[str(micv)]=mbbm[ort]['micValues'][listofmicprop[micv]]['values'][mid][mic]
-				t=dictjs['results'][mid][mic][algorithm]['t']['py/numpy.ndarray']['values']
+				t=dictjs['results'][mid][mic][alg]['t']['py/numpy.ndarray']['values']
 				mask = get_mask(t, (dictmicvalues['Tb'],dictmicvalues['Te']))
-				idmicresult=np.array(dictjs['results'][mid][mic][algorithm]['result']['py/numpy.ndarray']['values'], dtype=bool)
-				dt=float(dictjs['results'][mid][mic][algorithm]['dt'])
+				idmicresult=np.array(dictjs['results'][mid][mic][alg]['result']['py/numpy.ndarray']['values'], dtype=bool)
+				dt=float(dictjs['results'][mid][mic][alg]['dt'])
 				timenoise=float(int(np.sum(idmicresult[mask])*dt*100+0.5)/100)
 				neomics[mid][mic].properties['tNoise']=float(int(np.sum(idmicresult)*dt*100+0.5)/100)
 				neomics[mid][mic].properties['dt']=dt
@@ -166,7 +170,12 @@ for resPath in Paths:
 				graph.create(pn.Relationship(neomics[mid][mic],'WASEVALWITH',neoalgorithms[alg]))
 
 				#graph.create(pn.Relationship(neomics[mid][mic],'OF',thistrain, TrainLength=trainLength, Track=traintrack, Date=mDate, Time=mTime))
-		graph.create(pn.Relationship(neomid,'SAW',thistrain,TrainLength=trainLength, Track=traintrack, Date=mDate, Time=mTime))
+		#converting time to human readable format
+		mHour=int(mTime*24)
+		mMinute=int((mTime*24-mHour)*60)
+		mSecond=int(((mTime*24-mHour)*60-mMinute)*60)
+		mDay,mMonth,mYear=mDate.split('.')
+		graph.create(pn.Relationship(neomid,'SAW',thistrain,TrainLength=trainLength, Track=traintrack, Day=mDay, Month=mMonth,Year=mYear,Hour=mHour,Minute=mMinute,Second=mSecond, V1=v1, V2=v2))
 		graph.create(pn.Relationship(neomid,'IN',neolocations[location],Track=traintrack, Date=mDate, Time=mTime))
 		neomids[mid]=neomid#store the reference to this node with key id
 		neomid.push()

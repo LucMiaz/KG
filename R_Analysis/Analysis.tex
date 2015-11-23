@@ -47,7 +47,7 @@ The aim of this part of the project is to implement an algorithm capable of tell
 \subsection{Hand selection of intervals}
 We have selected by hands the intervals with noise on a small subset of samples (about twenty). We asked other people of our team to do the same. This gives us a subjective set of data to compare our algorithms. The {\bf subjective} part is very important as the perception of what an annoying noise is cannot be reduced solely to physical variables.
 
-The process of selection was performed on an interface in PyQt created for this project. The python file to call to start this interface is {\tt run\_ CaseCreatorWidget}. The interface has two shapes: the first one is the simplest and most stable, it is only designed to select the cases; the second is not fully stable but implements an administrator environment that allows to review the intervals selected by the authors, review the algorithms and see the spectogram of the stft -- it is a faily long process, so be patient if you call it. 
+The process of selection was performed on an interface in PyQt created for this project. The interface has two shapes: the first one is the simplest and most stable, it is only designed to select the cases. The python file to call to start this interface is {\tt run\_ CaseCreatorWidget.py}; the second is not fully stable but implements an administrator environment -- aside the casecreator environment -- that allows to review the intervals selected by the authors, review the algorithms and see the spectogram of the stft -- it is a fairly long process, so be patient if you call it. It can be loaded with {\tt run\_ AdminAlgorithmWidgets.py}. 
 
 \subsection{Development of a proto-algorithm} We have developped a simple algorithm for flanging noise based on the detection of steep change in band power ratio (BPR). The band power ratio is the relation of the low band frequencies to the high band frequencies taken on a small increment (dt) of the signal. This pattern leads to an algorithm with three variables: a delta time, a cutoff frequency (fc) and a threshold. This approach is described in general terms in Bullen and Jiang article for railways \citeyear{Bullen2010}\footnote{We found later that a similar algorithm was use for tonal bird sound recognition \autocite{Jancovic2011}}.
 
@@ -107,7 +107,7 @@ This gave us the following table for our four authors -- the output give the nam
 
 
 % latex table generated in R 3.2.2 by xtable 1.8-0 package
-% Sat Nov 21 18:06:54 2015
+% Mon Nov 23 11:57:44 2015
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrrrrrrlr}
@@ -149,7 +149,7 @@ walloffamest<-filter(walloffame, walloffame$dist_ax>0.45 | (walloffame$author=='
 compressed<-walloffamest %>% group_by(algorithm) %>% summarise( avgthres=mean(thd)) %>% arrange(avgthres)#summarise walloffamest by taking the mean threshold for every duplicate algorithm (if such duplicate exists)
 \end{Sinput}
 % latex table generated in R 3.2.2 by xtable 1.8-0 package
-% Sat Nov 21 18:06:54 2015
+% Mon Nov 23 11:57:49 2015
 \begin{table}[ht]
 \centering
 \begin{tabular}{rlr}
@@ -238,7 +238,7 @@ q<-cypher(graph,query)#takes the info of each MicMes for one algorithm
 \subsection{\label{ssec:app:authorstables}Best thresholds for each author}
 The following tables show the best algorithms (i.e. proto-algorithm + threshold) for the four authors.
 % latex table generated in R 3.2.2 by xtable 1.8-0 package
-% Sat Nov 21 18:32:00 2015
+% Mon Nov 23 12:02:56 2015
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrrrrrrlr}
@@ -266,7 +266,7 @@ The following tables show the best algorithms (i.e. proto-algorithm + threshold)
 \end{table}
 
 % latex table generated in R 3.2.2 by xtable 1.8-0 package
-% Sat Nov 21 18:32:00 2015
+% Mon Nov 23 12:02:57 2015
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrrrrrrlr}
@@ -294,7 +294,7 @@ The following tables show the best algorithms (i.e. proto-algorithm + threshold)
 \end{table}
 
 % latex table generated in R 3.2.2 by xtable 1.8-0 package
-% Sat Nov 21 18:32:00 2015
+% Mon Nov 23 12:02:57 2015
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrrrrrrlr}
@@ -322,7 +322,7 @@ The following tables show the best algorithms (i.e. proto-algorithm + threshold)
 \end{table}
 
 % latex table generated in R 3.2.2 by xtable 1.8-0 package
-% Sat Nov 21 18:32:00 2015
+% Mon Nov 23 12:02:57 2015
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrrrrrrlr}
@@ -372,7 +372,7 @@ rocplotesr
 \end{Schunk}
 \begin{Schunk}
 \begin{Soutput}
-Error in eval(expr, envir, enclos): objet 'bestLuc' introuvable
+Error in eval(expr, envir, enclos): Objekt 'bestLuc' nicht gefunden
 \end{Soutput}
 \end{Schunk}
 \begin{Schunk}
