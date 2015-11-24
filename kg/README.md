@@ -116,105 +116,105 @@ name | takes | returns | description
 `case_down` | - | None | abstact class
 `case_up` | - | None | abstact class
 `chg_folder` | - | None | abstract class
-`change_plot`| - | None | abstract class
-`change_quality`| - | None | abstract class
-`chg_type`| - | None | abstract class
-`chg_typedisplay`| - | None | abstract class
-`connections` | - | None | Sets the connections for media.tick, media.finished. media.stateChanged and calls _connections()
+`change_plot` | - | None | abstract class
+`change_quality` | - | None | abstract class
+`chg_type` | - | None | abstract class
+`chg_typedisplay` | - | None | abstract class
+`connections` | - | None | Sets the connections for media.tick, media.finished. media.stateChanged and calls `_connections`
 `_connections` | - | None | abstract class
 `define_actions` | - | None | Defines the actions exitAction, showinfoAction, saveAction, changesavingfolderAction, playPauseAction, stopAction, nextcaseAction and prevcaseAction.
 `keyPressEvent` | event | None | Defines actions for Keyboard shortcuts (see info.html for description)
 `keyReleaseEvent` | event | None | see `keyPressEvent`.
 `media_finish` | - | None | Defines what to do when media.finished is connected
-`menu_ bar` | - | None | Sets the menubar with the action previously defined with `define_actions`.
+`menu_ bar` | - | None | Sets the menubar with the action previously defined with `define_actions`
 `playPause` | - | None | Plays or pause the audio (depending on current state)
-`set_int`| - | None | abstract class
-`set_quality`| - | None | abstract class
-`set_remove`| - | None | abstract class
-`save_case`| - | None | abstract class
+`set_int` | - | None | abstract class
+`set_quality` | - | None | abstract class
+`set_remove` | - | None | abstract class
+`save_case` | - | None | abstract class
 `setCentraWidget` | - | None | abstract class
-`set_centralWidget`| - | None | add vBox to the displays (calls `setCentralWidget`)
-`set_ media_ source`| pathlib Path, *float*, *options* | None | Sets the audio source to the file in the given path.
-`set_mpl`| *dict* | None | adds canvas
-`show_info`| - | None | abstract class
+`set_centralWidget` | - | None | add vBox to the displays (calls `setCentralWidget`)
+`set_ media_ source` | pathlib Path, *float*, *options* | None | Sets the audio source to the file in the given path.
+`set_mpl` | *dict* | None | adds canvas
+`show_info` | - | None | abstract class
 `timer_status` | bool, bool | None | changes the timer status according to played audio
 `update_time` | float | None | updates t with tShift and float given divided by 1000. Calls update _canvas
-`update_canvas`| - | None | calls `set _ bar _ position` and `ca _ update _ handle`.
+`update_canvas` | - | None | calls `set _ bar _ position` and `ca _ update _ handle`.
 `alg_results` | micSignal, algorithm | None | classmethod (cls, micSn, algorithm) 
 
 ### CaseCreatorWidget
 **subclass of DetectControlWidget**
 This widget should allow to create cases in GUI style kg_ event duration is selected with mouse cursor case is saved using a button case_dicts contains the following attributes:
-name | type |
+name | type | 
 ---- | ---- |----
-`mainPath` | str |
+`mainPath` | str | 
 `Paths` | list of pathlib paths | contains pathlib Paths to the raw data (actually to the folder containing the dir `raw_signals`)
 `infofolder` | pathlib path | path to the folder with the info.html
-`minspan` | float|
-`PlotTypes` | list|
-`currentplottype` | String |
-`author` | string |
-`sparecase`|tuple|
-`AuthorCases` | dict|
-`casesToAnalyze` | dict|
+`minspan` | float| 
+`PlotTypes` | list| 
+`currentplottype` | String | 
+`author` | string | 
+`sparecase`| tuple | 
+`AuthorCases` | dict| 
+`casesToAnalyze` | dict| 
 `both_visibles` | bool | if K and Z intervals are displayed or not
-`NoiseTypes` | list of strings |
+`NoiseTypes` | list of strings | 
 `ccaseDict` | dict | With the following attributes
-||case: Case() instance
-||plot: {pName:[t,y],...}
-||tmin: flt
-||tmax: flt
-||wavPath: str
+ | | case: Case() instance
+ | | plot: {pName:[t,y],...}
+ | | tmin: flt
+ | | tmax: flt
+ | | wavPath: str
 
 Methods:
 Name | input | output | description
 --- | ----- | ----- |-----
-`add_new_cases` | - | -|asks for adding a new case
+`add_new_cases` | - | - |asks for adding a new case
 `add_int`|float, float | - | adds an interval
 `add_widgets_admin` | - | - | adds admin tools such as different types of plot, algorithm test and authors browser
-`add_widgets_basic` | - |- | creates the default interface
-`add_widget_extended` | - | -| add widgets that are not useful when logged as admin
+`add_widgets_basic` | - | - | creates the default interface
+`add_widget_extended` | - | - | add widgets that are not useful when logged as admin
 `admin_actions` | - | - | creates admin actions
-`asks_for_algorithm`|-|-|queries the desired algorithms
-`asks_for_author`|-|-| queries who's there
-`asks_for_case` | -|-|asks for new case add
+`asks_for_algorithm` | - | - | queries the desired algorithms
+`asks_for_author` | - | - |  queries who's there
+`asks_for_case` | - | - | asks for new case add
 `_barplay` | bool | - |tells what to do if audio is playing or not
-`case_down` | - |-|changes case to the next one
+`case_down` | -  | - | changes case to the next one
 `case_to_analyse` | string, int, path, *string*|-|setup the analysed cases from MBBM. Needs ID, mic, matPath, givenauthor=None. Is called by load_cases
-`case_up` |- |-|changes case to the previous one
-`change_current_case` | int |- | changes current case to the i-th item in CaseCombo
+`case_up` | - | - | changes case to the previous one
+`change_current_case` | int | - | changes current case to the i-th item in CaseCombo
 `change_quality` | string | - | sets the quality depending on input (which must be in  ['good','medium','bad']
 `changeplot` | - | - | changes the plottype
-`chg_folder` | -|-| change the directory where to save the data
+`chg_folder` | - | - | change the directory where to save the data
 `check_rb` | string | -  | sets the qradios buttons
-`checkSavedCases`| - | list | gets the cases saved by current author in savefolder/test_cases/author
-`chg_type` |-|-|change the noise type to the next one on the list (and back to the first)
-`chg_typedisplay`|-|-|toggle between show both and show one
-`_connections`|-|-|connects the buttons/combobox to the methods to be applied
-`extbrowsercall`|-|-|call opening info page in external web browser
-`get_quality` |-|-| returns current quality
-`hide_rect`|-|-|hides the rectangles without touching the SOI
-`import_cases`|-|-|performs the basic import of cases"
-`load_algorithm` | int |-|loads the algorithm selected
-`load_author` | int |-|loads the saved intervals of an author
-`load_cases` | list | -| loads the cases given in list of paths to casesToAnalyse. Is called by `add_case` and by `asks_for_ncases`.
+`checkSavedCases` | - | list | gets the cases saved by current author in savefolder/test_cases/author
+`chg_type` | - | - | change the noise type to the next one on the list (and back to the first)
+`chg_typedisplay` | - | - | toggle between show both and show one
+`_connections` | - | - | connects the buttons/combobox to the methods to be applied
+`extbrowsercall` | - | - | call opening info page in external web browser
+`get_quality` | - | - |  returns current quality
+`hide_rect` | - | - | hides the rectangles without touching the SOI
+`import_cases` | - | - | performs the basic import of cases"
+`load_algorithm` | int | - | loads the algorithm selected
+`load_author` | int  | - | loads the saved intervals of an author
+`load_cases` | list | - | loads the cases given in list of paths to casesToAnalyse. Is called by `add_case` and by `asks_for_ncases`.
 `onclick` | interval | - | removes interval
-`onselect` | float, float, *bool* |-| adds interval1
-`plot` |-|-|
+`onselect` | float, float, *bool* | - |  adds interval1
+`plot` | - | - | 
 `plotchange` | int | - | changes the plot to index
 `remove_int` | float, *float* | - | removes an interval
-`save_case` |-|-| saves the case
-`set_both_visible` | bool |-| toogle Z/K intervals visibility
+`save_case` | - | - |  saves the case
+`set_both_visible` | bool | - | toogle Z/K intervals visibility
 `set_current_case` | string | - | sets the current case
 `set_int` | bool | - | adds a float as first bound to a currently spanned interval (useful when selecting while audio is played)
 `set_noise_type` | int | - | changes noise type
 `set_remove` | bool | - | removes int while playing audio (nemesis of `set _int`)
-`show_compare` | bool | -| will show or remove the comparison between current author /current case and the current algorithm
-`show_info` |-|-|
-`TurnTheSavedGreen`|-|-| as its name tells, it turns the saved cases green. It initiates the combobox Casecombo and it also load the intervals saved
-`unsave`|-|-|get back to unsaved status
-`update_stay_rect` | *bool*|-| updates the intervals that must be shown
-`from_measurement`|many|-| classmethod : (cls, mesVal, mID, mics, author = None)
+`show_compare` | bool | - | will show or remove the comparison between current author /current case and the current algorithm
+`show_info` | - | - | 
+`TurnTheSavedGreen` | - | - |  as its name tells, it turns the saved cases green. It initiates the combobox Casecombo and it also load the intervals saved
+`unsave` | - | - | get back to unsaved status
+`update_stay_rect` | *bool* | - |  updates the intervals that must be shown
+`from_measurement` | many | - |  classmethod : (cls, mesVal, mID, mics, author = None)
 
 Other method : 
 `load_micSn(ID,mic,matPath, algorithm=None,gvar = ['Tb','Te','Tp_b','Tp_e','LAEQ'] )` |loads micSn from the matPath, returns a signal and a stftName
