@@ -17,7 +17,8 @@ The databases in Neo4j are graphs, containing nodes and relationships between th
 \centering
 \includegraphics[width=\textwidth]{img/graph.pdf}
 \label{graphneo4j}
-\caption{\label{fig:neo4jdb}Illustration of the nodes and relationships types in the Neo4j database.}
+\caption{Illustration of the nodes and relationships types in the Neo4j database.}
+\label{fig:neo4jdb}
 \end{figure}
 
 \subsection{Getting started in R}
@@ -37,32 +38,32 @@ q<-cypher(graph,query)#takes the info of each MicMes for one algorithm
 q<- q %>% arrange(a.Name)
 @
 <<Evalsummary, include=FALSE, results='asis'>>=
-tabqEval <- xtable(q %>% summary(s.tEval), digits=c(0,3,3,0,0,3,3,0,2),caption='Summary of the evaluated time.', label='tab:Eval')
+tabqEval <- xtable(q %>% summary(s.tEval), digits=c(3),caption='Summary of the evaluated time.', label='tab:Eval')
 print(tabqEval,type="latex")
 @
 <<Noisesummary, include=FALSE, results='asis'>>=
-tabqNoise <- xtable(q %>% summary(c.tNoise), digits=c(0,3,3,0,0,3,3,0,2),caption='Summary of the Noise time.', label='tab:Noise')
+tabqNoise <- xtable(q %>% summary(c.tNoise), digits=c(3),caption='Summary of the Noise time.', label='tab:Noise')
 print(tabqNoise,type="latex")
 @
 <<Evalmaskedsummary, include=FALSE, results='asis'>>=
-tabqmaskedEval <- xtable(q %>% summary(s.tEvalmasked), digits=c(0,3,3,0,0,3,3,0,2),caption='Summary of the evaluated time masked.', label='tab:Evalmasked')
+tabqmaskedEval <- xtable(q %>% summary(s.tEvalmasked), digits=c(3),caption='Summary of the evaluated time masked.', label='tab:Evalmasked')
 print(tabqmaskedEval,type="latex")
 @
 <<Noisemaskedsummary, include=FALSE, results='asis'>>=
-tabqNoisemasked <- xtable(q %>% summary(c.tNoise), digits=c(0,3,3,0,0,3,3,0,2),caption='Summary of the Noise time on the masked subrange.', label='tab:Noisemasked')
+tabqNoisemasked <- xtable(q %>% summary(c.tNoise), digits=c(3),caption='Summary of the Noise time on the masked subrange.', label='tab:Noisemasked')
 print(tabqNoisemasked,type="latex")
 @
 
-We will perform a calculation to see if train type is a factor of the noise length (only on the measures made without lubrification, i.e. {\it Vormessung})..
+We will perform a calculation to see if train type is a factor of the noise length (only on the measures made without lubrification, i.e. {\it Vormessung}).
 
 <<trainfactor>>=
 library(RColorBrewer)
-qfilt<- filter(q,b.Measurement=='Vormessung')
-ggplot(qfilt, aes(t.Name,log(abs(c.tNoise/s.tEval)), color=a.Name))+geom_boxplot()+
+qfilt<- q %>% filter(b.Measurement=='Vormessung')
+ggplot(qfilt, mapping=aes(x = t.Name, y = c.tNoise/s.tEval), lw=0)+geom_boxplot(outlier.colour = NULL, aes(color=NULL, fill=a.Name))+
   xlab('Train Type')+
-  ylab('Ratio $\frac{Noise}{Total}$')+
-  title('Comparison of Noise length ratio for pre-measurements')+
+  ylab('Ratio Noise-Total')+
+  #title('Comparison of Noise length ratio for pre-measurements')+
   coord_flip()+#rotates the graphic
-  scale_fill_manual(values=c("#66a61e", "#e6ab02"),name="Algorithms")+
+  scale_fill_manual(values=rep(c("#66a61e", "#e6ab02"),10),name="Algorithms")+
   theme(legend.position="bottom")
 @

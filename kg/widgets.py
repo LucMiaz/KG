@@ -73,7 +73,6 @@ class DetectControlWidget(QMainWindow):
             action.triggered.connect(getattr(self.media, name))
         self.actions.addSeparator()
         self.actions.addSeparator()
-        
         self.menu_bar()
         
         
@@ -274,7 +273,8 @@ class DetectControlWidget(QMainWindow):
         pass
     def save_case(self):
         pass
-    
+    def setCentralWidget(self):
+	    pass
     def set_centralWidget(self):
         #centralwidget
         centralWidget = QtGui.QWidget()

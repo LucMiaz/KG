@@ -1,0 +1,9 @@
+base
+knitr
+ggplot2
+dplyr
+tidyr
+RColorBrewer
+extrafont
+xtable
+RNeo4j

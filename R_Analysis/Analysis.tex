@@ -47,15 +47,15 @@ The aim of this part of the project is to implement an algorithm capable of tell
 \subsection{Hand selection of intervals}
 We have selected by hands the intervals with noise on a small subset of samples (about twenty). We asked other people of our team to do the same. This gives us a subjective set of data to compare our algorithms. The {\bf subjective} part is very important as the perception of what an annoying noise is cannot be reduced solely to physical variables.
 
-The process of selection was performed on an interface in PyQt created for this project. The interface has two shapes: the first one is the simplest and most stable, it is only designed to select the cases. The python file to call to start this interface is {\tt run\_ CaseCreatorWidget.py}; the second is not fully stable but implements an administrator environment -- aside the casecreator environment -- that allows to review the intervals selected by the authors, review the algorithms and see the spectogram of the stft -- it is a fairly long process, so be patient if you call it. It can be loaded with {\tt run\_ AdminAlgorithmWidgets.py}. 
+The process of selection was performed on an interface in PyQt created for this project. The interface has two shapes: the first one is the simplest and most stable, it is only designed to select the cases. The python file to call to start this interface is {\tt run{\_}CaseCreatorWidget.py}; the second is not fully stable but implements an administrator environment -- aside the casecreator environment -- that allows to review the intervals selected by the authors, review the algorithms and see the spectogram of the stft -- it is a fairly long process, so be patient if you call it. It can be loaded with {\tt run{\_}AdminAlgorithmWidgets.py}. 
 
-\subsection{Development of a proto-algorithm} We have developped a simple algorithm for flanging noise based on the detection of steep change in band power ratio (BPR). The band power ratio is the relation of the low band frequencies to the high band frequencies taken on a small increment (dt) of the signal. This pattern leads to an algorithm with three variables: a delta time, a cutoff frequency (fc) and a threshold. This approach is described in general terms in Bullen and Jiang article for railways \citeyear{Bullen2010}\footnote{We found later that a similar algorithm was use for tonal bird sound recognition \autocite{Jancovic2011}}.
+\subsection{Development of a proto-algorithm} We have developped a simple algorithm for flanging noise based on the detection of steep change in band power ratio (BPR). The band power ratio is the relation of the low band frequencies to the high band frequencies taken on a small increment (dt) of the signal. This pattern leads to an algorithm with three variables: a delta time, a cutoff frequency (fc) and a threshold. This approach is described in general terms in Bullen and Jiang article for railways (\citeyear{Bullen2010})\footnote{We found later that a similar algorithm was use for tonal bird sound recognition \autocite{Jancovic2011}}.
 
 We computed the BPR for cutoff frequencies and delta times, first without worrying about the threshold. This gave us a list of BPRs to compare with the set of handmade data. We tested the combinations of the following fc and dt each giving a proto-algorithm (as it misses the threshold): fc in (2000, 3000, 3500, 4000, 45000) and dt in (0.02,0.05,0.1). This algorithm is named {\tt Zischendetetkt2} ({\tt Z2}) in the python files.
 
 We noticed that one way to improve this algorithm would be to change the lower and upper bounds of the low and high bands (we noted them $fmin$ and $fmax$ in the code, especially in {\tt algorithm.py} from the {\tt kg} package). The default for {\tt Zischendetetkt2} was $fmin=100$. This could easily be raised to $300$. This would be one way to further improve our results. However this was not done at first and we shall use {\tt Z2} in the following article.
 
-\subsection{Optimisation of the proto-algorithm} For all the previously obtained proto-algorithms, we computed the True Positive Rate (i.e. the ratio of increments that were rightly selected by the algorithm as containing noise) and the False Positive Rate (i.e. the ratio of increments wrongly selected as containing noise) with 300 thresholds slip between the smallest and highest BPR. With this we will compute the so-called Receiving Operating Characteristic (ROC). More can be found on this method in Swets, Dawes and Monahan popularisation article (2000). This procedure was performed with the python code {\tt main\_ analysis.py}. Then we merged the multiple files created by {\tt main\_ analysis.py} together in a csv file we called {\tt datamaous.csv}. The rows of this file correspond to a delta time of the discretisation performed with {\tt main\_ analysis.py}. The merge was done with the python script {\tt commuter.py}.
+\subsection{Optimisation of the proto-algorithm} For all the previously obtained proto-algorithms, we computed the True Positive Rate (i.e. the ratio of increments that were rightly selected by the algorithm as containing noise) and the False Positive Rate (i.e. the ratio of increments wrongly selected as containing noise) with 300 thresholds slip between the smallest and highest BPR. With this we will compute the so-called Receiving Operating Characteristic (ROC). More can be found on this method in Swets, Dawes and Monahan popularisation article (2000). This procedure was performed with the python code {\tt main{\_}analysis.py}. Then we merged the multiple files created by {\tt main{\_}analysis.py} together in a csv file we called {\tt datamaous.csv}. The rows of this file correspond to a delta time of the discretisation performed with {\tt main{\_}analysis.py}. The merge was done with the python script {\tt commuter.py}.
 
 For each now-complete algorithm, we selected the best one, that is - for us - the one that is the farthest from the diagonal spanning from (0,0) to (1,1).,
 
@@ -71,9 +71,9 @@ source('../Algorithm_analysis/R/find_best.R')#load the functions inside find_bes
 \end{Sinput}
 \end{Schunk}
 
-{\tt find\_ best.R} contains two functions that basically do this:
+{\tt find{\_}best.R} contains two functions that basically do this:
 
-\begin{lstlisting}[style=Rstyle, caption={\tt find\_ best.R},label=code:findbest]
+\begin{lstlisting}[style=Rstyle, caption={\tt find{\_}best.R},label=code:findbest]
 TPFP_func<-function(df, threshold){
   #spec correspond to the BPR and disc to choise of the author : 1 is for flanging 0 for not flanging
   #tally function will count the TP, i.e. BPR is over the threshold and the author said it is flanging
@@ -102,12 +102,12 @@ find_best<-function(tff, authors=list(), qualities=list(),fixedthreshold=FALSE, 
 }
 \end{lstlisting}
 
-This gave us the following table for our four authors -- the output give the name of the authors and the qualities selected, from 1 (bad) to 3 (good):
+This gave us table \ref{tab:tablebestall}for our four authors -- the output give the name of the authors and the qualities selected, from 1 (bad) to 3 (good).
 
 
 
 % latex table generated in R 3.2.2 by xtable 1.8-0 package
-% Mon Nov 23 11:57:44 2015
+% Tue Nov 24 16:49:01 2015
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrrrrrrlr}
@@ -137,55 +137,77 @@ This gave us the following table for our four authors -- the output give the nam
 
 To get an idea of the comparative accuracy of these algorithms, we decided to look at their ROC graph. A ROC graph visually compares the True Positive Rate with the False Positive Rate. For a popularised introduction please see \autocite{Swets2008} or \autocite{Fawcett2006} for a more detailled discussion.
 \begin{Schunk}
-\begin{figure}
-\includegraphics[width=\textwidth]{figures/theme-bestallauthorstable-1} \caption[ROC plot of the algorithms with their best threshold, tested on all authors]{ROC plot of the algorithms with their best threshold, tested on all authors. The plot represents the True Positive Rate over the False Positive Rate.}\label{fig:bestallauthorstable}
-\end{figure}
+\begin{Soutput}
+Error in FUN(X[[i]], ...): Theme element 'text' has NULL property: face, colour, hjust, vjust, angle, lineheight
+\end{Soutput}
 \end{Schunk}
 
-The accuracy of each algorithm with the optimised threshold depends on the author that selected the intervals. The choices of two of our authors (esr and PHF) could be approximated fairly well by an algorithm -- the distance to the main diagonal was over 0.40\footnote{See Appendice \ref{ssec:app:roc} on page \pageref{ssec:app:roc} to see the respective ROC plots}. However, to take into account the other authors, we selected all combinations of algorithm-threshold-author that were distant from the diagonal by over 0.35 and added it to the list of the algorithm-threshold. For each algorithm, we took the mean of the thresholds available (i.e. if there was an other threshold from author esr or PHF, we took the mean of these thresholds with the threshold of all authors). Then we computed the TPR, TNR, FPR and FNR for all authors and globally. This was done like this:
+The accuracy of each algorithm with the optimised threshold depends on the author that selected the intervals. The choices of two of our authors -- esr and PHF -- could be approximated fairly well by an algorithm -- the distance to the main diagonal was over 0.40\footnote{See Appendice \ref{ssec:app:roc} on page \pageref{ssec:app:roc} to see the respective ROC plots}. However, to take into account the other authors, we selected all combinations of algorithm-threshold-author that were distant from the diagonal by over 0.35 and added it to the list of the algorithm-threshold. For each algorithm, we took the mean of the thresholds available (i.e. if there was an other threshold from author esr or PHF, we took the mean of these thresholds with the threshold of all authors). Then we computed the TPR, TNR, FPR and FNR for all authors and globally. This was done like this:
 \begin{Sinput}
 walloffame<- rbind(cbind(best, author='all'), cbind(bestesr,author='esr'), cbind(bestluc,author='luc'), cbind(bestPhC,author='PhC'), cbind(bestPHF,author='PHF'))#group the best algorithms from all authors
 walloffamest<-filter(walloffame, walloffame$dist_ax>0.45 | (walloffame$author=='all' & walloffame$dist_ax>0.35))#select a subset of walloffame with best thresholds
-compressed<-walloffamest %>% group_by(algorithm) %>% summarise( avgthres=mean(thd)) %>% arrange(avgthres)#summarise walloffamest by taking the mean threshold for every duplicate algorithm (if such duplicate exists)
+compressed<-walloffamest %>% group_by(algorithm) %>% summarise(avgthres=mean(thd)) %>% arrange(avgthres)#summarise walloffamest by taking the mean threshold for every duplicate algorithm (if such duplicate exists)
 \end{Sinput}
 % latex table generated in R 3.2.2 by xtable 1.8-0 package
-% Mon Nov 23 11:57:49 2015
+% Tue Nov 24 16:49:01 2015
 \begin{table}[ht]
 \centering
 \begin{tabular}{rlr}
   \hline
  & algorithm & avgthres \\ 
   \hline
-1 & Z2\_4500\_0.02 & 0.68 \\ 
-  2 & Z2\_4500\_0.1 & 0.73 \\ 
-  3 & Z2\_4500\_0.05 & 0.73 \\ 
-  4 & Z2\_4000\_0.02 & 0.91 \\ 
-  5 & Z2\_3500\_0.02 & 1.05 \\ 
-  6 & Z2\_4000\_0.05 & 1.39 \\ 
-  7 & Z2\_3000\_0.02 & 1.77 \\ 
-  8 & Z2\_3500\_0.05 & 1.79 \\ 
-  9 & Z2\_4000\_0.1 & 1.81 \\ 
-  10 & Z2\_3500\_0.1 & 2.00 \\ 
-  11 & Z2\_3000\_0.05 & 2.22 \\ 
-  12 & Z2\_3000\_0.1 & 2.58 \\ 
-  13 & Z2\_2000\_0.02 & 2.89 \\ 
-  14 & Z2\_2000\_0.05 & 3.23 \\ 
-  15 & Z2\_2000\_0.1 & 3.53 \\ 
+1 & Z2\_4500\_0.02 & 0.677 \\ 
+  2 & Z2\_4500\_0.1 & 0.727 \\ 
+  3 & Z2\_4500\_0.05 & 0.731 \\ 
+  4 & Z2\_4000\_0.02 & 0.913 \\ 
+  5 & Z2\_3500\_0.02 & 1.047 \\ 
+  6 & Z2\_4000\_0.05 & 1.388 \\ 
+  7 & Z2\_3000\_0.02 & 1.767 \\ 
+  8 & Z2\_3500\_0.05 & 1.791 \\ 
+  9 & Z2\_4000\_0.1 & 1.811 \\ 
+  10 & Z2\_3500\_0.1 & 1.998 \\ 
+  11 & Z2\_3000\_0.05 & 2.225 \\ 
+  12 & Z2\_3000\_0.1 & 2.577 \\ 
+  13 & Z2\_2000\_0.02 & 2.895 \\ 
+  14 & Z2\_2000\_0.05 & 3.235 \\ 
+  15 & Z2\_2000\_0.1 & 3.529 \\ 
    \hline
 \end{tabular}
-\caption{Best thresholds for the fifteen algorithms obtained while considering all the authors together} 
+\caption{Best thresholds for the fifteen algorithms obtained while considering all the authors together. "dif" is the difference between the True positive rate and the False positive rate.} 
 \label{tab:comp}
 \end{table}
 
-We ran {\tt main\_ analysis.py} for the proto-algorithms with their respective average threshold on the whole set of hand selected cases and as before merged them in one csv with {\tt commuter.py}. This gave us one file that we called {\tt Datamous2.csv}. The performance of these average algorithms is illustrated in figure \ref{fig:datamaous2}. The full results being in table \ref{tab:submaous}.
+We ran {\tt main{\_}analysis.py} for the proto-algorithms with their respective average threshold on the whole set of hand selected cases and as before merged them in one csv with {\tt commuter.py}. This gave us one file that we called {\tt Datamous2.csv}. The performance of these average algorithms is illustrated in figure \ref{fig:datamaous2}. The full results being in table \ref{tab:submaous}.
 
+\begin{Schunk}
+\begin{Sinput}
+Datamaous2<-read.csv('../Algorithm_analysis/WallofFame/Datamaous_2.csv')
+Datamaous2<-mutate(Datamaous2, algorithm=paste(alg,algprop, sep='_'))
+Datamaous2<- Datamaous2 %>% arrange(algorithm)
+rocplotdatamaous <- ggplot(Datamaous2, aes(Datamaous2$FPR,Datamaous2$TPR,color=Datamaous2$algorithm, title="Algorithms - datamaous"))+
+    scale_colour_manual(values=c('#fd8d3c','#f16913','#a63603','#bcbddc','#807dba','#4a1486','#9ecae1','#4292c6','#084594','#d9d9d9','#969696','#525252','#74c476','#238b45','#00441b'),name="Algorithms")+
+    scale_shape_manual(values=rep(c(15,16,17),times=6),name="Algorithms")+
+    geom_point(aes(shape=Datamaous2$algorithm,label=Datamaous2$algorithm), alpha=0.75,size=4)+
+    xlab("False Positive Rate") + ylab("True Positive Rate")+
+    labs("ROC")
+rocplotdatamaous
+\end{Sinput}
+\begin{Soutput}
+Error in FUN(X[[i]], ...): Theme element 'text' has NULL property: face, colour, hjust, vjust, angle, lineheight
+\end{Soutput}
+\end{Schunk}
 
-
-Looking a table \ref{tab:submaous} we chose two algorithms that seemed to fit fairly everyone. This resulted in the following selection\footnote{The properties of the algorithm ZischenDetetkt2 are presented in this order : fc, threshold, dt.}:
+Looking a table \ref{tab:submaous} we chose two algorithms that seemed to fit fairly everyone of our authors. This resulted in the following selection\footnote{The properties of the algorithm ZischenDetetkt2 are presented in this order : fc, threshold, dt.}:
 \begin{itemize}
-\item \lstinline[style=mypython]{ZischenDetetkt2(4500,0.7267437,0.1)} : it is the farthest (0.3905650) from the diagonal when we consider all authors separately and then sum them up (dist\_ tot);
-\item \lstinline[style=mypython]{ZischenDetetkt2(3500,1.0474294,0.02)} : it is the farthest (0.3911725) from the diagonal when we consider all authors together (dist\_ ax);
+\item {\tt ZischenDetetkt2(4500,0.7267437,0.1)} : it is the farthest (0.3905650) from the diagonal when we consider all authors separately and then sum them up (dist{\_}tot);
+\item {\tt ZischenDetetkt2(3500,1.0474294,0.02)} : it is the farthest (0.3911725) from the diagonal when we consider all authors together (dist{\_}ax);
 \end{itemize}
+
+\begin{Schunk}
+\begin{Soutput}
+Error in FUN(X[[i]], ...): Theme element 'text' has NULL property: face, colour, hjust, vjust, angle, lineheight
+\end{Soutput}
+\end{Schunk}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Analysing the data}
 
@@ -210,7 +232,8 @@ The databases in Neo4j are graphs, containing nodes and relationships between th
 \centering
 \includegraphics[width=\textwidth]{img/graph.pdf}
 \label{graphneo4j}
-\caption{\label{fig:neo4jdb}Illustration of the nodes and relationships types in the Neo4j database.}
+\caption{Illustration of the nodes and relationships types in the Neo4j database.}
+\label{fig:neo4jdb}
 \end{figure}
 
 \subsection{Getting started in R}
@@ -222,8 +245,8 @@ We will import the measurements for all the algorithms. RNeo4j accepts {\tt data
 query='
 MATCH (a:Algorithm)
 MATCH (b)<-[s:ISANEVALOF]-(c)-[:WASEVALWITH]->(a)//the relationship s contains the specific lengths of time (masked and not) of the microphone signal (c)
-MATCH (t)<-[r:SAW]-(b)//the relationship r contains info on the train of this Passing (lenght and track)
-RETURN a.Name, c.tNoisemasked, c.tNoise, s.tEval, s.tEvalmasked, t.Name, r.trainLength, r.Track
+MATCH (t)<-[r:SAW]-(b)//the relationship r contains info on the train (t) of this Passing (b) (lenght and track)
+RETURN a.Name, b.Name, b.Measurement, c.tNoisemasked, c.tNoise, s.tEval, s.tEvalmasked, t.Name, r.trainLength, r.Track
 '
 q<-cypher(graph,query)#takes the info of each MicMes for one algorithm
 \end{Sinput}
@@ -233,12 +256,36 @@ q<-cypher(graph,query)#takes the info of each MicMes for one algorithm
 
 
 
+
+We will perform a calculation to see if train type is a factor of the noise length (only on the measures made without lubrification, i.e. {\it Vormessung}).
+
+\begin{Schunk}
+\begin{Sinput}
+library(RColorBrewer)
+qfilt<- q %>% filter(b.Measurement=='Vormessung')
+ggplot(qfilt, aes(t.Name,abs(c.tNoise/s.tEval), fill=a.Name, lw=0))+geom_boxplot(stat = "ydensity", position = "dodge", trim = TRUE,
+  scale = "width", alpha=0.4,colour='#272822', weight=0.25,linetype=1, size=0.25)+
+  xlab('Train Type')+
+  ylab('Ratio $\\frac{Noise}{Total}$')+
+  #title('Comparison of Noise length ratio for pre-measurements')+
+  coord_flip()+#rotates the graphic
+  scale_fill_manual(values=c("#66a61e", "#e6ab02"),name="Algorithms")+
+  theme(legend.position="bottom")
+\end{Sinput}
+\begin{Soutput}
+ymax not defined: adjusting position using y instead
+\end{Soutput}
+\begin{Soutput}
+Error: geom_boxplot requires the following missing aesthetics: lower, upper, middle, ymin
+\end{Soutput}
+\end{Schunk}
 \section{\label{sec:app}Appendices}
 
+\FloatBarrier
 \subsection{\label{ssec:app:authorstables}Best thresholds for each author}
 The following tables show the best algorithms (i.e. proto-algorithm + threshold) for the four authors.
 % latex table generated in R 3.2.2 by xtable 1.8-0 package
-% Mon Nov 23 12:02:56 2015
+% Tue Nov 24 16:49:14 2015
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrrrrrrlr}
@@ -266,7 +313,7 @@ The following tables show the best algorithms (i.e. proto-algorithm + threshold)
 \end{table}
 
 % latex table generated in R 3.2.2 by xtable 1.8-0 package
-% Mon Nov 23 12:02:57 2015
+% Tue Nov 24 16:49:14 2015
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrrrrrrlr}
@@ -294,7 +341,7 @@ The following tables show the best algorithms (i.e. proto-algorithm + threshold)
 \end{table}
 
 % latex table generated in R 3.2.2 by xtable 1.8-0 package
-% Mon Nov 23 12:02:57 2015
+% Tue Nov 24 16:49:14 2015
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrrrrrrlr}
@@ -322,7 +369,7 @@ The following tables show the best algorithms (i.e. proto-algorithm + threshold)
 \end{table}
 
 % latex table generated in R 3.2.2 by xtable 1.8-0 package
-% Mon Nov 23 12:02:57 2015
+% Tue Nov 24 16:49:14 2015
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrrrrrrlr}
@@ -349,37 +396,40 @@ The following tables show the best algorithms (i.e. proto-algorithm + threshold)
 \caption{Best thresholds for the fifteen algorithms obtained while considering author PhC} 
 \end{table}
 
+
 \subsection{\label{ssec:app:roc}ROC plot for other authors}
 In the following figures, the ROC plot for each of the four authors of section {\ref{sec:algtest}} are depicted.
 \begin{Schunk}
 \begin{Sinput}
 rocplotesr <- ggplot(bestesr, aes(bestesr$FPR,bestesr$TPR,color=bestesr$algorithm, title="Algorithms - esr"))+  geom_segment(aes(x =0, y = 0, xend = 1, yend = 1), colour="#a5a5a5")+
-    scale_colour_manual(values=rep(brewer.pal(12,"Paired"),times=2),name="Algorithms")+
-    scale_shape_manual(values=rep(c(15,16,3,17,18,19),each=3),name="Algorithms")+
+    scale_colour_manual(values=c('#fd8d3c', '#f16913', '#a63603', '#bcbddc', '#807dba', '#4a1486', '#9ecae1', '#4292c6', '#084594', '#d9d9d9', '#969696', '#525252', '#74c476', '#238b45', '#00441b'), name="Algorithms")+
+    scale_shape_manual(values=rep(c(15,16,17),times=6),name="Algorithms")+
     geom_point(aes(shape=bestesr$algorithm,label=bestesr$algorithm),size=2)+
     xlab("False Positive Rate") + ylab("True Positive Rate")+
     labs("ROC")
 rocplotesr
 \end{Sinput}
-\begin{figure}
-\includegraphics[width=\textwidth]{figures/theme-bestesrplot-1} \caption[ROC plot of the algorithms with their best threshold, tested on author esr]{ROC plot of the algorithms with their best threshold, tested on author esr. The plot represents the True Positive Rate over the False Positive Rate.}\label{fig:bestesrplot}
-\end{figure}
+\begin{Soutput}
+Error in FUN(X[[i]], ...): Theme element 'text' has NULL property: face, colour, hjust, vjust, angle, lineheight
+\end{Soutput}
 \end{Schunk}
-\begin{Schunk}
-\begin{figure}
-\includegraphics[width=\textwidth]{figures/theme-bestPHFplot-1} \caption[ROC plot of the algorithms with their best threshold, tested on author PHF]{ROC plot of the algorithms with their best threshold, tested on author PHF. The plot represents the True Positive Rate over the False Positive Rate.}\label{fig:bestPHFplot}
-\end{figure}
-\end{Schunk}
+\FloatBarrier
 \begin{Schunk}
 \begin{Soutput}
-Error in eval(expr, envir, enclos): Objekt 'bestLuc' nicht gefunden
+Error in FUN(X[[i]], ...): Theme element 'text' has NULL property: face, colour, hjust, vjust, angle, lineheight
 \end{Soutput}
 \end{Schunk}
 \begin{Schunk}
-\begin{figure}
-\includegraphics[width=\textwidth]{figures/theme-bestPhCplot-1} \caption[ROC plot of the algorithms with their best threshold, tested on author PhC]{ROC plot of the algorithms with their best threshold, tested on author PhC. The plot represents the True Positive Rate over the False Positive Rate.}\label{fig:bestPhCplot}
-\end{figure}
+\begin{Soutput}
+Error in FUN(X[[i]], ...): Theme element 'text' has NULL property: face, colour, hjust, vjust, angle, lineheight
+\end{Soutput}
 \end{Schunk}
+\begin{Schunk}
+\begin{Soutput}
+Error in FUN(X[[i]], ...): Theme element 'text' has NULL property: face, colour, hjust, vjust, angle, lineheight
+\end{Soutput}
+\end{Schunk}
+\FloatBarrier
 \subsection{\label{ssec:app:neo4jstruct}Structure of the Graph Database}
 We detail here the characteristics of our Graph Database. It is constructed with {\it Neo4j}, its query language {\it Cypher} and its python interface {\it Py2Neo}. The 
 

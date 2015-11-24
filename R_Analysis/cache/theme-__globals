@@ -1,0 +1,25 @@
+themelibraryset	%>%	alg	algprop	library	mutate	paste	read.csv	source
+kablebest	%>%	alg	algprop	c	find_best	mutate	one_of	paste	select	tf
+kablebestauthors	%>%	alg	algprop	c	find_best	mutate	one_of	paste	select	tf
+tablebestall	best	c	print	xtable
+bestallauthorstable	$	aes	best	c	geom_point	geom_segment	ggplot	labs	rep	scale_colour_manual	scale_shape_manual	xlab	ylab
+walloffame	$	%>%	&	|	==	>	algorithm	arrange	avgthres	best	bestesr	bestluc	bestPhC	bestPHF	c	cbind	filter	group_by	mean	print	rbind	summarise	thd	xtable
+datamaous2	$	%>%	aes	alg	algorithm	algprop	arrange	c	geom_point	ggplot	labs	mutate	paste	read.csv	rep	scale_colour_manual	scale_shape_manual	xlab	ylab
+submaous	algorithm	c	Datamaous2	dist_ax	esr_dist_ax	luc_dist_ax	mutate	PhC_dist_ax	PHF_dist_ax	print	select	thd	write.csv	xtable
+barplotAccuracy	!=	%>%	aes	algprop	author	coord_flip	dist_ax	filter	geom_bar	ggplot	length	read.csv	scale_fill_brewer	unique	xlab	ylab
+Call of the database	library	startGraph
+Data query	cypher	graph
+arrage	%>%	a.Name	arrange
+Evalsummary	%>%	c	print	q	s.tEval	summary	xtable
+Noisesummary	%>%	c	c.tNoise	print	q	summary	xtable
+Evalmaskedsummary	%>%	c	print	q	s.tEvalmasked	summary	xtable
+Noisemaskedsummary	%>%	c	c.tNoise	print	q	summary	xtable
+trainfactor	%>%	==	a.Name	abs	aes	b.Measurement	c	c.tNoise	coord_flip	filter	geom_boxplot	ggplot	library	q	s.tEval	scale_fill_manual	t.Name	theme	xlab	ylab
+bestesrtable	bestesr	c	print	xtable
+bestPHFtable	bestPHF	c	print	xtable
+bestluctable	bestluc	c	print	xtable
+bestPhCtable	bestPhC	c	print	xtable
+bestesrplot	$	aes	bestesr	c	geom_point	geom_segment	ggplot	labs	rep	scale_colour_manual	scale_shape_manual	xlab	ylab
+bestPHFplot	$	aes	bestPHF	c	geom_point	geom_segment	ggplot	labs	rep	scale_colour_manual	scale_shape_manual	xlab	ylab
+bestlucplot	$	aes	bestluc	c	geom_point	geom_segment	ggplot	labs	rep	scale_colour_manual	scale_shape_manual	xlab	ylab
+bestPhCplot	$	aes	bestPhC	c	geom_point	geom_segment	ggplot	labs	rep	scale_colour_manual	scale_shape_manual	xlab	ylab

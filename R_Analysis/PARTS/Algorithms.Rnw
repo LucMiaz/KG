@@ -13,7 +13,7 @@ We have selected by hands the intervals with noise on a small subset of samples 
 
 The process of selection was performed on an interface in PyQt created for this project. The interface has two shapes: the first one is the simplest and most stable, it is only designed to select the cases. The python file to call to start this interface is {\tt run{\_}CaseCreatorWidget.py}; the second is not fully stable but implements an administrator environment -- aside the casecreator environment -- that allows to review the intervals selected by the authors, review the algorithms and see the spectogram of the stft -- it is a fairly long process, so be patient if you call it. It can be loaded with {\tt run{\_}AdminAlgorithmWidgets.py}. 
 
-\subsection{Development of a proto-algorithm} We have developped a simple algorithm for flanging noise based on the detection of steep change in band power ratio (BPR). The band power ratio is the relation of the low band frequencies to the high band frequencies taken on a small increment (dt) of the signal. This pattern leads to an algorithm with three variables: a delta time, a cutoff frequency (fc) and a threshold. This approach is described in general terms in Bullen and Jiang article for railways \citeyear{Bullen2010}\footnote{We found later that a similar algorithm was use for tonal bird sound recognition \autocite{Jancovic2011}}.
+\subsection{Development of a proto-algorithm} We have developped a simple algorithm for flanging noise based on the detection of steep change in band power ratio (BPR). The band power ratio is the relation of the low band frequencies to the high band frequencies taken on a small increment (dt) of the signal. This pattern leads to an algorithm with three variables: a delta time, a cutoff frequency (fc) and a threshold. This approach is described in general terms in Bullen and Jiang article for railways (\citeyear{Bullen2010})\footnote{We found later that a similar algorithm was use for tonal bird sound recognition \autocite{Jancovic2011}}.
 
 We computed the BPR for cutoff frequencies and delta times, first without worrying about the threshold. This gave us a list of BPRs to compare with the set of handmade data. We tested the combinations of the following fc and dt each giving a proto-algorithm (as it misses the threshold): fc in (2000, 3000, 3500, 4000, 45000) and dt in (0.02,0.05,0.1). This algorithm is named {\tt Zischendetetkt2} ({\tt Z2}) in the python files.
 
@@ -64,7 +64,7 @@ find_best<-function(tff, authors=list(), qualities=list(),fixedthreshold=FALSE, 
 }
 \end{lstlisting}
 
-This gave us the following table for our four authors -- the output give the name of the authors and the qualities selected, from 1 (bad) to 3 (good):
+This gave us table \ref{tab:tablebestall}for our four authors -- the output give the name of the authors and the qualities selected, from 1 (bad) to 3 (good).
 
 <<kablebest, include=FALSE>>=
 bestfull<-find_best(tf, qualities=c(3,2))
@@ -91,33 +91,34 @@ print(tab,type="latex")
 @
 
 To get an idea of the comparative accuracy of these algorithms, we decided to look at their ROC graph. A ROC graph visually compares the True Positive Rate with the False Positive Rate. For a popularised introduction please see \autocite{Swets2008} or \autocite{Fawcett2006} for a more detailled discussion.
-<<bestallauthorstable, echo=FALSE, fig.cap='ROC plot of the algorithms with their best threshold, tested on all authors. The plot represents the True Positive Rate over the False Positive Rate.', fig.lab='fig:rocall'>>=
+<<bestallauthorstable, echo=FALSE, fig.cap='ROC plot of the algorithms with their best threshold, tested on all authors. The plot represents the True Positive Rate over the False Positive Rate.', fig.lp='fig:',, fig.height=5>>=
 rocplot <- ggplot(best, aes(best$FPR,best$TPR,color=best$algorithm, title="Algorithms - all authors"))+  geom_segment(aes(x =0, y = 0, xend = 1, yend = 1), colour="#a5a5a5")+
-    scale_colour_manual(values=rep(brewer.pal(12,"Paired"),times=2),name="Algorithms")+
-    scale_shape_manual(values=rep(c(15,16,3,17,18,19),each=5),name="Algorithms")+
+    scale_colour_manual(values=c('#fd8d3c','#f16913','#a63603','#bcbddc','#807dba','#4a1486','#9ecae1','#4292c6','#084594','#d9d9d9','#969696','#525252','#74c476','#238b45','#00441b'),name="Algorithms")+
+    scale_shape_manual(values=rep(c(15,16,17),times=6),name="Algorithms")+
     geom_point(aes(shape=best$algorithm,label=best$algorithm),size=2)+
     xlab("False Positive Rate") + ylab("True Positive Rate")+
     labs("ROC")
 rocplot
 @
 
-The accuracy of each algorithm with the optimised threshold depends on the author that selected the intervals. The choices of two of our authors (esr and PHF) could be approximated fairly well by an algorithm -- the distance to the main diagonal was over 0.40\footnote{See Appendice \ref{ssec:app:roc} on page \pageref{ssec:app:roc} to see the respective ROC plots}. However, to take into account the other authors, we selected all combinations of algorithm-threshold-author that were distant from the diagonal by over 0.35 and added it to the list of the algorithm-threshold. For each algorithm, we took the mean of the thresholds available (i.e. if there was an other threshold from author esr or PHF, we took the mean of these thresholds with the threshold of all authors). Then we computed the TPR, TNR, FPR and FNR for all authors and globally. This was done like this:
+The accuracy of each algorithm with the optimised threshold depends on the author that selected the intervals. The choices of two of our authors -- esr and PHF -- could be approximated fairly well by an algorithm -- the distance to the main diagonal was over 0.40\footnote{See Appendice \ref{ssec:app:roc} on page \pageref{ssec:app:roc} to see the respective ROC plots}. However, to take into account the other authors, we selected all combinations of algorithm-threshold-author that were distant from the diagonal by over 0.35 and added it to the list of the algorithm-threshold. For each algorithm, we took the mean of the thresholds available (i.e. if there was an other threshold from author esr or PHF, we took the mean of these thresholds with the threshold of all authors). Then we computed the TPR, TNR, FPR and FNR for all authors and globally. This was done like this:
 <<walloffame, results='asis',echo=1:3>>=
 walloffame<- rbind(cbind(best, author='all'), cbind(bestesr,author='esr'), cbind(bestluc,author='luc'), cbind(bestPhC,author='PhC'), cbind(bestPHF,author='PHF'))#group the best algorithms from all authors
 walloffamest<-filter(walloffame, walloffame$dist_ax>0.45 | (walloffame$author=='all' & walloffame$dist_ax>0.35))#select a subset of walloffame with best thresholds
-compressed<-walloffamest %>% group_by(algorithm) %>% summarise( avgthres=mean(thd)) %>% arrange(avgthres)#summarise walloffamest by taking the mean threshold for every duplicate algorithm (if such duplicate exists)
-tabcomp <- xtable(compressed, digits=c(2),caption='Best thresholds for the fifteen algorithms obtained while considering all the authors together', label='tab:comp')
+compressed<-walloffamest %>% group_by(algorithm) %>% summarise(avgthres=mean(thd)) %>% arrange(avgthres)#summarise walloffamest by taking the mean threshold for every duplicate algorithm (if such duplicate exists)
+tabcomp <- xtable(compressed, digits=c(0,0,3),caption='Best thresholds for the fifteen algorithms obtained while considering all the authors together. "dif" is the difference between the True positive rate and the False positive rate.', label='tab:comp')
 print(tabcomp,type="latex")
 @
 We ran {\tt main{\_}analysis.py} for the proto-algorithms with their respective average threshold on the whole set of hand selected cases and as before merged them in one csv with {\tt commuter.py}. This gave us one file that we called {\tt Datamous2.csv}. The performance of these average algorithms is illustrated in figure \ref{fig:datamaous2}. The full results being in table \ref{tab:submaous}.
 
-<<datamaous2, include=FALSE, fig.cap='ROC graph of the selected two algorithms. The results depends on the author(s).', fig.lab='fig:datamaous2'>>=
+<<datamaous2, include=TRUE, fig.cap='ROC graph of the new algorithms with average threshold. The graph has been zoomed in to show the details.', fig.lp='fig:'>>=
 Datamaous2<-read.csv('../Algorithm_analysis/WallofFame/Datamaous_2.csv')
 Datamaous2<-mutate(Datamaous2, algorithm=paste(alg,algprop, sep='_'))
-rocplotdatamaous <- ggplot(Datamaous2, aes(Datamaous2$FPR,Datamaous2$TPR,color=Datamaous2$algorithm, title="Algorithms - datamaous"))+  geom_segment(aes(x =0, y = 0, xend = 1, yend = 1), colour="#a5a5a5")+
-    scale_colour_manual(values=rep(brewer.pal(12,"Paired"),times=2),name="Algorithms")+
-    scale_shape_manual(values=rep(c(15,16,3,17,18,19),each=4),name="Algorithms")+
-    geom_point(aes(shape=Datamaous2$algorithm,label=Datamaous2$algorithm),size=3)+
+Datamaous2<- Datamaous2 %>% arrange(algorithm)
+rocplotdatamaous <- ggplot(Datamaous2, aes(Datamaous2$FPR,Datamaous2$TPR,color=Datamaous2$algorithm, title="Algorithms - datamaous"))+
+    scale_colour_manual(values=c('#fd8d3c','#f16913','#a63603','#bcbddc','#807dba','#4a1486','#9ecae1','#4292c6','#084594','#d9d9d9','#969696','#525252','#74c476','#238b45','#00441b'),name="Algorithms")+
+    scale_shape_manual(values=rep(c(15,16,17),times=6),name="Algorithms")+
+    geom_point(aes(shape=Datamaous2$algorithm,label=Datamaous2$algorithm), alpha=0.75,size=4)+
     xlab("False Positive Rate") + ylab("True Positive Rate")+
     labs("ROC")
 rocplotdatamaous
@@ -129,8 +130,19 @@ write.csv(submaous, '../Algorithm_analysis/WallofFame/datamaous_dist.csv')
 tabsubmaous <- xtable(submaous, digits=c(2),caption='The results of the two algorithms.', label='tab:submaous')
 print(tabsubmaous,type="latex")
 @
-Looking a table \ref{tab:submaous} we chose two algorithms that seemed to fit fairly everyone. This resulted in the following selection\footnote{The properties of the algorithm ZischenDetetkt2 are presented in this order : fc, threshold, dt.}:
+Looking a table \ref{tab:submaous} we chose two algorithms that seemed to fit fairly everyone of our authors. This resulted in the following selection\footnote{The properties of the algorithm ZischenDetetkt2 are presented in this order : fc, threshold, dt.}:
 \begin{itemize}
-\item \lstinline[style=mypython]{ZischenDetetkt2(4500,0.7267437,0.1)} : it is the farthest (0.3905650) from the diagonal when we consider all authors separately and then sum them up (dist\_ tot);
-\item \lstinline[style=mypython]{ZischenDetetkt2(3500,1.0474294,0.02)} : it is the farthest (0.3911725) from the diagonal when we consider all authors together (dist{\_}ax);
+\item {\tt ZischenDetetkt2(4500,0.7267437,0.1)} : it is the farthest (0.3905650) from the diagonal when we consider all authors separately and then sum them up (dist{\_}tot);
+\item {\tt ZischenDetetkt2(3500,1.0474294,0.02)} : it is the farthest (0.3911725) from the diagonal when we consider all authors together (dist{\_}ax);
 \end{itemize}
+
+<<barplotAccuracy,include=TRUE,echo=FALSE, fig.cap='Average distance to the main diagonal for each algorithm (with average threshold from table \\ref{tab:comp}). The colors show how well the algorithms fits the results of an author (the greatest the better).',fig.lp='fig:',fig.height=5>>=
+forplot<-read.csv('../Algorithm_analysis/WallofFame/forplot.csv',sep=';')#contains the same info as Datamaous2, but in an other format
+barplot<- forplot %>% filter(author!='all') %>% ggplot(aes(x=algprop)) 
+barplot <- barplot + geom_bar(aes(weight=dist_ax/length(unique(author)), fill=author))+
+  coord_flip()+
+  xlab('Average efficiency')+
+  ylab('Algorithm')+
+  scale_fill_brewer(type='qual',palette=8)#colorscale
+barplot
+@

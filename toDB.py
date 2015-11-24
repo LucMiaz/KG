@@ -35,16 +35,17 @@ pathtoext_withdata=pathlib.Path('E:/')
 #------------------------------------------------------------------------#
 
 #Paths=[pathlib.Path('/Users/lucmiaz/Documents/TRAVAIL/SBB_KG/KG/Data/Biel1Vormessung/results/results_11-11-2015.json'),pathlib.Path('/Users/lucmiaz/Documents/TRAVAIL/SBB_KG/KG/Data/Biel2Vormessung/results/results_11-11-2015.json'),pathlib.Path('/Users/lucmiaz/Documents/TRAVAIL/SBB_KG/KG/Data/ZugVormessung/results/results_11-11-2015.json')]
-Paths=[pathlib.Path('E:/Biel1Vormessung/results/results_11-11-2015.json')]
-Paths.append(pathlib.Path('E:/Biel2Vormessung/results/results_11-11-2015.json'))
+#Paths=[pathlib.Path('E:/Biel1Vormessung/results/results_11-11-2015.json')]
+#Paths.append(pathlib.Path('E:/Biel2Vormessung/results/results_11-11-2015.json'))
+Paths=[]
 Paths.append(pathlib.Path('E:/ZugVormessung/results/results_11-11-2015.json'))
 
 #---------------------------------------------------------------------------------#
 #--------Give a list of tuples that gives location and name of the folder---------#
 #--------for this location -------------------------------------------------------#
 #---------------------------------------------------------------------------------#
-ORTS=[['Biel','Biel1Vormessung'], ['Biel2','Biel2Vormessung'],['Zug','ZugVormessung']]#
-
+#ORTS=[['Biel','Biel1Vormessung'], ['Biel2','Biel2Vormessung'],['Zug','ZugVormessung']]#
+ORTS=[['Zug','ZugVormessung']]
 #-----------------------------------------------------------------------------------------#
 #--------Give the name of the variables (they will be taken from MBBM_mes_values.json ----#
 #-------- in the path : ------------------------------------------------------------------#
@@ -164,8 +165,8 @@ for resPath in Paths:
 				neomics[mid][mic].properties['tNoisemasked']=timenoise
 				neomics[mid][mic].properties['micN']=mic
 				neomics[mid][mic].push()
-				tevalmask= float(int(np.sum(mask)*dt*100+0.5)/100)
-				teval=float(int(np.sum(t)*dt*100+0.5)/100)
+				tevalmask= dictmicvalues['Te_p']-dictmicvalues['Tb_p']
+				teval=dictmicvalues['Te']-dictmicvalues['Tb']#calc length of full signal
 				graph.create(pn.Relationship(neomics[mid][mic],'ISANEVALOF',neomid, tEvalmasked=tevalmask, tEval=teval))
 				graph.create(pn.Relationship(neomics[mid][mic],'WASEVALWITH',neoalgorithms[alg]))
 
@@ -176,7 +177,7 @@ for resPath in Paths:
 		mSecond=int(((mTime*24-mHour)*60-mMinute)*60)
 		mDay,mMonth,mYear=mDate.split('.')
 		graph.create(pn.Relationship(neomid,'SAW',thistrain,TrainLength=trainLength, Track=traintrack, Day=mDay, Month=mMonth,Year=mYear,Hour=mHour,Minute=mMinute,Second=mSecond, V1=v1, V2=v2))
-		graph.create(pn.Relationship(neomid,'IN',neolocations[location],Track=traintrack, Date=mDate, Time=mTime))
+		graph.create(pn.Relationship(neomid,'IN',neolocations[location],Track=traintrack, Day=mDay, Month=mMonth,Year=mYear,Hour=mHour,Minute=mMinute,Second=mSecond))
 		neomids[mid]=neomid#store the reference to this node with key id
 		neomid.push()
 		graph.push()

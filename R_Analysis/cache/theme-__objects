@@ -1,0 +1,25 @@
+themelibraryset	csv_file	tf	find_best	TPFP_func
+kablebest	best	bestfull
+kablebestauthors	bestesr	bestesrfull	bestluc	bestlucfull	bestPhC	bestPhCfull	bestPHF	bestPHFfull
+tablebestall	tab
+bestallauthorstable	rocplot
+walloffame	compressed	tabcomp	walloffame	walloffamest
+datamaous2	Datamaous2	rocplotdatamaous
+submaous	submaous	tabsubmaous
+barplotAccuracy	barplot	forplot
+Call of the database	graph
+Data query	q	query
+arrage	q
+Evalsummary	tabqEval
+Noisesummary	tabqNoise
+Evalmaskedsummary	tabqmaskedEval
+Noisemaskedsummary	tabqNoisemasked
+trainfactor	qfilt
+bestesrtable	tabesr
+bestPHFtable	tabphf
+bestluctable	tabluc
+bestPhCtable	tabphc
+bestesrplot	rocplotesr
+bestPHFplot	rocplotPHF
+bestlucplot	rocplotluc
+bestPhCplot	rocplotphc
