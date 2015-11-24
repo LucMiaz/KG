@@ -110,6 +110,7 @@ Attributes | type
 
 
 Methods:
+
 | name | takes | returns | description |
 |----------------------|----------------------------------|---------|-------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `_barplay` | boolean | None | defines what to do when audio is playing/not playing |
@@ -145,7 +146,8 @@ Methods:
 ### CaseCreatorWidget
 **subclass of DetectControlWidget**
 This widget should allow to create cases in GUI style kg_ event duration is selected with mouse cursor case is saved using a button case_dicts contains the following attributes:
-| name              | type                  |    -                                                                                              |
+
+| name              | type                  |    -                                                                                          |
 |-------------------|-----------------------|--------------------------------------------------------------------------------------------------|
 | `mainPath`        | str                   | -                                                                                                |
 | `Paths`           | list of pathlib paths | contains pathlib Paths to the raw data (actually to the folder containing the dir `raw_signals`) |
@@ -167,6 +169,7 @@ This widget should allow to create cases in GUI style kg_ event duration is sele
 | -                 | -                     | wavPath: str   
 
 Methods:
+
 | Name                  | input                       | output | description                                                                                                                 |
 |-----------------------|-----------------------------|--------|-----------------------------------------------------------------------------------------------------------------------------|
 | `add_new_cases`       | -                           | -      | asks for adding a new case                                                                                                  |
@@ -217,7 +220,8 @@ Methods:
 | `from_measurement`    | many                        | -      | classmethod : (cls, mesVal, mID, mics, author = None)                                                                       |
 
 Other method : 
-`load_micSn(ID,mic,matPath, algorithm=None,gvar = ['Tb','Te','Tp_b','Tp_e','LAEQ'] )` |loads micSn from the matPath, returns a signal and a stftName
+
+`load_micSn(ID,mic,matPath, algorithm=None,gvar = ['Tb','Te','Tp_b','Tp_e','LAEQ'] )` | loads micSn from the matPath, returns a signal and a stftName
 
 ### Case
 **Define a case of study**.
