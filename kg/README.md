@@ -12,6 +12,12 @@
 - [Copyrights](#copyrights)
 
 ***
+This packages implements a GUI to select intervals by hands. The graphical interface is generated with `widget.py` backed by `case` for the cases, `intervals` and `SetOfIntervals` for the manipulation of intervals and `MicSignal` for the microphone signals. 
+
+The following documentations focuses on these classes.
+
+N.B. `widgets.py` have an add-on, for admin sessions (i.e. the review of algorithm results), it can be called by selection `admin` as user name. However it is not very developped. There is an other GUI destined to separate and ameliorate the admin session but it is not stable (especially for case selection) -- it is in `widgets2.py`.
+
 
 ## Classes
 ### time signals:
