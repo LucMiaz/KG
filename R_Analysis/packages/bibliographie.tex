@@ -1,6 +1,6 @@
 %gestion de la bibliographie
 
-\usepackage[citestyle=authoryear-comp, backend=biber, bibencoding=inputenc, isbn=false, bibstyle=authoryear, , maxnames=1, language=auto, uniquelist=false]{biblatex}
+\usepackage[citestyle=authoryear-comp, backend=biber, bibencoding=inputenc, isbn=false, bibstyle=authoryear, , maxnames=1, language=auto, uniquelist=false, firstinits=true, maxbibnames=99]{biblatex}
 
 %changer l'affichage de la citation
 %\renewcommand*{\nameyeardelim}{\addspace}
@@ -38,7 +38,7 @@
   \ifentrytype{article}{}{%
   \printtext{\bibstring{in}\intitlepunct}}}
   
-\ExecuteBibliographyOptions{firstinits=true,maxnames=1, maxbibnames=99}
+%\ExecuteBibliographyOptions{firstinits=true,maxnames=1, maxbibnames=99}
 
 \DeclareNameAlias{sortname}{last-first}
 

@@ -19,6 +19,7 @@ import py2neo as pn
 
 ##setting up neo4j:
 ##Please start a server first and modify the following path accordingly (first is the username:password) (THE DATABASE I MADE IS LIKE THIS neo4j:admin (i.e. neo4j is the username and admin the password)
+
 neopath='http://neo4j:admin@localhost:7474/db/data'
 graph=pn.Graph(neopath)
 
@@ -35,17 +36,17 @@ pathtoext_withdata=pathlib.Path('E:/')
 #------------------------------------------------------------------------#
 
 #Paths=[pathlib.Path('/Users/lucmiaz/Documents/TRAVAIL/SBB_KG/KG/Data/Biel1Vormessung/results/results_11-11-2015.json'),pathlib.Path('/Users/lucmiaz/Documents/TRAVAIL/SBB_KG/KG/Data/Biel2Vormessung/results/results_11-11-2015.json'),pathlib.Path('/Users/lucmiaz/Documents/TRAVAIL/SBB_KG/KG/Data/ZugVormessung/results/results_11-11-2015.json')]
-#Paths=[pathlib.Path('E:/Biel1Vormessung/results/results_11-11-2015.json')]
-#Paths.append(pathlib.Path('E:/Biel2Vormessung/results/results_11-11-2015.json'))
 Paths=[]
-Paths.append(pathlib.Path('E:/ZugVormessung/results/results_11-11-2015.json'))
+Paths.append(pathlib.Path('E:/Biel1Vormessung/results/results_11-11-2015.json'))
+#Paths.append(pathlib.Path('E:/Biel2Vormessung/results/results_11-11-2015.json'))
+#Paths.append(pathlib.Path('E:/ZugVormessung/results/results_11-11-2015.json'))
 
 #---------------------------------------------------------------------------------#
 #--------Give a list of tuples that gives location and name of the folder---------#
 #--------for this location -------------------------------------------------------#
 #---------------------------------------------------------------------------------#
 #ORTS=[['Biel','Biel1Vormessung'], ['Biel2','Biel2Vormessung'],['Zug','ZugVormessung']]#
-ORTS=[['Zug','ZugVormessung']]
+ORTS=[['Biel','Biel1Vormessung']]
 #-----------------------------------------------------------------------------------------#
 #--------Give the name of the variables (they will be taken from MBBM_mes_values.json ----#
 #-------- in the path : ------------------------------------------------------------------#
@@ -118,7 +119,8 @@ for resPath in Paths:
 		ort=dictjs['location']
 		#read values from mbbm_mes_values
 		dictidvalues={}
-		neomid=pn.Node('Passing',Name=mid, Location=ort, Measurement=measurement)
+		#
+		neomid=pn.Node('Passing',Name=mid, Measurement=measurement)
 		graph.create(neomid)
 		for idv in listofidprop.keys():
 			dictidvalues[str(idv)]=mbbm[ort]['idValues'][listofidprop[idv]]['values'][mid]
@@ -132,8 +134,22 @@ for resPath in Paths:
 				traintrack=mbbm[ort]['idValues'][listofidprop[idv]]['values'][mid]
 			elif idv=='mDate':
 				mDate=mbbm[ort]['idValues'][listofidprop[idv]]['values'][mid]
+				dictidvalues['Day'],dictidvalues['Month'],dictidvalues['Year']=mDate.split('.')
+				neomid.properties['Year']=dictidvalues['Year']
+				neomid.properties['Month']=dictidvalues['Month']
+				neomid.properties['Day']=dictidvalues['Day']
 			elif idv=='mTime':
 				mTime=mbbm[ort]['idValues'][listofidprop[idv]]['values'][mid]
+				#converting time to human readable format
+				mHour=int(mTime*24)
+				mMinute=int((mTime*24-mHour)*60)
+				mSecond=int(((mTime*24-mHour)*60-mMinute)*60)
+				dictidvalues['Hour']=mHour
+				dictidvalues['Minute']=mMinute
+				dictidvalues['Second']=mSecond
+				neomid.properties['Hour']=mHour
+				neomid.properties['Minute']=mMinute
+				neomid.properties['Second']=mSecond
 			elif idv=='v1':
 				v1=mbbm[ort]['idValues'][listofidprop[idv]]['values'][mid]
 			elif idv=='v2':
@@ -142,42 +158,47 @@ for resPath in Paths:
 				dictidvalues[str(idv)]=mbbm[ort]['idValues'][listofidprop[idv]]['values'][mid]
 				neomid.properties[str(idv)]=dictidvalues[str(idv)]
 		thistrain=graph.merge_one('TrainType', property_key='Name', property_value=train)
-		
+		neomid.push()
 		neomics[mid]={}
 		##evaluation of microphones (check path to it)
 		maxtN=0
-		for alg in algorithms.keys():
-			alg_props=algorithms[alg]['id']+algorithms[alg]['prop']
-			for mic in dictjs['results'][mid].keys():
-				neomics[mid][mic]=pn.Node('MicMes', Name=mid+'_'+str(mic), Location=ort)
-				graph.create(neomics[mid][mic])
-				dictmicvalues={}
-				for micv in listofmicprop:
-					dictmicvalues[str(micv)]=mbbm[ort]['micValues'][listofmicprop[micv]]['values'][mid][mic]
-					neomics[mid][mic].properties[str(micv)]=mbbm[ort]['micValues'][listofmicprop[micv]]['values'][mid][mic]
-				t=dictjs['results'][mid][mic][alg]['t']['py/numpy.ndarray']['values']
-				mask = get_mask(t, (dictmicvalues['Tb'],dictmicvalues['Te']))
-				idmicresult=np.array(dictjs['results'][mid][mic][alg]['result']['py/numpy.ndarray']['values'], dtype=bool)
+		for mic in dictjs['results'][mid].keys():
+			neomics[mid][mic]=pn.Node('MicMes', Name=mid+'_'+str(mic))
+			graph.create(neomics[mid][mic])
+			neomics[mid][mic].properties['micN']=mic
+			dictmicvalues={}
+			addtEval=True #boolean that says if you have to add the tEval to the mic or if it was already done
+			for micv in listofmicprop:
+				dictmicvalues[str(micv)]=mbbm[ort]['micValues'][listofmicprop[micv]]['values'][mid][mic]
+				neomics[mid][mic].properties[str(micv)]=mbbm[ort]['micValues'][listofmicprop[micv]]['values'][mid][mic]
+			tevalmasked=dictmicvalues['Te']-dictmicvalues['Tb']
+			tevalmasked_p= dictmicvalues['Tp_e']-dictmicvalues['Tp_b']
+			neomics[mid][mic].properties['tEvalmasked']=tevalmasked
+			neomics[mid][mic].properties['tEvalmaskedp']=tevalmasked_p
+			for alg in algorithms.keys():
+				alg_props=algorithms[alg]['id']+algorithms[alg]['prop']
 				dt=float(dictjs['results'][mid][mic][alg]['dt'])
-				timenoise=float(int(np.sum(idmicresult[mask])*dt*100+0.5)/100)
-				neomics[mid][mic].properties['tNoise']=float(int(np.sum(idmicresult)*dt*100+0.5)/100)
-				neomics[mid][mic].properties['dt']=dt
-				neomics[mid][mic].properties['tNoisemasked']=timenoise
-				neomics[mid][mic].properties['micN']=mic
-				neomics[mid][mic].push()
-				tevalmask= dictmicvalues['Te_p']-dictmicvalues['Tb_p']
-				teval=dictmicvalues['Te']-dictmicvalues['Tb']#calc length of full signal
-				graph.create(pn.Relationship(neomics[mid][mic],'ISANEVALOF',neomid, tEvalmasked=tevalmask, tEval=teval))
-				graph.create(pn.Relationship(neomics[mid][mic],'WASEVALWITH',neoalgorithms[alg]))
-
+				t=dictjs['results'][mid][mic][alg]['t']['py/numpy.ndarray']['values']
+				#compute masks
+				mask = get_mask(t, (dictmicvalues['Tb'],dictmicvalues['Te']))#first mask on Tb to Te
+				mask_p = get_mask(t, (dictmicvalues['Tp_b'],dictmicvalues['Tp_e']))#second mask on Tp_b to Tp_e
+				#compute noise time
+				idmicresult=np.array(dictjs['results'][mid][mic][alg]['result']['py/numpy.ndarray']['values'], dtype=bool)
+				timenoise=float(int(np.sum(idmicresult)*dt*100+0.5)/100)
+				timenoisemasked=float(int(np.sum(idmicresult[mask])*dt*100+0.5)/100)
+				timenoisemasked_p=float(int(np.sum(idmicresult[mask_p])*dt*100+0.5)/100)
+				#compute total time
+				teval=len(t)*dt#calc length of full raw signal
+				graph.create(pn.Relationship(neomics[mid][mic],'EVALWITH',neoalgorithms[alg],tNoise=timenoise, dt=dt,tNoisemasked=timenoisemasked,
+								tNoisemasked_p=timenoisemasked_p))
+				if addtEval:
+					neomics[mid][mic].properties['tEval']=teval
+					addtEval=False
+			graph.create(pn.Relationship(neomics[mid][mic],'ISMICOF',neomid))
+			neomics[mid][mic].push()
 				#graph.create(pn.Relationship(neomics[mid][mic],'OF',thistrain, TrainLength=trainLength, Track=traintrack, Date=mDate, Time=mTime))
-		#converting time to human readable format
-		mHour=int(mTime*24)
-		mMinute=int((mTime*24-mHour)*60)
-		mSecond=int(((mTime*24-mHour)*60-mMinute)*60)
-		mDay,mMonth,mYear=mDate.split('.')
-		graph.create(pn.Relationship(neomid,'SAW',thistrain,TrainLength=trainLength, Track=traintrack, Day=mDay, Month=mMonth,Year=mYear,Hour=mHour,Minute=mMinute,Second=mSecond, V1=v1, V2=v2))
-		graph.create(pn.Relationship(neomid,'IN',neolocations[location],Track=traintrack, Day=mDay, Month=mMonth,Year=mYear,Hour=mHour,Minute=mMinute,Second=mSecond))
+		graph.create(pn.Relationship(neomid,'SAW',thistrain,TrainLength=trainLength, V1=v1, V2=v2))
+		graph.create(pn.Relationship(neomid,'IN',neolocations[location],Track=traintrack))
 		neomids[mid]=neomid#store the reference to this node with key id
 		neomid.push()
 		graph.push()

@@ -3,6 +3,7 @@
 %\subimport*{}{packages/Bericht_Hoch.tex}
 \subimport*{}{packages/colors.tex}
 \usepackage{graphicx}
+\usepackage{multicol}
 %% for inline R code: if the inline code is not correctly parsed, you will see a message
 \newcommand{\rinline}[1]{SOMETHING WRONG WITH knitr}
 %% begin.rcode setup, include=FALSE
@@ -16,7 +17,7 @@
 \subimport*{}{packages/title.tex}
 <<setup, include=FALSE, cache=FALSE>>=
 library(knitr)
-opts_chunk$set(cache=TRUE, autodep=TRUE,fig.width=8, fig.height=6,fig.path='figures/theme-', cache.path='cache/theme-',out.width='\\textwidth', split=TRUE)
+opts_chunk$set(cache=TRUE, autodep=TRUE,fig.width=8, fig.height=6,fig.path='figures/', cache.path='cache/',out.width='\\textwidth', split=TRUE)
 render_listings()
 library(ggplot2)
 library(dplyr)
@@ -27,8 +28,7 @@ library(xtable)
 loadfonts()
 #theme_bw<-theme_update(text=element_text(size=14, family="Helvetica Neue"), axis.text=element_text(family="Helvetica Neue"),legend.background=element_rect(fill="#f5f5f5"))
 #theme_set(theme_bw())
-theme = theme_set(theme_minimal())
-theme = theme_update(legend.position="top", legend.title=element_blank(), panel.grid.major.x=element_blank(), axis.text=element_text(family="Helvetica Neue"),legend.background=element_rect(fill="#f5f5f5"))
+theme_set(theme_minimal(base_family='Helvetica Neue', base_size=11))
 @
 \tableofcontents
 \newpage
@@ -39,8 +39,11 @@ theme = theme_update(legend.position="top", legend.title=element_blank(), panel.
 \section{Analysing the data}
 <<child='PARTS/Neo4j.Rnw'>>=
 @
+\newpage
 \section{\label{sec:app}Appendices}
 <<child='PARTS/Appendices.Rnw'>>=
 @
 \newpage
+\listoffigures
+\listoftables
 \printbibliography 

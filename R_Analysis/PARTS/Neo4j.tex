@@ -1,0 +1,93 @@
+\subsection{Reproducing the calculations}
+The following calculations are done by calling data stored in a neo4j graph database from R. To insert data in this database, first use {\tt main\_ analysis.py} to generate a serie of json file containing all the useful info on your new data. Then use the code {\tt toDB.py} to import these data in the neo4j database -- before running the script, please read the head lines and make the necessary changes described there.
+
+In R, the database is called as follows -- don't forget to launch the neo4j interface and start the local server if necessary :
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{library}\hlstd{(RNeo4j)}\hlcom{#call RNeo4j package}
+\hlstd{graph}\hlkwb{=}\hlkwd{startGraph}\hlstd{(}\hlstr{'http://localhost:7474/db/data'}\hlstd{,} \hlkwc{username}\hlstd{=}\hlstr{'neo4j'}\hlstd{,} \hlkwc{password}\hlstd{=}\hlstr{'admin'}\hlstd{)}\hlcom{#opens a port to the db, with username 'neo4j' and password 'admin'}
+\hlcom{#to access the database click this link : 'http://neo4j:admin@localhost:7474/db/data'}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+\subsubsection{Structure of the database}
+
+The databases in Neo4j are graphs, containing nodes and relationships between these nodes. Nodes and relationships have types (or labels). This will differentiate between Passings and Algorithms, in the case of Nodes, and between the relation of seeing (Passing saw this type of train) and the relation of taking place there (Passing took place here). To gain insight of this database please look at figure \ref{fig:neo4jdb} and at the structure in appendice {\ref{ssec:app:neo4jstruct}} on page {\pageref{ssec:app:neo4jstruct}}.
+
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth]{img/graph.pdf}
+\label{graphneo4j}
+\caption{Illustration of the nodes and relationships types in the Neo4j database.}
+\label{fig:neo4jdb}
+\end{figure}
+
+\subsection{Getting started in R}
+
+We will import the measurements for all the algorithms. RNeo4j accepts {\tt data.frames} as input, so we will give it that. In the following R-code, we will call all evaluations made with the algorithms in the database, all Passings attached to those evaluations and all trains types of those Passings.
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{query}\hlkwb{=}\hlstr{'
+MATCH (a:Algorithm)
+MATCH (b)<-[s:ISMICOF]-(c)-[e:EVALWITH]->(a)//the relationship s contains the specific lengths of time (masked and not) of the microphone signal (c)
+MATCH (t)<-[r:SAW]-(b)//the relationship r contains info on the train (t) of this Passing (b) (lenght and track)
+RETURN a.Name, b.Name, b.Measurement, e.tNoisemasked_p, e.tNoisemasked, e.tNoise, c.tEval, c.tEvalmasked, c.tEvalmasked_p , t.Name, r.TrainLength
+'}
+\hlstd{q}\hlkwb{<-}\hlkwd{cypher}\hlstd{(graph,query)}\hlcom{#takes the info of each MicMes for one algorithm}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in eval(expr, envir, enclos): konnte Funktion "{}\%>\%"{} nicht finden}}\end{kframe}
+\end{knitrout}
+\begin{kframe}
+
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in temp[[3]]: Indizierung auﬂerhalb der Grenzen}}
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in temp[[4]]: Indizierung auﬂerhalb der Grenzen}}
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in temp[[5]]: Indizierung auﬂerhalb der Grenzen}}
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in temp[[6]]: Indizierung auﬂerhalb der Grenzen}}
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in data.frame(Name = sum.Names, Min. = sum.min, `1st Qu.` = sum.fsq, : Objekt 'sum.med' nicht gefunden}}\end{kframe}
+\begin{kframe}
+
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in eval(expr, envir, enclos): konnte Funktion "{}xtable"{} nicht finden}}
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in print(tabqNoise, type = "{}latex"{}, row.names = FALSE): Objekt 'tabqNoise' nicht gefunden}}\end{kframe}
+
+
+We will perform a calculation to see if train type is a factor of the noise length (only on the measures made without lubrification, i.e. {\it Vormessung}).
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{library}\hlstd{(RColorBrewer)}
+\hlstd{qfilt}\hlkwb{<-} \hlstd{q} \hlopt{%>%} \hlkwd{filter}\hlstd{(b.Measurement}\hlopt{==}\hlstr{'Vormessung'}\hlstd{)}
+\end{alltt}
+
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in eval(expr, envir, enclos): konnte Funktion "{}\%>\%"{} nicht finden}}\begin{alltt}
+\hlkwd{ggplot}\hlstd{(qfilt,} \hlkwc{mapping}\hlstd{=}\hlkwd{aes}\hlstd{(}\hlkwc{x} \hlstd{= t.Name,} \hlkwc{y} \hlstd{= e.tNoisemasked}\hlopt{/}\hlstd{c.tEvalmasked),} \hlkwc{lw}\hlstd{=}\hlnum{0}\hlstd{)}\hlopt{+}\hlkwd{geom_boxplot}\hlstd{(}\hlkwc{outlier.colour} \hlstd{=} \hlkwa{NULL}\hlstd{,} \hlkwd{aes}\hlstd{(}\hlkwc{color}\hlstd{=a.Name,} \hlkwc{fill}\hlstd{=a.Name))}\hlopt{+}
+  \hlkwd{xlab}\hlstd{(}\hlstr{'Train Type'}\hlstd{)}\hlopt{+}
+  \hlkwd{ylab}\hlstd{(}\hlstr{'Ratio Noise-Total'}\hlstd{)}\hlopt{+}
+  \hlcom{#title('Comparison of Noise length ratio for pre-measurements')+}
+  \hlkwd{coord_flip}\hlstd{()}\hlopt{+}\hlcom{#rotates the graphic}
+  \hlkwd{scale_fill_manual}\hlstd{(}\hlkwc{values}\hlstd{=}\hlkwd{c}\hlstd{(}\hlstr{"#e31a1c"}\hlstd{,} \hlstr{"#1f78b4"}\hlstd{),}\hlkwc{name}\hlstd{=}\hlstr{"Algorithms"}\hlstd{)}\hlopt{+}
+  \hlkwd{theme}\hlstd{(}\hlkwc{legend.position}\hlstd{=}\hlstr{"bottom"}\hlstd{)}
+\end{alltt}
+
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in eval(expr, envir, enclos): konnte Funktion "{}ggplot"{} nicht finden}}\end{kframe}
+\end{knitrout}

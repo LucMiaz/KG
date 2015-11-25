@@ -28,42 +28,47 @@ We will import the measurements for all the algorithms. RNeo4j accepts {\tt data
 <<Data query>>=
 query='
 MATCH (a:Algorithm)
-MATCH (b)<-[s:ISANEVALOF]-(c)-[:WASEVALWITH]->(a)//the relationship s contains the specific lengths of time (masked and not) of the microphone signal (c)
+MATCH (b)<-[s:ISMICOF]-(c)-[e:EVALWITH]->(a)//the relationship s contains the specific lengths of time (masked and not) of the microphone signal (c)
 MATCH (t)<-[r:SAW]-(b)//the relationship r contains info on the train (t) of this Passing (b) (lenght and track)
-RETURN a.Name, b.Name, b.Measurement, c.tNoisemasked, c.tNoise, s.tEval, s.tEvalmasked, t.Name, r.trainLength, r.Track
+RETURN a.Name, b.Name, b.Measurement, e.tNoisemasked_p, e.tNoisemasked, e.tNoise, c.tEval, c.tEvalmasked, c.tEvalmasked_p , t.Name, r.TrainLength
 '
 q<-cypher(graph,query)#takes the info of each MicMes for one algorithm
 @
-<<arrage, include=FALSE>>=
+<<arrage, echo=FALSE>>=
 q<- q %>% arrange(a.Name)
 @
-<<Evalsummary, include=FALSE, results='asis'>>=
-tabqEval <- xtable(q %>% summary(s.tEval), digits=c(3),caption='Summary of the evaluated time.', label='tab:Eval')
-print(tabqEval,type="latex")
+<<Evalsummary, echo=FALSE, results='asis'>>=
+te<-summary(q$c.tEval)
+tn<-summary(q$e.tNoise)
+tem<-summary(q$c.tEvalmasked)
+tnm<-summary(q$e.tNoisemasked)
+temp<-summary(q$e.tEvalmasked_p)
+tnmp<-summary(q$e.tNoisemasked_p)
+sum.Names<-c('tEval','tNoise','tEvalmask.','tNoisemasked','tEvalmasked p','tNoisemasked p')
+sum.min<-c(te[[1]],tn[[1]],tem[[1]],tnm[[1]],temp[[1]],tnmp[[1]])
+sum.fsq<-c(te[[2]],tn[[2]],tem[[2]],tnm[[2]],temp[[2]],tnmp[[2]])
+sum.med<-c(te[[3]],tn[[3]],tem[[3]],tnm[[3]],temp[[3]],tnmp[[3]])
+sum.mean<-c(te[[4]],tn[[4]],tem[[4]],tnm[[4]],temp[[4]],tnmp[[4]])
+sum.tsq<-c(te[[5]],tn[[5]],tem[[5]],tnm[[5]],temp[[5]],tnmp[[5]])
+sum.max<-c(te[[6]],tn[[6]],tem[[6]],tnm[[6]],temp[[6]],tnmp[[6]])
+qcte<- data.frame('Name'=sum.Names,'Min.'=sum.min,'1st Qu.'=sum.fsq,'Median'=sum.med,'Mean'=sum.mean,'3rd Qu.'=sum.tsq,'Max.'=sum.max)
 @
-<<Noisesummary, include=FALSE, results='asis'>>=
-tabqNoise <- xtable(q %>% summary(c.tNoise), digits=c(3),caption='Summary of the Noise time.', label='tab:Noise')
-print(tabqNoise,type="latex")
+<<Noisesummary, echo=FALSE, results='asis'>>=
+tabqNoise <- xtable(qcte, digits=c(3),caption='Summary of the evaluated time.', label='tab:Noise')
+print(tabqNoise,type="latex", row.names=FALSE)
 @
-<<Evalmaskedsummary, include=FALSE, results='asis'>>=
-tabqmaskedEval <- xtable(q %>% summary(s.tEvalmasked), digits=c(3),caption='Summary of the evaluated time masked.', label='tab:Evalmasked')
-print(tabqmaskedEval,type="latex")
-@
-<<Noisemaskedsummary, include=FALSE, results='asis'>>=
-tabqNoisemasked <- xtable(q %>% summary(c.tNoise), digits=c(3),caption='Summary of the Noise time on the masked subrange.', label='tab:Noisemasked')
-print(tabqNoisemasked,type="latex")
-@
+
 
 We will perform a calculation to see if train type is a factor of the noise length (only on the measures made without lubrification, i.e. {\it Vormessung}).
 
-<<trainfactor>>=
+<<trainfactor, result='asis', fig.cap='Ratio of Noisemasked'>>=
 library(RColorBrewer)
 qfilt<- q %>% filter(b.Measurement=='Vormessung')
-ggplot(qfilt, mapping=aes(x = t.Name, y = c.tNoise/s.tEval), lw=0)+geom_boxplot(outlier.colour = NULL, aes(color=NULL, fill=a.Name))+
+ggplot(qfilt, mapping=aes(x = t.Name, y = e.tNoisemasked/c.tEvalmasked), lw=0)+geom_boxplot(outlier.colour = NULL, aes(color=a.Name, fill=a.Name))+
   xlab('Train Type')+
   ylab('Ratio Noise-Total')+
   #title('Comparison of Noise length ratio for pre-measurements')+
   coord_flip()+#rotates the graphic
-  scale_fill_manual(values=rep(c("#66a61e", "#e6ab02"),10),name="Algorithms")+
+  scale_fill_manual(values=c("#e31a1c", "#1f78b4"),name="Algorithms")+
   theme(legend.position="bottom")
 @

@@ -18,6 +18,8 @@ def split_list(alist, wanted_parts=1):
 if __name__ == "__main__":
     log=''
     blocks_size=1000#specifies the size of the sublists we want to break validID2 in.
+#%-----------------------------------#
+#--------------------------------------#
 	###Choose the Paths to the data
 	##1. Make sure that there is a file called 
     Paths=[pathlib.Path('E:/Biel1Vormessung'),pathlib.Path('E:/Biel2Vormessung'), pathlib.Path('E:/ZugVormessung')]
