@@ -35,18 +35,16 @@ pathtoext_withdata=pathlib.Path('E:/')
 #---------THEY MUST BE INSIDE A FOLDER results---------------------------#
 #------------------------------------------------------------------------#
 
-#Paths=[pathlib.Path('/Users/lucmiaz/Documents/TRAVAIL/SBB_KG/KG/Data/Biel1Vormessung/results/results_11-11-2015.json'),pathlib.Path('/Users/lucmiaz/Documents/TRAVAIL/SBB_KG/KG/Data/Biel2Vormessung/results/results_11-11-2015.json'),pathlib.Path('/Users/lucmiaz/Documents/TRAVAIL/SBB_KG/KG/Data/ZugVormessung/results/results_11-11-2015.json')]
 Paths=[]
-Paths.append(pathlib.Path('E:/Biel1Vormessung/results/results_11-11-2015.json'))
-#Paths.append(pathlib.Path('E:/Biel2Vormessung/results/results_11-11-2015.json'))
-#Paths.append(pathlib.Path('E:/ZugVormessung/results/results_11-11-2015.json'))
+#Paths.append(pathtoext_withdata.joinpath('/Biel1Vormessung/results/results_11-11-2015.json'))
+Paths.append(pathtoext_withdata.joinpath('Biel2Vormessung/results/results_11-11-2015.json'))
+Paths.append(pathtoext_withdata.joinpath('ZugVormessung/results/results_11-11-2015.json'))
 
 #---------------------------------------------------------------------------------#
 #--------Give a list of tuples that gives location and name of the folder---------#
 #--------for this location -------------------------------------------------------#
 #---------------------------------------------------------------------------------#
-#ORTS=[['Biel','Biel1Vormessung'], ['Biel2','Biel2Vormessung'],['Zug','ZugVormessung']]#
-ORTS=[['Biel','Biel1Vormessung']]
+ORTS=[['Biel','Biel1Vormessung'], ['Biel2','Biel2Vormessung'],['Zug','ZugVormessung']]#
 #-----------------------------------------------------------------------------------------#
 #--------Give the name of the variables (they will be taken from MBBM_mes_values.json ----#
 #-------- in the path : ------------------------------------------------------------------#
