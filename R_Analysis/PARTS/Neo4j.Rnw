@@ -27,10 +27,9 @@ We will import the measurements for all the algorithms. RNeo4j accepts {\tt data
 
 <<Data query>>=
 query='
-MATCH (a:Algorithm)
-MATCH (b)<-[s:ISMICOF]-(c)-[e:EVALWITH]->(a)//the relationship s contains the specific lengths of time (masked and not) of the microphone signal (c)
-MATCH (t)<-[r:SAW]-(b)//the relationship r contains info on the train (t) of this Passing (b) (lenght and track)
-RETURN a.Name, b.Name, b.Measurement, e.tNoisemasked_p, e.tNoisemasked, e.tNoise, c.tEval, c.tEvalmasked, c.tEvalmasked_p , t.Name, r.TrainLength
+MATCH (p:Passing) 
+MATCH (a)<-[e:EVALWITH]-(m)-[i:ISMICOF]->(p)-[s:SAW]->(t) 
+RETURN a.Name, p.Name, p.Measurement, e.tNoisemasked_p, e.tNoisemasked, e.tNoise, m.tEval, m.tEvalmasked, m.tEvalmaskedp , t.Name, s.TrainLength
 '
 q<-cypher(graph,query)#takes the info of each MicMes for one algorithm
 @
@@ -38,12 +37,13 @@ q<-cypher(graph,query)#takes the info of each MicMes for one algorithm
 q<- q %>% arrange(a.Name)
 @
 <<Evalsummary, echo=FALSE, results='asis'>>=
-te<-summary(q$c.tEval)
-tn<-summary(q$e.tNoise)
-tem<-summary(q$c.tEvalmasked)
-tnm<-summary(q$e.tNoisemasked)
-temp<-summary(q$e.tEvalmasked_p)
-tnmp<-summary(q$e.tNoisemasked_p)
+summarytable<-function(qt){
+te<-summary(qt$m.tEval)
+tn<-summary(qt$e.tNoise)
+tem<-summary(qt$m.tEvalmasked)
+tnm<-summary(qt$e.tNoisemasked)
+temp<-summary(qt$m.tEvalmaskedp)
+tnmp<-summary(qt$e.tNoisemasked_p)
 sum.Names<-c('tEval','tNoise','tEvalmask.','tNoisemasked','tEvalmasked p','tNoisemasked p')
 sum.min<-c(te[[1]],tn[[1]],tem[[1]],tnm[[1]],temp[[1]],tnmp[[1]])
 sum.fsq<-c(te[[2]],tn[[2]],tem[[2]],tnm[[2]],temp[[2]],tnmp[[2]])
@@ -51,24 +51,39 @@ sum.med<-c(te[[3]],tn[[3]],tem[[3]],tnm[[3]],temp[[3]],tnmp[[3]])
 sum.mean<-c(te[[4]],tn[[4]],tem[[4]],tnm[[4]],temp[[4]],tnmp[[4]])
 sum.tsq<-c(te[[5]],tn[[5]],tem[[5]],tnm[[5]],temp[[5]],tnmp[[5]])
 sum.max<-c(te[[6]],tn[[6]],tem[[6]],tnm[[6]],temp[[6]],tnmp[[6]])
-qcte<- data.frame('Name'=sum.Names,'Min.'=sum.min,'1st Qu.'=sum.fsq,'Median'=sum.med,'Mean'=sum.mean,'3rd Qu.'=sum.tsq,'Max.'=sum.max)
+return(data.frame('Name'=sum.Names,'Min'=sum.min,'fqu'=sum.fsq,'Median'=sum.med,'Mean'=sum.mean,'tqu'=sum.tsq,'Max'=sum.max))}
+qcte <- q %>% group_by(a.Name, p.Measurement) %>% do(summarytable(.))
+qcte$a.Name<- paste('Z2',gsub("^.*?_","_",qcte$a.Name), sep='')
+qcte$thd_dB<- as.double(gsub('dB','',gsub("^.*Hz_",'', qcte$a.Name)))
+qcte$fc_Hz<- as.integer(gsub('^.*s_','',sub("Hz_.*$",'', qcte$a.Name)))
+qcte$dt_s<-as.double(gsub('Z2_*','',sub('s_.*$','',qcte$a.Name)))
+qcte$p.Measurement <- NULL
+qcte$a.Name<-NULL
+qcte <-  data.frame('dt'=qcte$dt_s, 'fc'=qcte$fc_Hz, 'thd'=qcte$thd_dB, 'Name'=qcte$Name, 'min'=qcte$Min, 'fqu'=qcte$fqu, 'median'=qcte$Median, 'mean'=qcte$Mean, 'tqu'=qcte$tqu, 'max'=qcte$Max)
 @
+\begin{table}
+\centering
+\begin{tabular}{r|r|r|l|r|r|r|r|r|r}
+$\delta$ & fc & thd & Name & Min. & 1st Qu. & Median & Mean & 3rd Qu. & Max. \\
 <<Noisesummary, echo=FALSE, results='asis'>>=
-tabqNoise <- xtable(qcte, digits=c(3),caption='Summary of the evaluated time.', label='tab:Noise')
-print(tabqNoise,type="latex", row.names=FALSE)
+tabqNoise <- xtable(qcte, digits=c(2),caption='Summary of the evaluated time.', label='tab:Noise')
+print(tabqNoise, include.rownames = FALSE, include.colnames=FALSE, only.contents = TRUE)
 @
-
+\end{tabular}
+\caption{Summary of the detected Noise and evalutation time (masked, p-masked and unmasked).}
+\label{tab:tNoiseSummary}
+\end{table}
 
 We will perform a calculation to see if train type is a factor of the noise length (only on the measures made without lubrification, i.e. {\it Vormessung}).
 
 <<trainfactor, result='asis', fig.cap='Ratio of Noisemasked'>>=
 library(RColorBrewer)
-qfilt<- q %>% filter(b.Measurement=='Vormessung')
-ggplot(qfilt, mapping=aes(x = t.Name, y = e.tNoisemasked/c.tEvalmasked), lw=0)+geom_boxplot(outlier.colour = NULL, aes(color=a.Name, fill=a.Name))+
+qfilt<- q %>% filter(p.Measurement=='Vormessung')
+ggplot(qfilt, mapping=aes(x = t.Name, y = e.tNoisemasked/m.tEvalmasked), lw=0)+geom_boxplot(outlier.colour = NULL, weight=0,size=0,notchwidth = 0.25, aes(fill=a.Name), linewidth=0)+
+  #stat_summary(geom = "crossbar", width=0.65, fatten=0, color="white", fun.data = function(x){ return(c(y=median(x), ymin=median(x), ymax=median(x))) })+#prints the median. But must be changed to support the two algorithms. See http://biochemres.com/beautiful-minimalist-boxplots-with-r-and-ggplot2
   xlab('Train Type')+
-  ylab('Ratio Noise-Total')+
-  #title('Comparison of Noise length ratio for pre-measurements')+
+  ylab('Ratio Noisemasked-Totalmasked')+
   coord_flip()+#rotates the graphic
-  scale_fill_manual(values=c("#e31a1c", "#1f78b4"),name="Algorithms")+
+  scale_fill_manual(values=c("#DE756A", "#68BEC4"),name="Algorithms")+
   theme(legend.position="bottom")
 @

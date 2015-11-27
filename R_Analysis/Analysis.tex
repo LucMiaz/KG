@@ -116,7 +116,7 @@ find_best<-function(tff, authors=list(), qualities=list(),fixedthreshold=FALSE, 
 }
 \end{lstlisting}
 
-This gave us table \ref{tab:tablebestall} for our four authors -- the output give the name of the authors and the qualities selected, from 1 (bad) to 3 (good).
+This gave us table \ref{tab:tablebestall} for our four authors -- the output gives the name of the authors and the qualities selected, from 1 (bad) to 3 (good).
 
 \begin{Schunk}
 \begin{Soutput}
@@ -147,7 +147,7 @@ This gave us table \ref{tab:tablebestall} for our four authors -- the output giv
 \begin{tabular}{r|r|r|r|r|r|r|r}
 TPR & FPR & Tot. positives & Tot. negatives & thd & dist{\_ax} & Algorithm & $\delta$ \\
 % latex table generated in R 3.2.2 by xtable 1.8-0 package
-% Wed Nov 25 13:49:00 2015
+% Fri Nov 27 20:53:37 2015
   \hline
 0.665 & 0.137 & 15550 & 26382 & 2.657 & 0.373 & Z2\_2000\_0.02 & 0.53 \\ 
   0.710 & 0.177 & 15550 & 26382 & 1.290 & 0.377 & Z2\_3000\_0.02 & 0.53 \\ 
@@ -189,7 +189,7 @@ compressed<-walloffamest %>% group_by(algorithm) %>% summarise(avgthres=mean(thd
 \begin{tabular}{l|r}
 Algorithm & Average threshold \\
 % latex table generated in R 3.2.2 by xtable 1.8-0 package
-% Wed Nov 25 19:07:24 2015
+% Fri Nov 27 20:53:37 2015
   \hline
 Z2\_4500\_0.02 & 0.677 \\ 
   Z2\_4500\_0.1 & 0.727 \\ 
@@ -240,7 +240,7 @@ rocplotdatamaous
 \begin{tabular}{r|r|r|r|r|l|r|r}
 dist{\_}ax & esr & luc & PHF & PhC & Algorithm & thd & average dist{\_}ax\\
 % latex table generated in R 3.2.2 by xtable 1.8-0 package
-% Wed Nov 25 13:49:01 2015
+% Fri Nov 27 20:53:38 2015
   \hline
 0.38 & 0.47 & 0.33 & 0.46 & 0.29 & Z2\_2000\_0.02 & 2.89 & 0.31 \\ 
   0.38 & 0.46 & 0.34 & 0.47 & 0.31 & Z2\_2000\_0.05 & 3.23 & 0.31 \\ 
@@ -309,54 +309,220 @@ We will import the measurements for all the algorithms. RNeo4j accepts {\tt data
 \begin{Schunk}
 \begin{Sinput}
 query='
-MATCH (a:Algorithm)
-MATCH (b)<-[s:ISMICOF]-(c)-[e:EVALWITH]->(a)//the relationship s contains the specific lengths of time (masked and not) of the microphone signal (c)
-MATCH (t)<-[r:SAW]-(b)//the relationship r contains info on the train (t) of this Passing (b) (lenght and track)
-RETURN a.Name, b.Name, b.Measurement, e.tNoisemasked_p, e.tNoisemasked, e.tNoise, c.tEval, c.tEvalmasked, c.tEvalmasked_p , t.Name, r.TrainLength
+MATCH (p:Passing) 
+MATCH (a)<-[e:EVALWITH]-(m)-[i:ISMICOF]->(p)-[s:SAW]->(t) 
+RETURN a.Name, p.Name, p.Measurement, e.tNoisemasked_p, e.tNoisemasked, e.tNoise, m.tEval, m.tEvalmasked, m.tEvalmaskedp , t.Name, s.TrainLength
 '
 q<-cypher(graph,query)#takes the info of each MicMes for one algorithm
 \end{Sinput}
 \end{Schunk}
 
-\begin{Soutput}
-Error in tn[[4]]: Indizierung au�erhalb der Grenzen
-\end{Soutput}
-\begin{Soutput}
-Error in tn[[5]]: Indizierung au�erhalb der Grenzen
-\end{Soutput}
-\begin{Soutput}
-Error in tn[[6]]: Indizierung au�erhalb der Grenzen
-\end{Soutput}
-\begin{Soutput}
-Error in data.frame(Name = sum.Names, Min. = sum.min, `1st Qu.` = sum.fsq, : Objekt 'sum.mean' nicht gefunden
-\end{Soutput}
 
-\begin{Soutput}
-Error in xtable(qcte, digits = c(3), caption = "Summary of the evaluated time.", : Objekt 'qcte' nicht gefunden
-\end{Soutput}
-\begin{Soutput}
-Error in print(tabqNoise, type = "latex", row.names = FALSE): Objekt 'tabqNoise' nicht gefunden
-\end{Soutput}
+\begin{table}
+\centering
+\begin{tabular}{r|r|r|l|r|r|r|r|r|r}
+$\delta$ & fc & thd & Name & Min. & 1st Qu. & Median & Mean & 3rd Qu. & Max. \\
+% latex table generated in R 3.2.2 by xtable 1.8-0 package
+% Fri Nov 27 20:53:43 2015
+  \hline
+0.02 & 3500 & 1.05 & tEval & 9.68 & 14.62 & 18.14 & 20.50 & 23.90 & 57.30 \\ 
+  0.02 & 3500 & 1.05 & tNoise & 0.00 & 0.54 & 3.56 & 5.07 & 8.08 & 37.16 \\ 
+  0.02 & 3500 & 1.05 & tEvalmask. & 1.38 & 7.38 & 10.00 & 12.43 & 14.88 & 51.50 \\ 
+  0.02 & 3500 & 1.05 & tNoisemasked & 0.00 & 0.44 & 2.92 & 4.31 & 6.42 & 30.72 \\ 
+  0.02 & 3500 & 1.05 & tEvalmasked p & 0.56 & 4.46 & 6.98 & 9.30 & 10.89 & 42.63 \\ 
+  0.02 & 3500 & 1.05 & tNoisemasked p & 0.00 & 0.26 & 2.10 & 3.52 & 4.86 & 28.18 \\ 
+  0.10 & 4500 & 0.73 & tEval & 9.68 & 14.62 & 18.14 & 20.50 & 23.90 & 57.30 \\ 
+  0.10 & 4500 & 0.73 & tNoise & 0.00 & 1.40 & 5.90 & 6.98 & 10.90 & 38.90 \\ 
+  0.10 & 4500 & 0.73 & tEvalmask. & 1.38 & 7.38 & 10.00 & 12.43 & 14.88 & 51.50 \\ 
+  0.10 & 4500 & 0.73 & tNoisemasked & 0.00 & 0.70 & 4.10 & 5.19 & 7.50 & 31.90 \\ 
+  0.10 & 4500 & 0.73 & tEvalmasked p & 0.56 & 4.46 & 6.98 & 9.30 & 10.89 & 42.63 \\ 
+  0.10 & 4500 & 0.73 & tNoisemasked p & 0.00 & 0.40 & 2.90 & 4.13 & 5.70 & 29.30 \\ 
+   \hline
 
-
+\end{tabular}
+\caption{Summary of the detected Noise and evalutation time (masked, p-masked and unmasked).}
+\label{tab:tNoiseSummary}
+\end{table}
 
 We will perform a calculation to see if train type is a factor of the noise length (only on the measures made without lubrification, i.e. {\it Vormessung}).
 
 \begin{Schunk}
 \begin{Sinput}
 library(RColorBrewer)
-qfilt<- q %>% filter(b.Measurement=='Vormessung')
-ggplot(qfilt, mapping=aes(x = t.Name, y = e.tNoisemasked/c.tEvalmasked), lw=0)+geom_boxplot(outlier.colour = NULL, aes(color=a.Name, fill=a.Name))+
+qfilt<- q %>% filter(p.Measurement=='Vormessung')
+ggplot(qfilt, mapping=aes(x = t.Name, y = e.tNoisemasked/m.tEvalmasked), lw=0)+geom_boxplot(outlier.colour = NULL, weight=0,size=0,notchwidth = 0.25, aes(fill=a.Name), linewidth=0)+
+  #stat_summary(geom = "crossbar", width=0.65, fatten=0, color="white", fun.data = function(x){ return(c(y=median(x), ymin=median(x), ymax=median(x))) })+#prints the median. But must be changed to support the two algorithms. See http://biochemres.com/beautiful-minimalist-boxplots-with-r-and-ggplot2
   xlab('Train Type')+
-  ylab('Ratio Noise-Total')+
-  #title('Comparison of Noise length ratio for pre-measurements')+
+  ylab('Ratio Noisemasked-Totalmasked')+
   coord_flip()+#rotates the graphic
-  scale_fill_manual(values=c("#e31a1c", "#1f78b4"),name="Algorithms")+
+  scale_fill_manual(values=c("#DE756A", "#68BEC4"),name="Algorithms")+
   theme(legend.position="bottom")
 \end{Sinput}
 \begin{Soutput}
-Error in eval(expr, envir, enclos): Objekt 'e.tNoisemasked' nicht gefunden
+Warning in grid.Call(L_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : erreur de conversion de 'IR L460-8D-…' dans 'mbcsToSbcs' : le point est substitué pour <e2>
 \end{Soutput}
+\begin{Soutput}
+Warning in grid.Call(L_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : erreur de conversion de 'IR L460-8D-…' dans 'mbcsToSbcs' : le point est substitué pour <80>
+\end{Soutput}
+\begin{Soutput}
+Warning in grid.Call(L_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : erreur de conversion de 'IR L460-8D-…' dans 'mbcsToSbcs' : le point est substitué pour <a6>
+\end{Soutput}
+\begin{Soutput}
+Warning in grid.Call(L_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : erreur de conversion de 'Re 460-EW-…' dans 'mbcsToSbcs' : le point est substitué pour <e2>
+\end{Soutput}
+\begin{Soutput}
+Warning in grid.Call(L_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : erreur de conversion de 'Re 460-EW-…' dans 'mbcsToSbcs' : le point est substitué pour <80>
+\end{Soutput}
+\begin{Soutput}
+Warning in grid.Call(L_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : erreur de conversion de 'Re 460-EW-…' dans 'mbcsToSbcs' : le point est substitué pour <a6>
+\end{Soutput}
+\begin{Soutput}
+Warning in grid.Call(L_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : erreur de conversion de 'Re 460-IC2000-…' dans 'mbcsToSbcs' : le point est substitué pour <e2>
+\end{Soutput}
+\begin{Soutput}
+Warning in grid.Call(L_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : erreur de conversion de 'Re 460-IC2000-…' dans 'mbcsToSbcs' : le point est substitué pour <80>
+\end{Soutput}
+\begin{Soutput}
+Warning in grid.Call(L_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : erreur de conversion de 'Re 460-IC2000-…' dans 'mbcsToSbcs' : le point est substitué pour <a6>
+\end{Soutput}
+\begin{Soutput}
+Warning in grid.Call(L_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : erreur de conversion de 'IR L460-8D-…' dans 'mbcsToSbcs' : le point est substitué pour <e2>
+\end{Soutput}
+\begin{Soutput}
+Warning in grid.Call(L_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : erreur de conversion de 'IR L460-8D-…' dans 'mbcsToSbcs' : le point est substitué pour <80>
+\end{Soutput}
+\begin{Soutput}
+Warning in grid.Call(L_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : erreur de conversion de 'IR L460-8D-…' dans 'mbcsToSbcs' : le point est substitué pour <a6>
+\end{Soutput}
+\begin{Soutput}
+Warning in grid.Call(L_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : erreur de conversion de 'Re 460-EW-…' dans 'mbcsToSbcs' : le point est substitué pour <e2>
+\end{Soutput}
+\begin{Soutput}
+Warning in grid.Call(L_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : erreur de conversion de 'Re 460-EW-…' dans 'mbcsToSbcs' : le point est substitué pour <80>
+\end{Soutput}
+\begin{Soutput}
+Warning in grid.Call(L_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : erreur de conversion de 'Re 460-EW-…' dans 'mbcsToSbcs' : le point est substitué pour <a6>
+\end{Soutput}
+\begin{Soutput}
+Warning in grid.Call(L_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : erreur de conversion de 'Re 460-IC2000-…' dans 'mbcsToSbcs' : le point est substitué pour <e2>
+\end{Soutput}
+\begin{Soutput}
+Warning in grid.Call(L_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : erreur de conversion de 'Re 460-IC2000-…' dans 'mbcsToSbcs' : le point est substitué pour <80>
+\end{Soutput}
+\begin{Soutput}
+Warning in grid.Call(L_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : erreur de conversion de 'Re 460-IC2000-…' dans 'mbcsToSbcs' : le point est substitué pour <a6>
+\end{Soutput}
+\begin{Soutput}
+Warning in grid.Call(L_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : erreur de conversion de 'IR L460-8D-…' dans 'mbcsToSbcs' : le point est substitué pour <e2>
+\end{Soutput}
+\begin{Soutput}
+Warning in grid.Call(L_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : erreur de conversion de 'IR L460-8D-…' dans 'mbcsToSbcs' : le point est substitué pour <80>
+\end{Soutput}
+\begin{Soutput}
+Warning in grid.Call(L_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : erreur de conversion de 'IR L460-8D-…' dans 'mbcsToSbcs' : le point est substitué pour <a6>
+\end{Soutput}
+\begin{Soutput}
+Warning in grid.Call(L_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : erreur de conversion de 'Re 460-EW-…' dans 'mbcsToSbcs' : le point est substitué pour <e2>
+\end{Soutput}
+\begin{Soutput}
+Warning in grid.Call(L_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : erreur de conversion de 'Re 460-EW-…' dans 'mbcsToSbcs' : le point est substitué pour <80>
+\end{Soutput}
+\begin{Soutput}
+Warning in grid.Call(L_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : erreur de conversion de 'Re 460-EW-…' dans 'mbcsToSbcs' : le point est substitué pour <a6>
+\end{Soutput}
+\begin{Soutput}
+Warning in grid.Call(L_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : erreur de conversion de 'Re 460-IC2000-…' dans 'mbcsToSbcs' : le point est substitué pour <e2>
+\end{Soutput}
+\begin{Soutput}
+Warning in grid.Call(L_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : erreur de conversion de 'Re 460-IC2000-…' dans 'mbcsToSbcs' : le point est substitué pour <80>
+\end{Soutput}
+\begin{Soutput}
+Warning in grid.Call(L_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : erreur de conversion de 'Re 460-IC2000-…' dans 'mbcsToSbcs' : le point est substitué pour <a6>
+\end{Soutput}
+\begin{Soutput}
+Warning in grid.Call(L_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : erreur de conversion de 'IR L460-8D-…' dans 'mbcsToSbcs' : le point est substitué pour <e2>
+\end{Soutput}
+\begin{Soutput}
+Warning in grid.Call(L_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : erreur de conversion de 'IR L460-8D-…' dans 'mbcsToSbcs' : le point est substitué pour <80>
+\end{Soutput}
+\begin{Soutput}
+Warning in grid.Call(L_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : erreur de conversion de 'IR L460-8D-…' dans 'mbcsToSbcs' : le point est substitué pour <a6>
+\end{Soutput}
+\begin{Soutput}
+Warning in grid.Call(L_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : erreur de conversion de 'Re 460-EW-…' dans 'mbcsToSbcs' : le point est substitué pour <e2>
+\end{Soutput}
+\begin{Soutput}
+Warning in grid.Call(L_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : erreur de conversion de 'Re 460-EW-…' dans 'mbcsToSbcs' : le point est substitué pour <80>
+\end{Soutput}
+\begin{Soutput}
+Warning in grid.Call(L_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : erreur de conversion de 'Re 460-EW-…' dans 'mbcsToSbcs' : le point est substitué pour <a6>
+\end{Soutput}
+\begin{Soutput}
+Warning in grid.Call(L_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : erreur de conversion de 'Re 460-IC2000-…' dans 'mbcsToSbcs' : le point est substitué pour <e2>
+\end{Soutput}
+\begin{Soutput}
+Warning in grid.Call(L_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : erreur de conversion de 'Re 460-IC2000-…' dans 'mbcsToSbcs' : le point est substitué pour <80>
+\end{Soutput}
+\begin{Soutput}
+Warning in grid.Call(L_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : erreur de conversion de 'Re 460-IC2000-…' dans 'mbcsToSbcs' : le point est substitué pour <a6>
+\end{Soutput}
+\begin{Soutput}
+Warning in grid.Call(L_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : erreur de conversion de 'IR L460-8D-…' dans 'mbcsToSbcs' : le point est substitué pour <e2>
+\end{Soutput}
+\begin{Soutput}
+Warning in grid.Call(L_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : erreur de conversion de 'IR L460-8D-…' dans 'mbcsToSbcs' : le point est substitué pour <80>
+\end{Soutput}
+\begin{Soutput}
+Warning in grid.Call(L_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : erreur de conversion de 'IR L460-8D-…' dans 'mbcsToSbcs' : le point est substitué pour <a6>
+\end{Soutput}
+\begin{Soutput}
+Warning in grid.Call(L_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : erreur de conversion de 'Re 460-EW-…' dans 'mbcsToSbcs' : le point est substitué pour <e2>
+\end{Soutput}
+\begin{Soutput}
+Warning in grid.Call(L_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : erreur de conversion de 'Re 460-EW-…' dans 'mbcsToSbcs' : le point est substitué pour <80>
+\end{Soutput}
+\begin{Soutput}
+Warning in grid.Call(L_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : erreur de conversion de 'Re 460-EW-…' dans 'mbcsToSbcs' : le point est substitué pour <a6>
+\end{Soutput}
+\begin{Soutput}
+Warning in grid.Call(L_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : erreur de conversion de 'Re 460-IC2000-…' dans 'mbcsToSbcs' : le point est substitué pour <e2>
+\end{Soutput}
+\begin{Soutput}
+Warning in grid.Call(L_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : erreur de conversion de 'Re 460-IC2000-…' dans 'mbcsToSbcs' : le point est substitué pour <80>
+\end{Soutput}
+\begin{Soutput}
+Warning in grid.Call(L_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : erreur de conversion de 'Re 460-IC2000-…' dans 'mbcsToSbcs' : le point est substitué pour <a6>
+\end{Soutput}
+\begin{Soutput}
+Warning in grid.Call.graphics(L_text, as.graphicsAnnot(x$label), x$x, x$y, : erreur de conversion de 'IR L460-8D-…' dans 'mbcsToSbcs' : le point est substitué pour <e2>
+\end{Soutput}
+\begin{Soutput}
+Warning in grid.Call.graphics(L_text, as.graphicsAnnot(x$label), x$x, x$y, : erreur de conversion de 'IR L460-8D-…' dans 'mbcsToSbcs' : le point est substitué pour <80>
+\end{Soutput}
+\begin{Soutput}
+Warning in grid.Call.graphics(L_text, as.graphicsAnnot(x$label), x$x, x$y, : erreur de conversion de 'IR L460-8D-…' dans 'mbcsToSbcs' : le point est substitué pour <a6>
+\end{Soutput}
+\begin{Soutput}
+Warning in grid.Call.graphics(L_text, as.graphicsAnnot(x$label), x$x, x$y, : erreur de conversion de 'Re 460-EW-…' dans 'mbcsToSbcs' : le point est substitué pour <e2>
+\end{Soutput}
+\begin{Soutput}
+Warning in grid.Call.graphics(L_text, as.graphicsAnnot(x$label), x$x, x$y, : erreur de conversion de 'Re 460-EW-…' dans 'mbcsToSbcs' : le point est substitué pour <80>
+\end{Soutput}
+\begin{Soutput}
+Warning in grid.Call.graphics(L_text, as.graphicsAnnot(x$label), x$x, x$y, : erreur de conversion de 'Re 460-EW-…' dans 'mbcsToSbcs' : le point est substitué pour <a6>
+\end{Soutput}
+\begin{Soutput}
+Warning in grid.Call.graphics(L_text, as.graphicsAnnot(x$label), x$x, x$y, : erreur de conversion de 'Re 460-IC2000-…' dans 'mbcsToSbcs' : le point est substitué pour <e2>
+\end{Soutput}
+\begin{Soutput}
+Warning in grid.Call.graphics(L_text, as.graphicsAnnot(x$label), x$x, x$y, : erreur de conversion de 'Re 460-IC2000-…' dans 'mbcsToSbcs' : le point est substitué pour <80>
+\end{Soutput}
+\begin{Soutput}
+Warning in grid.Call.graphics(L_text, as.graphicsAnnot(x$label), x$x, x$y, : erreur de conversion de 'Re 460-IC2000-…' dans 'mbcsToSbcs' : le point est substitué pour <a6>
+\end{Soutput}
+\begin{figure}
+\includegraphics[width=\textwidth]{figures/trainfactor-1} \caption[Ratio of Noisemasked]{Ratio of Noisemasked}\label{fig:trainfactor}
+\end{figure}
 \end{Schunk}
 \newpage
 \section{\label{sec:app}Appendices}
@@ -365,7 +531,7 @@ Error in eval(expr, envir, enclos): Objekt 'e.tNoisemasked' nicht gefunden
 \subsection{\label{ssec:app:authorstables}Best thresholds for each author}
 The following tables show the best algorithms (i.e. proto-algorithm + threshold) for the four authors.
 % latex table generated in R 3.2.2 by xtable 1.8-0 package
-% Wed Nov 25 13:43:55 2015
+% Fri Nov 27 20:53:44 2015
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrrrrrrlr}
@@ -394,7 +560,7 @@ The following tables show the best algorithms (i.e. proto-algorithm + threshold)
 \end{table}
 
 % latex table generated in R 3.2.2 by xtable 1.8-0 package
-% Wed Nov 25 13:43:55 2015
+% Fri Nov 27 20:53:44 2015
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrrrrrrlr}
@@ -423,7 +589,7 @@ The following tables show the best algorithms (i.e. proto-algorithm + threshold)
 \end{table}
 
 % latex table generated in R 3.2.2 by xtable 1.8-0 package
-% Wed Nov 25 13:43:55 2015
+% Fri Nov 27 20:53:44 2015
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrrrrrrlr}
@@ -452,7 +618,7 @@ The following tables show the best algorithms (i.e. proto-algorithm + threshold)
 \end{table}
 
 % latex table generated in R 3.2.2 by xtable 1.8-0 package
-% Wed Nov 25 13:43:55 2015
+% Fri Nov 27 20:53:44 2015
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrrrrrrlr}
@@ -601,4 +767,5 @@ The database contains the following Relationships -- the example is the canonica
 \newpage
 \listoffigures
 \listoftables
-\printbibliography 
+\printbibliography
+\end{document}

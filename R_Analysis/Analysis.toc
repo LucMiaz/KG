@@ -8,9 +8,9 @@
 \contentsline {subsection}{\numberline {\sffamily 2.1}Reproducing the calculations}{7}
 \contentsline {subsubsection}{\numberline {\sffamily 2.1.1}Structure of the database}{7}
 \contentsline {subsection}{\numberline {\sffamily 2.2}Getting started in R}{7}
-\contentsline {section}{\numberline {\sffamily 3}Appendices}{10}
-\contentsline {subsection}{\numberline {\sffamily 3.1}Best thresholds for each author}{10}
-\contentsline {subsection}{\numberline {\sffamily 3.2}ROC plot for other authors}{10}
-\contentsline {subsection}{\numberline {\sffamily 3.3}Structure of the Graph Database}{14}
-\contentsline {subsubsection}{\numberline {\sffamily 3.3.1}Nodes}{14}
-\contentsline {subsubsection}{\numberline {\sffamily 3.3.2}Relationships}{14}
+\contentsline {section}{\numberline {\sffamily 3}Appendices}{14}
+\contentsline {subsection}{\numberline {\sffamily 3.1}Best thresholds for each author}{14}
+\contentsline {subsection}{\numberline {\sffamily 3.2}ROC plot for other authors}{14}
+\contentsline {subsection}{\numberline {\sffamily 3.3}Structure of the Graph Database}{18}
+\contentsline {subsubsection}{\numberline {\sffamily 3.3.1}Nodes}{18}
+\contentsline {subsubsection}{\numberline {\sffamily 3.3.2}Relationships}{18}

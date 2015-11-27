@@ -28,7 +28,7 @@ library(xtable)
 loadfonts()
 #theme_bw<-theme_update(text=element_text(size=14, family="Helvetica Neue"), axis.text=element_text(family="Helvetica Neue"),legend.background=element_rect(fill="#f5f5f5"))
 #theme_set(theme_bw())
-theme_set(theme_minimal(base_family='Helvetica Neue', base_size=11))
+theme_set(theme_minimal(base_family='Helvetica', base_size=11))
 @
 \tableofcontents
 \newpage
@@ -46,4 +46,5 @@ theme_set(theme_minimal(base_family='Helvetica Neue', base_size=11))
 \newpage
 \listoffigures
 \listoftables
-\printbibliography 
+\printbibliography
+\end{document}

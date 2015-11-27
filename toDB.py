@@ -200,3 +200,5 @@ for resPath in Paths:
 		neomids[mid]=neomid#store the reference to this node with key id
 		neomid.push()
 		graph.push()
+	print(str(resPath)+" : done !")
+print("Importation complete!")

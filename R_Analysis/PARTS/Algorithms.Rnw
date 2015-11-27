@@ -77,7 +77,7 @@ find_best<-function(tff, authors=list(), qualities=list(),fixedthreshold=FALSE, 
 }
 \end{lstlisting}
 
-This gave us table \ref{tab:tablebestall} for our four authors -- the output give the name of the authors and the qualities selected, from 1 (bad) to 3 (good).
+This gave us table \ref{tab:tablebestall} for our four authors -- the output gives the name of the authors and the qualities selected, from 1 (bad) to 3 (good).
 
 <<kablebest, echo=FALSE>>=
 bestfull<-find_best(tf, qualities=c(3,2))
